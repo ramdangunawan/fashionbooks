@@ -128,9 +128,8 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 .cat-dropdown-absolute{position:fixed;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 20px rgba(28,23,20,.15);z-index:100;max-height:360px;overflow-y:auto;display:none}
 .cat-dropdown-absolute.show{display:block}
 .cat-section{padding:8px 12px 4px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
-.cat-option{padding:14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;border-top:1px solid var(--border);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:rgba(196,88,40,0.15);touch-action:manipulation;min-height:44px}
+.cat-option{padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;border-top:1px solid var(--border)}
 .cat-option:hover{background:var(--surface2)}
-.cat-option:active{background:var(--accent-light)}
 .cat-option .cat-auto{font-size:10px;margin-left:auto;padding:2px 7px;border-radius:4px;font-weight:700}
 .cat-option .cat-auto.ok{background:#e8f3ed;color:var(--accent2)}
 .cat-option .cat-auto.review{background:#fdf3e4;color:var(--amber)}
@@ -988,9 +987,9 @@ function openCatDropdown(rowIdx,event){
     const autoCats=[],reviewCats=[];
     Object.keys(CATEGORIES).forEach(name=>{const cfg=CATEGORIES[name];if(cfg.autoApprove)autoCats.push({name,cfg});else reviewCats.push({name,cfg});});
     let html='<div class="cat-section" style="color:var(--accent2)">🟢 Auto-Approve (≤ Rp '+AUTO_LIMIT.toLocaleString('id-ID')+')</div>';
-    autoCats.forEach(c=>{html+=`<div class="cat-option" onclick="selectCat('${c.name.replace(/'/g,"\\'")}',event)"><span style="font-size:16px">${CAT_EMOJI[c.name]||'•'}</span><span>${c.name}</span><span class="cat-auto ok">AUTO</span></div>`;});
+    autoCats.forEach(c=>{html+=`<div class="cat-option" onclick="selectCat('${c.name.replace(/'/g,"\\'")}')"><span style="font-size:16px">${CAT_EMOJI[c.name]||'•'}</span><span>${c.name}</span><span class="cat-auto ok">AUTO</span></div>`;});
     html+='<div class="cat-section" style="color:var(--amber);border-top:1px solid var(--border);margin-top:4px">🟡 Perlu Review Owner</div>';
-    reviewCats.forEach(c=>{html+=`<div class="cat-option" onclick="selectCat('${c.name.replace(/'/g,"\\'")}',event)"><span style="font-size:16px">${CAT_EMOJI[c.name]||'•'}</span><span>${c.name}</span><span class="cat-auto review">REVIEW</span></div>`;});
+    reviewCats.forEach(c=>{html+=`<div class="cat-option" onclick="selectCat('${c.name.replace(/'/g,"\\'")}')"><span style="font-size:16px">${CAT_EMOJI[c.name]||'•'}</span><span>${c.name}</span><span class="cat-auto review">REVIEW</span></div>`;});
     dd.innerHTML=html;
   }
   // Position dropdown at button
@@ -1001,8 +1000,7 @@ function openCatDropdown(rowIdx,event){
   dd.style.width=rect.width+'px';
   dd.classList.add('show');
 }
-function selectCat(name,event){
-  if(event){event.stopPropagation();event.preventDefault();}
+function selectCat(name){
   if(activeDropdownRow===null)return;
   expItems[activeDropdownRow].category=name;
   document.getElementById('cat-dropdown').classList.remove('show');
