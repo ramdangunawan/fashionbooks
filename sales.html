@@ -439,7 +439,6 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
     <div class="section-title"><span class="dot" style="background:var(--teal)"></span>Lost Sale Hari Ini</div>
     <div id="lost-history"></div>
   </div>
-<div id="cat-dropdown" class="cat-dropdown-absolute"></div>
 
 </div>
 
@@ -884,9 +883,11 @@ async function submitReport(){
 }
 
 async function loadTodayReports(){
+  if(!session||!session.sales){console.warn('Session not ready');return;}
   const date=document.getElementById('input-date').value;
   const res=await apiCall({action:'getAll'});
   if(!res.ok)return;
+  if(!session||!session.sales)return;
   const mine=res.reports.filter(r=>String(r.date).slice(0,10)===date&&Number(r.salesId)===Number(session.sales.id));
   const c=document.getElementById('today-reports');
   if(!mine.length){c.innerHTML='';return;}
@@ -1095,5 +1096,6 @@ setInterval(protectNumberInputs,2000);
   try{session=JSON.parse(savedSession);initData().then(()=>goToMain());}catch(e){show('page-login');}
 })();
 </script>
+<div id="cat-dropdown" class="cat-dropdown-absolute"></div>
 </body>
 </html>
