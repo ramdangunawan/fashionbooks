@@ -283,6 +283,24 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
         <div class="pay-total"><span class="pay-total-l">Total Penjualan</span><span class="pay-total-v" id="pay-total">Rp 0</span></div>
       </div>
       <div class="field">
+        <div class="field-top"><span class="field-icon">🎯</span><div class="field-info"><div class="field-label">Diskon Marketing (jika ada)</div><div class="field-sub">Potongan dari program promo / diskon marketing</div></div></div>
+        <div class="field-input-wrap">
+          <span class="field-prefix">Rp</span>
+          <input type="number" min="0" class="input input-num" id="f-disc-marketing" placeholder="0" onfocus="this.select()" oninput="updatePreview()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-top"><span class="field-icon">⚠️</span><div class="field-info"><div class="field-label">Kompensasi Reject (jika ada)</div><div class="field-sub">Potongan karena barang cacat/reject</div></div></div>
+        <div class="field-input-wrap">
+          <span class="field-prefix">Rp</span>
+          <input type="number" min="0" class="input input-num" id="f-disc-reject" placeholder="0" onfocus="this.select()" oninput="updatePreview()">
+        </div>
+        <div id="reject-desc-wrap" style="display:none;margin-top:10px">
+          <label class="label">Alasan Reject <span style="color:var(--red)">*</span></label>
+          <textarea id="f-disc-reject-desc" class="input" rows="2" placeholder="Contoh: jahitan lepas, warna luntur, salah size dll" oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+      <div class="field">
         <div class="field-top"><span class="field-icon">↩️</span><div class="field-info"><div class="field-label">Retur (jika ada)</div><div class="field-sub">Nilai retur dalam Rp</div></div></div>
         <div class="field-input-wrap">
           <span class="field-prefix">Rp</span>
@@ -507,7 +525,7 @@ function goToMain(){
   const td=new Date().toISOString().slice(0,10);
   document.getElementById('input-date').value=td;
   document.getElementById('exp-date').value=td;
-  ['f-followup','f-feedback','f-qty','f-retur','exp-general-desc'].forEach(id=>document.getElementById(id).value='');
+  ['f-followup','f-feedback','f-qty','f-retur','exp-general-desc','f-disc-marketing','f-disc-reject','f-disc-reject-desc'].forEach(id=>document.getElementById(id).value='');
   payRows=[{accountCode:'1-1000',amount:''}];renderPayRows();
   expItems=[{category:'',amount:'',description:''}];renderExpItems();
   renderSourceDropdown();
@@ -815,18 +833,27 @@ function updatePreview(){
   const fu=Number(document.getElementById('f-followup').value)||0;
   const fb=Number(document.getElementById('f-feedback').value)||0;
   const qty=Number(document.getElementById('f-qty').value)||0;
+  const discMkt=Number(document.getElementById('f-disc-marketing').value)||0;
+  const discRej=Number(document.getElementById('f-disc-reject').value)||0;
+  // Toggle reject description requirement
+  document.getElementById('reject-desc-wrap').style.display=discRej>0?'block':'none';
   const hasRecv=document.getElementById('f-has-receivable').checked;
   const recvAmount=hasRecv?(Number(document.getElementById('f-recv-amount').value)||0):0;
   const recvCustomer=hasRecv?(document.getElementById('f-recv-customer').value.trim()):'';
   const total=totalPay+recvAmount;
   if(total<=0){document.getElementById('preview').style.display='none';return;}
   const cvr=fu>0?((fb/fu)*100).toFixed(1):0;
+  const grossSales=total+discMkt+discRej;
   const breakdown=payRows.filter(r=>Number(r.amount)>0).map(r=>{const acc=KAS_ACCOUNTS.find(a=>a.code===r.accountCode);return`<div class="preview-row" style="grid-column:1/-1;font-size:12px">• ${acc?acc.name:r.accountCode}: <b>${fmt(Number(r.amount))}</b></div>`;}).join('');
   let recvHtml='';
   if(recvAmount>0){
     recvHtml=`<div class="preview-row" style="grid-column:1/-1;font-size:12px;color:var(--amber);margin-top:4px;padding:6px 8px;background:#fff7e6;border-radius:6px">💳 Piutang ${recvCustomer?'<b>'+recvCustomer+'</b>':'<span style="color:var(--red)">(Isi nama customer!)</span>'}: <b>${fmt(recvAmount)}</b></div>`;
   }
-  document.getElementById('preview').innerHTML=`<div class="preview"><div class="preview-label">Ringkasan Sebelum Kirim</div><div class="preview-grid"><div class="preview-row">Follow-up: <b>${fu}</b></div><div class="preview-row">Feedback: <b>${fb}</b></div><div class="preview-row">Qty: <b>${qty} pcs</b></div><div class="preview-row">Conversion: <b>${cvr}%</b></div><div class="preview-row" style="grid-column:1/-1;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><b style="font-size:13px">Uang Masuk (Cash/Bank):</b></div>${breakdown}${recvHtml}<div class="preview-row" style="grid-column:1/-1;margin-top:4px">Total Penjualan: <b style="color:var(--accent2);font-size:16px">${fmt(total)}</b>${ret>0?' — Retur: <b style="color:var(--red)">'+fmt(ret)+'</b>':''}</div><div class="preview-row" style="grid-column:1/-1">Nett: <b style="color:var(--accent2);font-size:16px">${fmt(total-ret)}</b></div></div></div>`;
+  let discHtml='';
+  if(discMkt>0||discRej>0){
+    discHtml=`<div class="preview-row" style="grid-column:1/-1;font-size:12px;color:var(--amber);margin-top:4px;padding:6px 8px;background:#fff7e6;border-radius:6px">🎯 Potongan: ${discMkt>0?'Marketing <b>'+fmt(discMkt)+'</b>':''}${discMkt>0&&discRej>0?' + ':''}${discRej>0?'Reject <b>'+fmt(discRej)+'</b>':''}<br><span style="font-size:11px;color:var(--muted)">Gross Sales: <b>${fmt(grossSales)}</b></span></div>`;
+  }
+  document.getElementById('preview').innerHTML=`<div class="preview"><div class="preview-label">Ringkasan Sebelum Kirim</div><div class="preview-grid"><div class="preview-row">Follow-up: <b>${fu}</b></div><div class="preview-row">Feedback: <b>${fb}</b></div><div class="preview-row">Qty: <b>${qty} pcs</b></div><div class="preview-row">Conversion: <b>${cvr}%</b></div><div class="preview-row" style="grid-column:1/-1;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><b style="font-size:13px">Uang Masuk (Cash/Bank):</b></div>${breakdown}${recvHtml}${discHtml}<div class="preview-row" style="grid-column:1/-1;margin-top:4px">Net Sales: <b style="color:var(--accent2);font-size:16px">${fmt(total)}</b>${ret>0?' — Retur: <b style="color:var(--red)">'+fmt(ret)+'</b>':''}</div><div class="preview-row" style="grid-column:1/-1">Nett Final: <b style="color:var(--accent2);font-size:16px">${fmt(total-ret)}</b></div></div></div>`;
   document.getElementById('preview').style.display='block';
 }
 
@@ -838,6 +865,9 @@ async function submitReport(){
   const recvAmount=hasRecv?(Number(document.getElementById('f-recv-amount').value)||0):0;
   const recvCustomer=hasRecv?(document.getElementById('f-recv-customer').value.trim()):'';
   const recvPhone=hasRecv?(document.getElementById('f-recv-phone').value.trim()):'';
+  const discMkt=Number(document.getElementById('f-disc-marketing').value)||0;
+  const discRej=Number(document.getElementById('f-disc-reject').value)||0;
+  const discRejDesc=document.getElementById('f-disc-reject-desc').value.trim();
   const total=totalPay+recvAmount;
   if(!date){showA('input-err','Tanggal wajib diisi');document.getElementById('input-err').style.display='block';return;}
   if(total<=0){showA('input-err','Isi minimal nominal penjualan atau piutang');document.getElementById('input-err').style.display='block';return;}
@@ -846,6 +876,8 @@ async function submitReport(){
     if(recvAmount<=0){showA('input-err','Nilai piutang harus > 0 (atau uncheck box piutang)');document.getElementById('input-err').style.display='block';return;}
     if(!recvCustomer){showA('input-err','Nama customer wajib diisi untuk piutang');document.getElementById('input-err').style.display='block';return;}
   }
+  // Validate reject description
+  if(discRej>0&&!discRejDesc){showA('input-err','Alasan reject wajib diisi jika ada Kompensasi Reject');document.getElementById('input-err').style.display='block';return;}
   const accs=validPays.map(r=>r.accountCode);
   if(new Set(accs).size!==accs.length){showA('input-err','Ada akun pembayaran yang dipakai 2 kali');document.getElementById('input-err').style.display='block';return;}
   let confirmMsg='Kirim laporan?\n\nTanggal: '+date+'\n';
@@ -856,7 +888,10 @@ async function submitReport(){
   if(recvAmount>0){
     confirmMsg+='\n\n💳 Piutang:\n'+recvCustomer+(recvPhone?' ('+recvPhone+')':'')+': '+fmt(recvAmount);
   }
-  confirmMsg+='\n\nTotal Penjualan: '+fmt(total);
+  if(discMkt>0)confirmMsg+='\n\n🎯 Diskon Marketing: '+fmt(discMkt);
+  if(discRej>0)confirmMsg+='\n⚠️ Komp. Reject: '+fmt(discRej)+'\n  Alasan: '+discRejDesc;
+  confirmMsg+='\n\nNet Sales: '+fmt(total);
+  if(discMkt>0||discRej>0)confirmMsg+='\nGross Sales: '+fmt(total+discMkt+discRej);
   if(!confirm(confirmMsg))return;
   const btn=document.getElementById('submit-btn');btn.innerHTML='<span class="loading"></span> Mengirim...';btn.disabled=true;
   const payments=validPays.map(r=>({accountCode:r.accountCode,amount:Number(r.amount)}));
@@ -868,15 +903,19 @@ async function submitReport(){
     payments:JSON.stringify(payments),
     receivableAmount:recvAmount,
     receivableCustomer:recvCustomer,
-    receivablePhone:recvPhone});
+    receivablePhone:recvPhone,
+    discMarketing:discMkt,
+    discReject:discRej,
+    discRejectDesc:discRejDesc});
   btn.innerHTML='✓ Kirim Laporan';btn.disabled=false;
   if(!res.ok){showA('input-err',res.error||'Gagal mengirim');document.getElementById('input-err').style.display='block';return;}
   let okMsg='Laporan berhasil dikirim! 🎉';
   if(res.receivableAdded)okMsg+=' Piutang tercatat.';
   showA('input-ok',okMsg,'ok');document.getElementById('input-ok').style.display='block';
-  ['f-followup','f-feedback','f-qty','f-retur','f-recv-customer','f-recv-phone','f-recv-amount'].forEach(id=>document.getElementById(id).value='');
+  ['f-followup','f-feedback','f-qty','f-retur','f-recv-customer','f-recv-phone','f-recv-amount','f-disc-marketing','f-disc-reject','f-disc-reject-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-has-receivable').checked=false;
   document.getElementById('receivable-box').style.display='none';
+  document.getElementById('reject-desc-wrap').style.display='none';
   payRows=[{accountCode:'1-1000',amount:''}];renderPayRows();
   document.getElementById('preview').style.display='none';
   loadPerformance();loadTarget();loadTodayReports();
