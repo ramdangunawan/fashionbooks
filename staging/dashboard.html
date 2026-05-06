@@ -3,19 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FashionBooks Analytics — Staging</title>
+<title>FashionBooks Analytics — Owner Dashboard</title>
 <style>
 :root {
   --green: #2C5F2D;
+  --green-dark: #1F4520;
+  --green-light: #E8F0E8;
   --gold: #D4AF37;
-  --bg: #FAFAF7;
+  --gold-light: #FAF3D9;
+  --bg: #F7F7F4;
   --card: #FFFFFF;
-  --text: #2C2C2C;
-  --muted: #6B6B6B;
+  --text: #1A1A1A;
+  --text-muted: #6B6B6B;
   --border: #E5E5E0;
   --success: #27AE60;
   --warning: #F39C12;
   --danger: #C0392B;
+  --info: #3498DB;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,301 +30,680 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.6;
-  padding: 1rem;
+  line-height: 1.5;
+  font-size: 14px;
 }
 
 .staging-banner {
   background: linear-gradient(90deg, #F39C12, #E67E22);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1rem;
   text-align: center;
   font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  border-radius: 6px;
+  font-size: 0.8rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 1.5rem;
 }
 
 header {
   background: var(--card);
-  padding: 1.5rem 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow);
   margin-bottom: 1.5rem;
+  padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+  border: 1px solid var(--border);
 }
 
-header h1 {
-  font-size: 1.5rem;
-  color: var(--green);
+header .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+header .logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-size: 1.4rem;
   font-weight: 700;
 }
 
+header h1 {
+  font-size: 1.3rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
 header .subtitle {
-  color: var(--muted);
-  font-size: 0.9rem;
-  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.1rem;
+}
+
+header .controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.last-updated .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .btn {
   background: var(--green);
   color: white;
   border: none;
-  padding: 0.7rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.btn:hover { background: #1f4520; }
-.btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }
 
-.test-grid {
+.btn-secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+select.btn-secondary {
+  appearance: none;
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%236B6B6B' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 0.6rem center;
+  padding-right: 2rem;
+}
+
+.tabs {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  padding: 0.4rem;
+  display: flex;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 0.7rem 1.4rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tab:hover { background: var(--bg); color: var(--text); }
+.tab.active { background: var(--green); color: white; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.kpi-card .label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-card .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+}
+
+.kpi-card .sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.kpi-card .badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.kpi-card .badge.up { background: #D4EDDA; color: #155724; }
+.kpi-card .badge.down { background: #F8D7DA; color: #721C24; }
+
+.kpi-card.accent-green::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--green); }
+.kpi-card.accent-gold::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gold); }
+.kpi-card.accent-info::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--info); }
+.kpi-card.accent-warning::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--warning); }
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
-.test-card {
+.chart-grid.two-col {
+  grid-template-columns: 2fr 1fr;
+}
+
+.chart-card {
   background: var(--card);
-  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  border-left: 4px solid var(--green);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
-.test-card h3 {
-  color: var(--green);
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.test-card p {
-  color: var(--muted);
-  font-size: 0.9rem;
+.chart-card .chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.status {
-  display: inline-block;
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
+.chart-card h3 {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.chart-card .chart-meta {
   font-size: 0.8rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
+  color: var(--text-muted);
 }
-.status.pending { background: #FFF3CD; color: #856404; }
-.status.success { background: #D4EDDA; color: #155724; }
-.status.failed { background: #F8D7DA; color: #721C24; }
 
-.log {
-  background: #1E1E1E;
-  color: #D4D4D4;
-  padding: 1rem;
+.chart-placeholder {
+  background: linear-gradient(135deg, #F7F7F4, #FFFFFF);
+  border: 2px dashed var(--border);
   border-radius: 8px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 1rem;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  gap: 0.5rem;
 }
 
-.log-entry {
-  margin-bottom: 0.3rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid #2D2D2D;
+.chart-placeholder .icon {
+  font-size: 3rem;
+  opacity: 0.3;
 }
 
-.log-entry.success { color: #4EC9B0; }
-.log-entry.error { color: #F48771; }
-.log-entry.info { color: #9CDCFE; }
+.chart-placeholder .text {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.chart-placeholder .sub {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #F0F0EC 25%, #E5E5E0 50%, #F0F0EC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  height: 1.6rem;
+  margin-bottom: 0.5rem;
+  width: 60%;
+}
 
 .spinner {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border);
-  border-top-color: var(--green);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-right: 0.5rem;
-  vertical-align: middle;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.info-box {
-  background: #E7F3FF;
-  border-left: 4px solid #2196F3;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
 }
 
-.info-box h4 { color: #1976D2; margin-bottom: 0.5rem; }
-.info-box p { color: #424242; font-size: 0.9rem; }
+.empty-state .icon { font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; }
+
+@media (max-width: 968px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid.two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 0.8rem; }
+  header { padding: 1rem; }
+  header h1 { font-size: 1.1rem; }
+  .kpi-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+  .kpi-card .value { font-size: 1.4rem; }
+  .tab { padding: 0.6rem 0.9rem; font-size: 0.8rem; }
+}
+
+.alert {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.alert-info { background: #E7F3FF; border-left: 3px solid var(--info); color: #1976D2; }
+.alert-error { background: #FFEBEE; border-left: 3px solid var(--danger); color: var(--danger); }
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.coming-soon {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: var(--gold-light);
+  color: #826A18;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.4rem;
+}
 </style>
 </head>
 <body>
-  <div class="container">
-    
-    <div class="staging-banner">
-      ⚠️ STAGING ENVIRONMENT — Hanya untuk testing. Bukan untuk akses sales.
-    </div>
-    
-    <header>
+
+<div class="staging-banner">
+  ⚠️ STAGING — Phase 1 Day 2: Frontend Layout
+</div>
+
+<div class="container">
+  
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📊</div>
       <div>
-        <h1>📊 FashionBooks Analytics Dashboard</h1>
-        <div class="subtitle">Phase 0: Staging Foundation Test</div>
+        <h1>FashionBooks Analytics</h1>
+        <div class="subtitle">Owner Dashboard — Pak Ramdhan</div>
       </div>
-      <button class="btn" id="run-test-btn">🚀 Run Connection Test</button>
-    </header>
-    
-    <div class="info-box">
-      <h4>ℹ️ Tentang Halaman Ini</h4>
-      <p>
-        Halaman ini adalah <strong>Phase 0 dari pengembangan Fitur Grafik FashionBooks</strong>. 
-        Tujuannya hanya untuk memverifikasi bahwa staging environment sudah berjalan dengan baik, 
-        sebelum kita mulai membuat grafik yang sesungguhnya di Phase 1. 
-        Klik tombol "Run Connection Test" di atas untuk memulai pemeriksaan.
-      </p>
     </div>
     
-    <div class="test-grid">
-      
-      <div class="test-card" id="card-1">
-        <h3>✅ Test 1: HTML Loaded</h3>
-        <p>Verifikasi bahwa halaman dashboard.html berhasil diakses dari URL staging.</p>
-        <div class="status success">PASS</div>
+    <div class="controls">
+      <div class="last-updated">
+        <span class="dot"></span>
+        <span id="last-updated-text">Belum ter-update</span>
+      </div>
+      <select class="btn-secondary" id="period-filter">
+        <option value="today">Hari Ini</option>
+        <option value="week">Minggu Ini</option>
+        <option value="month" selected>Bulan Ini</option>
+      </select>
+      <button class="btn" id="refresh-btn">
+        <span id="refresh-icon">🔄</span>
+        <span id="refresh-text">Refresh Data</span>
+      </button>
+    </div>
+  </header>
+  
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">📈 Overview</button>
+    <button class="tab" data-tab="penjualan">💰 Penjualan <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="biaya">💸 Biaya <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
+  </div>
+  
+  <div class="tab-content active" id="tab-overview">
+    
+    <div id="alert-box"></div>
+    
+    <div class="kpi-grid">
+      <div class="kpi-card accent-green">
+        <div class="label">💰 Penjualan Bulan Ini</div>
+        <div class="value" id="kpi-sales">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:140px;"></span>
+        </div>
+        <div class="sub" id="kpi-sales-sub">Memuat data...</div>
       </div>
       
-      <div class="test-card" id="card-2">
-        <h3>🔄 Test 2: JavaScript Active</h3>
-        <p>Verifikasi bahwa JavaScript di halaman ini bisa di-eksekusi browser.</p>
-        <div class="status pending" id="status-2">PENDING</div>
+      <div class="kpi-card accent-warning">
+        <div class="label">💸 Pengeluaran Bulan Ini</div>
+        <div class="value" id="kpi-expense">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:120px;"></span>
+        </div>
+        <div class="sub" id="kpi-expense-sub">Memuat data...</div>
       </div>
       
-      <div class="test-card" id="card-3">
-        <h3>🌐 Test 3: Apps Script Connection</h3>
-        <p>Verifikasi koneksi ke Apps Script production (read-only test).</p>
-        <div class="status pending" id="status-3">PENDING</div>
+      <div class="kpi-card accent-info">
+        <div class="label">📊 Profit Kasar</div>
+        <div class="value" id="kpi-profit">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:130px;"></span>
+        </div>
+        <div class="sub" id="kpi-profit-sub">Memuat data...</div>
       </div>
       
-      <div class="test-card" id="card-4">
-        <h3>📊 Test 4: Data Read Test</h3>
-        <p>Verifikasi bisa membaca data dasar dari Google Sheet (tanpa modifikasi).</p>
-        <div class="status pending" id="status-4">PENDING</div>
+      <div class="kpi-card accent-gold">
+        <div class="label">🎯 Pencapaian Target</div>
+        <div class="value" id="kpi-target">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:80px;"></span>
+        </div>
+        <div class="sub" id="kpi-target-sub">Memuat data...</div>
       </div>
-      
     </div>
     
-    <div class="test-card">
-      <h3>📋 Test Log</h3>
-      <p>Output log dari semua test yang dijalankan.</p>
-      <div class="log" id="log">
-        <div class="log-entry info">[INFO] Dashboard loaded. Click "Run Connection Test" to start.</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📈 Trend Penjualan 30 Hari Terakhir</h3>
+          <div class="chart-meta" id="trend-meta">Memuat data...</div>
+        </div>
+        <div class="chart-placeholder">
+          <div class="icon">📈</div>
+          <div class="text">Trend Chart akan muncul di Day 4</div>
+          <div class="sub">Backend sudah siap, tinggal integrasi Chart.js</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chart-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>🏪 Penjualan per Outlet (Hari Ini)</h3>
+          <div class="chart-meta" id="outlet-today-meta">Memuat data...</div>
+        </div>
+        <div class="chart-placeholder">
+          <div class="icon">📊</div>
+          <div class="text">Bar Chart per Outlet akan muncul di Day 5</div>
+          <div class="sub">Data sudah tersedia di backend</div>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📋 Quick Stats</h3>
+          <div class="chart-meta" id="stats-meta">Memuat data...</div>
+        </div>
+        <div id="quick-stats" style="padding: 0.5rem 0;">
+          <div class="skeleton skeleton-line" style="width:80%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:70%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:75%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:65%;"></div>
+        </div>
       </div>
     </div>
     
   </div>
+  
+  <div class="tab-content" id="tab-penjualan">
+    <div class="empty-state">
+      <div class="icon">💰</div>
+      <h3>Tab Penjualan</h3>
+      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi analisis penjualan mendalam.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-biaya">
+    <div class="empty-state">
+      <div class="icon">💸</div>
+      <h3>Tab Biaya</h3>
+      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi analisis pengeluaran.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-target">
+    <div class="empty-state">
+      <div class="icon">🎯</div>
+      <h3>Tab Target</h3>
+      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi pencapaian target.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-forecast">
+    <div class="empty-state">
+      <div class="icon">🔮</div>
+      <h3>Tab Forecast</h3>
+      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi prediksi.</p>
+    </div>
+  </div>
+  
+  <footer>
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 2 Build
+  </footer>
+</div>
 
 <script>
-// === Phase 0 Test Script ===
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1mSO9TS-kfK0BTNAyCNm342L_l_bNksJBMlMRjE47rNWjV8b1MYImD/exec';
 
-const log = document.getElementById('log');
+let currentData = null;
+let isLoading = false;
 
-function addLog(msg, type = 'info') {
-  const entry = document.createElement('div');
-  entry.className = 'log-entry ' + type;
-  const time = new Date().toLocaleTimeString('id-ID');
-  entry.innerHTML = '[' + time + '] ' + msg;
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
+function formatRupiah(num) {
+  if (num === null || num === undefined || isNaN(num)) return 'Rp 0';
+  const n = Number(num);
+  if (Math.abs(n) >= 1000000000) {
+    return 'Rp ' + (n / 1000000000).toFixed(1).replace(/\.0$/, '') + ' M';
+  } else if (Math.abs(n) >= 1000000) {
+    return 'Rp ' + (n / 1000000).toFixed(1).replace(/\.0$/, '') + ' jt';
+  } else if (Math.abs(n) >= 1000) {
+    return 'Rp ' + (n / 1000).toFixed(0) + ' rb';
+  }
+  return 'Rp ' + n.toLocaleString('id-ID');
 }
 
-function setStatus(cardId, statusText, statusClass) {
-  const el = document.getElementById('status-' + cardId);
-  if (el) {
-    el.textContent = statusText;
-    el.className = 'status ' + statusClass;
+function formatNumber(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  return Number(num).toLocaleString('id-ID');
+}
+
+function formatPercent(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0%';
+  return Number(num).toFixed(1) + '%';
+}
+
+function formatTimestamp(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleString('id-ID', { 
+    day: '2-digit', month: 'short', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit' 
+  });
+}
+
+function showAlert(message, type) {
+  const box = document.getElementById('alert-box');
+  box.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+  if (type !== 'error') {
+    setTimeout(function() { box.innerHTML = ''; }, 5000);
   }
 }
 
-async function apiCall(params) {
-  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
-}
-
-async function runTests() {
-  const btn = document.getElementById('run-test-btn');
+async function fetchAnalytics() {
+  if (isLoading) return null;
+  isLoading = true;
+  
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  const text = document.getElementById('refresh-text');
+  
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Running tests...';
+  icon.innerHTML = '<span class="spinner"></span>';
+  text.textContent = 'Memuat...';
   
-  // Test 2: JavaScript Active
-  addLog('Test 2: JavaScript active', 'success');
-  setStatus(2, 'PASS', 'success');
-  
-  // Test 3: Apps Script Connection
-  addLog('Test 3: Trying to connect to Apps Script...', 'info');
   try {
+    const url = APPS_SCRIPT_URL + '?action=getAnalyticsOverview';
     const startTime = Date.now();
-    const res = await apiCall({ action: 'ping' });
+    const res = await fetch(url);
+    const data = await res.json();
     const duration = Date.now() - startTime;
     
-    if (res && (res.ok !== false)) {
-      addLog('Test 3: Connected successfully (' + duration + 'ms)', 'success');
-      setStatus(3, 'PASS', 'success');
-    } else {
-      addLog('Test 3: Connection succeeded but ping returned: ' + JSON.stringify(res), 'info');
-      setStatus(3, 'PARTIAL', 'pending');
+    if (!data.ok) {
+      throw new Error(data.error || 'Unknown error');
     }
+    
+    currentData = data.data;
+    renderDashboard(data.data);
+    
+    document.getElementById('last-updated-text').textContent = 
+      'Updated ' + formatTimestamp(new Date()) + ' (' + duration + 'ms)';
+    
+    return data.data;
   } catch (err) {
-    addLog('Test 3: Failed — ' + err.message, 'error');
-    addLog('Hint: Apps Script may not have "ping" action yet. This is OK for Phase 0.', 'info');
-    setStatus(3, 'NEEDS BACKEND', 'failed');
+    showAlert('❌ Gagal memuat data: ' + err.message, 'error');
+    console.error('Fetch error:', err);
+    return null;
+  } finally {
+    isLoading = false;
+    btn.disabled = false;
+    icon.textContent = '🔄';
+    text.textContent = 'Refresh Data';
   }
-  
-  // Test 4: Data Read Test
-  addLog('Test 4: Trying to read data...', 'info');
-  try {
-    const res = await apiCall({ action: 'getOutlets' });
-    if (res && res.ok && Array.isArray(res.data)) {
-      addLog('Test 4: Data read OK — ' + res.data.length + ' outlets found', 'success');
-      setStatus(4, 'PASS', 'success');
-    } else {
-      addLog('Test 4: Response: ' + JSON.stringify(res).substring(0, 100), 'info');
-      setStatus(4, 'PARTIAL', 'pending');
-    }
-  } catch (err) {
-    addLog('Test 4: Failed — ' + err.message, 'error');
-    setStatus(4, 'FAILED', 'failed');
-  }
-  
-  addLog('All tests completed.', 'info');
-  btn.disabled = false;
-  btn.innerHTML = '🔄 Re-run Tests';
 }
 
-document.getElementById('run-test-btn').addEventListener('click', runTests);
+function renderDashboard(data) {
+  const k = data.kpi || {};
+  
+  document.getElementById('kpi-sales').textContent = formatRupiah(k.netSalesMonth);
+  document.getElementById('kpi-sales-sub').innerHTML = 
+    'Hari ini: <strong>' + formatRupiah(k.netSalesToday) + '</strong>' +
+    (k.returMonth > 0 ? ' · Retur: ' + formatRupiah(k.returMonth) : '');
+  
+  document.getElementById('kpi-expense').textContent = formatRupiah(k.expenseMonth);
+  document.getElementById('kpi-expense-sub').innerHTML = 
+    'Hari ini: <strong>' + formatRupiah(k.expenseToday) + '</strong>';
+  
+  document.getElementById('kpi-profit').textContent = formatRupiah(k.profitMonth);
+  const profitClass = k.profitMonth >= 0 ? 'up' : 'down';
+  const margin = k.netSalesMonth > 0 ? ((k.profitMonth/k.netSalesMonth)*100).toFixed(1) : '0';
+  document.getElementById('kpi-profit-sub').innerHTML = 
+    '<span class="badge ' + profitClass + '">' + 
+    (k.profitMonth >= 0 ? '↑' : '↓') + ' ' + margin + '% margin</span>';
+  
+  document.getElementById('kpi-target').textContent = formatPercent(k.targetAchievementPercent);
+  document.getElementById('kpi-target-sub').innerHTML = 
+    'Target: <strong>' + formatRupiah(k.targetMonth) + '</strong>';
+  
+  const trendCount = (data.trend30Days || []).length;
+  const trendTotal = (data.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  document.getElementById('trend-meta').textContent = 
+    trendCount + ' hari · Total: ' + formatRupiah(trendTotal);
+  
+  const outletCount = (data.perOutletToday || []).length;
+  const outletTodayTotal = (data.perOutletToday || []).reduce(function(s, o) { return s + (o.amount || 0); }, 0);
+  document.getElementById('outlet-today-meta').textContent = 
+    outletCount + ' outlet · Total: ' + formatRupiah(outletTodayTotal);
+  
+  const c = data.counts || {};
+  document.getElementById('stats-meta').textContent = 'Per ' + data.referenceDate;
+  document.getElementById('quick-stats').innerHTML = 
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalReports) + '</strong> total laporan sales</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.approvedExpenses) + '</strong> dari ' + formatNumber(c.totalExpenses) + ' biaya disetujui</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalOutlets) + '</strong> outlet aktif</div>' +
+    '<div><strong>' + formatNumber(c.totalSales) + '</strong> sales aktif</div>';
+}
 
-// Auto-test 1 on load
-addLog('HTML page loaded successfully.', 'success');
-addLog('Click "Run Connection Test" to verify backend connectivity.', 'info');
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('refresh-btn').addEventListener('click', fetchAnalytics);
+
+document.getElementById('period-filter').addEventListener('change', function(e) {
+  showAlert('ℹ️ Filter periode "' + e.target.options[e.target.selectedIndex].text + '" akan diaktifkan di tahap berikutnya', 'info');
+});
+
+fetchAnalytics();
 </script>
 </body>
 </html>
