@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FashionBooks Analytics — Staging</title>
+<style>
+:root {
+  --green: #2C5F2D;
+  --gold: #D4AF37;
+  --bg: #FAFAF7;
+  --card: #FFFFFF;
+  --text: #2C2C2C;
+  --muted: #6B6B6B;
+  --border: #E5E5E0;
+  --success: #27AE60;
+  --warning: #F39C12;
+  --danger: #C0392B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+.staging-banner {
+  background: linear-gradient(90deg, #F39C12, #E67E22);
+  color: white;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+header {
+  background: var(--card);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  color: var(--green);
+  font-weight: 700;
+}
+
+header .subtitle {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn:hover { background: #1f4520; }
+.btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+.test-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.test-card {
+  background: var(--card);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-left: 4px solid var(--green);
+}
+
+.test-card h3 {
+  color: var(--green);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.test-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+.status.pending { background: #FFF3CD; color: #856404; }
+.status.success { background: #D4EDDA; color: #155724; }
+.status.failed { background: #F8D7DA; color: #721C24; }
+
+.log {
+  background: #1E1E1E;
+  color: #D4D4D4;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.log-entry {
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #2D2D2D;
+}
+
+.log-entry.success { color: #4EC9B0; }
+.log-entry.error { color: #F48771; }
+.log-entry.info { color: #9CDCFE; }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.info-box {
+  background: #E7F3FF;
+  border-left: 4px solid #2196F3;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.info-box h4 { color: #1976D2; margin-bottom: 0.5rem; }
+.info-box p { color: #424242; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+  <div class="container">
+    
+    <div class="staging-banner">
+      ⚠️ STAGING ENVIRONMENT — Hanya untuk testing. Bukan untuk akses sales.
+    </div>
+    
+    <header>
+      <div>
+        <h1>📊 FashionBooks Analytics Dashboard</h1>
+        <div class="subtitle">Phase 0: Staging Foundation Test</div>
+      </div>
+      <button class="btn" id="run-test-btn">🚀 Run Connection Test</button>
+    </header>
+    
+    <div class="info-box">
+      <h4>ℹ️ Tentang Halaman Ini</h4>
+      <p>
+        Halaman ini adalah <strong>Phase 0 dari pengembangan Fitur Grafik FashionBooks</strong>. 
+        Tujuannya hanya untuk memverifikasi bahwa staging environment sudah berjalan dengan baik, 
+        sebelum kita mulai membuat grafik yang sesungguhnya di Phase 1. 
+        Klik tombol "Run Connection Test" di atas untuk memulai pemeriksaan.
+      </p>
+    </div>
+    
+    <div class="test-grid">
+      
+      <div class="test-card" id="card-1">
+        <h3>✅ Test 1: HTML Loaded</h3>
+        <p>Verifikasi bahwa halaman dashboard.html berhasil diakses dari URL staging.</p>
+        <div class="status success">PASS</div>
+      </div>
+      
+      <div class="test-card" id="card-2">
+        <h3>🔄 Test 2: JavaScript Active</h3>
+        <p>Verifikasi bahwa JavaScript di halaman ini bisa di-eksekusi browser.</p>
+        <div class="status pending" id="status-2">PENDING</div>
+      </div>
+      
+      <div class="test-card" id="card-3">
+        <h3>🌐 Test 3: Apps Script Connection</h3>
+        <p>Verifikasi koneksi ke Apps Script production (read-only test).</p>
+        <div class="status pending" id="status-3">PENDING</div>
+      </div>
+      
+      <div class="test-card" id="card-4">
+        <h3>📊 Test 4: Data Read Test</h3>
+        <p>Verifikasi bisa membaca data dasar dari Google Sheet (tanpa modifikasi).</p>
+        <div class="status pending" id="status-4">PENDING</div>
+      </div>
+      
+    </div>
+    
+    <div class="test-card">
+      <h3>📋 Test Log</h3>
+      <p>Output log dari semua test yang dijalankan.</p>
+      <div class="log" id="log">
+        <div class="log-entry info">[INFO] Dashboard loaded. Click "Run Connection Test" to start.</div>
+      </div>
+    </div>
+    
+  </div>
+
+<script>
+// === Phase 0 Test Script ===
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1mSO9TS-kfK0BTNAyCNm342L_l_bNksJBMlMRjE47rNWjV8b1MYImD/exec';
+
+const log = document.getElementById('log');
+
+function addLog(msg, type = 'info') {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + type;
+  const time = new Date().toLocaleTimeString('id-ID');
+  entry.innerHTML = '[' + time + '] ' + msg;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setStatus(cardId, statusText, statusClass) {
+  const el = document.getElementById('status-' + cardId);
+  if (el) {
+    el.textContent = statusText;
+    el.className = 'status ' + statusClass;
+  }
+}
+
+async function apiCall(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+async function runTests() {
+  const btn = document.getElementById('run-test-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running tests...';
+  
+  // Test 2: JavaScript Active
+  addLog('Test 2: JavaScript active', 'success');
+  setStatus(2, 'PASS', 'success');
+  
+  // Test 3: Apps Script Connection
+  addLog('Test 3: Trying to connect to Apps Script...', 'info');
+  try {
+    const startTime = Date.now();
+    const res = await apiCall({ action: 'ping' });
+    const duration = Date.now() - startTime;
+    
+    if (res && (res.ok !== false)) {
+      addLog('Test 3: Connected successfully (' + duration + 'ms)', 'success');
+      setStatus(3, 'PASS', 'success');
+    } else {
+      addLog('Test 3: Connection succeeded but ping returned: ' + JSON.stringify(res), 'info');
+      setStatus(3, 'PARTIAL', 'pending');
+    }
+  } catch (err) {
+    addLog('Test 3: Failed — ' + err.message, 'error');
+    addLog('Hint: Apps Script may not have "ping" action yet. This is OK for Phase 0.', 'info');
+    setStatus(3, 'NEEDS BACKEND', 'failed');
+  }
+  
+  // Test 4: Data Read Test
+  addLog('Test 4: Trying to read data...', 'info');
+  try {
+    const res = await apiCall({ action: 'getOutlets' });
+    if (res && res.ok && Array.isArray(res.data)) {
+      addLog('Test 4: Data read OK — ' + res.data.length + ' outlets found', 'success');
+      setStatus(4, 'PASS', 'success');
+    } else {
+      addLog('Test 4: Response: ' + JSON.stringify(res).substring(0, 100), 'info');
+      setStatus(4, 'PARTIAL', 'pending');
+    }
+  } catch (err) {
+    addLog('Test 4: Failed — ' + err.message, 'error');
+    setStatus(4, 'FAILED', 'failed');
+  }
+  
+  addLog('All tests completed.', 'info');
+  btn.disabled = false;
+  btn.innerHTML = '🔄 Re-run Tests';
+}
+
+document.getElementById('run-test-btn').addEventListener('click', runTests);
+
+// Auto-test 1 on load
+addLog('HTML page loaded successfully.', 'success');
+addLog('Click "Run Connection Test" to verify backend connectivity.', 'info');
+</script>
+</body>
+</html>
