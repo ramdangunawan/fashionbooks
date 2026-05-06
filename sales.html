@@ -36,6 +36,13 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 .btn-red{background:var(--red);color:#fff}
 .btn-sec{background:var(--surface2);color:var(--dim);border:1px solid var(--border)}
 .btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+.submit-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9999;display:none;align-items:center;justify-content:center}
+.submit-overlay.active{display:flex}
+.submit-overlay-box{background:white;padding:2rem 2.5rem;border-radius:12px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);max-width:90%}
+.submit-overlay-box .spinner{width:50px;height:50px;border:4px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem}
+.submit-overlay-box .msg{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:0.4rem}
+.submit-overlay-box .sub{font-size:0.9rem;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
 .alert{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:14px;animation:slideIn .3s}
 .alert-err{background:#fceae9;color:var(--red);border:1px solid #f5c6c3}
 .alert-ok{background:#e8f3ed;color:var(--accent2);border:1px solid #c6e4d4}
@@ -136,6 +143,13 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 </style>
 </head>
 <body>
+<div id="submit-overlay" class="submit-overlay">
+  <div class="submit-overlay-box">
+    <div class="spinner"></div>
+    <div class="msg">⏳ Sedang memproses...</div>
+    <div class="sub">Mohon tunggu, jangan tutup atau refresh halaman.</div>
+  </div>
+</div>
 <div class="app">
 
 <div id="page-setup" style="display:none">
@@ -462,7 +476,8 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 
 <script>
 const LS_URL='fb_sales_url';const LS_SESSION='fb_sales_session';
-let API_URL='';let session=null;let ACCOUNTS=[];let KAS_ACCOUNTS=[];let EXPENSE_SOURCES=[];let payRows=[];
+let API_URL='';window.isSubmitting = false;
+let session =null;let ACCOUNTS=[];let KAS_ACCOUNTS=[];let EXPENSE_SOURCES=[];let payRows=[];
 let CATEGORIES=null;let AUTO_LIMIT=200000;
 let expItems=[];let activeDropdownRow=null;
 const fmt=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
@@ -858,6 +873,8 @@ function updatePreview(){
 }
 
 async function submitReport(){
+  // ANTI-DOUBLE-SUBMIT: Cek flag global
+  if(window.isSubmitting){console.warn('Submit already in progress');return;}
   const date=document.getElementById('input-date').value;
   const validPays=payRows.filter(r=>Number(r.amount)>0);
   const totalPay=validPays.reduce((s,r)=>s+Number(r.amount),0);
@@ -893,22 +910,35 @@ async function submitReport(){
   confirmMsg+='\n\nNet Sales: '+fmt(total);
   if(discMkt>0||discRej>0)confirmMsg+='\nGross Sales: '+fmt(total+discMkt+discRej);
   if(!confirm(confirmMsg))return;
+  // SET FLAG + Show overlay + Disable button (TRIPLE PROTECTION)
+  window.isSubmitting = true;
+  document.getElementById('submit-overlay').classList.add('active');
   const btn=document.getElementById('submit-btn');btn.innerHTML='<span class="loading"></span> Mengirim...';btn.disabled=true;
-  const payments=validPays.map(r=>({accountCode:r.accountCode,amount:Number(r.amount)}));
-  const res=await apiCall({action:'addReport',date,outletId:session.outlet.id,salesId:session.sales.id,
-    followup:Number(document.getElementById('f-followup').value)||0,
-    feedback:Number(document.getElementById('f-feedback').value)||0,
-    qty:Number(document.getElementById('f-qty').value)||0,
-    amount:total,retur:Number(document.getElementById('f-retur').value)||0,
-    payments:JSON.stringify(payments),
-    receivableAmount:recvAmount,
-    receivableCustomer:recvCustomer,
-    receivablePhone:recvPhone,
-    discMarketing:discMkt,
-    discReject:discRej,
-    discRejectDesc:discRejDesc});
-  btn.innerHTML='✓ Kirim Laporan';btn.disabled=false;
-  if(!res.ok){showA('input-err',res.error||'Gagal mengirim');document.getElementById('input-err').style.display='block';return;}
+  try {
+    const payments=validPays.map(r=>({accountCode:r.accountCode,amount:Number(r.amount)}));
+    const res=await apiCall({action:'addReport',date,outletId:session.outlet.id,salesId:session.sales.id,
+      followup:Number(document.getElementById('f-followup').value)||0,
+      feedback:Number(document.getElementById('f-feedback').value)||0,
+      qty:Number(document.getElementById('f-qty').value)||0,
+      amount:total,retur:Number(document.getElementById('f-retur').value)||0,
+      payments:JSON.stringify(payments),
+      receivableAmount:recvAmount,
+      receivableCustomer:recvCustomer,
+      receivablePhone:recvPhone,
+      discMarketing:discMkt,
+      discReject:discRej,
+      discRejectDesc:discRejDesc});
+    if(!res.ok){
+      // GAGAL: Reset flag & enable button supaya bisa retry
+      window.isSubmitting = false;
+      document.getElementById('submit-overlay').classList.remove('active');
+      btn.innerHTML='✓ Kirim Laporan';btn.disabled=false;
+      showA('input-err',res.error||'Gagal mengirim');document.getElementById('input-err').style.display='block';return;
+    }
+    // SUKSES: Hide overlay, enable button, reset flag
+    document.getElementById('submit-overlay').classList.remove('active');
+    btn.innerHTML='✓ Kirim Laporan';btn.disabled=false;
+    window.isSubmitting = false;
   let okMsg='Laporan berhasil dikirim! 🎉';
   if(res.receivableAdded)okMsg+=' Piutang tercatat.';
   showA('input-ok',okMsg,'ok');document.getElementById('input-ok').style.display='block';
@@ -919,6 +949,14 @@ async function submitReport(){
   payRows=[{accountCode:'1-1000',amount:''}];renderPayRows();
   document.getElementById('preview').style.display='none';
   loadPerformance();loadTarget();loadTodayReports();
+  } catch(err) {
+    // ERROR HANDLER: Pastikan flag & UI direset kalau ada error tak terduga
+    console.error('Submit error:', err);
+    window.isSubmitting = false;
+    document.getElementById('submit-overlay').classList.remove('active');
+    const btn=document.getElementById('submit-btn');btn.innerHTML='✓ Kirim Laporan';btn.disabled=false;
+    showA('input-err','Gagal mengirim: '+(err.message||err));document.getElementById('input-err').style.display='block';
+  }
 }
 
 async function loadTodayReports(){
