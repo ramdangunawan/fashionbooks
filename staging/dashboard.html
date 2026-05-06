@@ -157,6 +157,35 @@ select.btn-secondary {
   padding-right: 2rem;
 }
 
+/* Period filter as button group */
+.period-filter {
+  display: inline-flex;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.period-filter button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.period-filter button:hover { color: var(--text); }
+.period-filter button.active {
+  background: white;
+  color: var(--green);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
 .tabs {
   background: var(--card);
   border-radius: 12px;
@@ -189,7 +218,12 @@ select.btn-secondary {
 .tab.active { background: var(--green); color: white; }
 
 .tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .kpi-grid {
   display: grid;
@@ -206,10 +240,14 @@ select.btn-secondary {
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: all 0.2s;
 }
 
-.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card:hover { 
+  transform: translateY(-2px); 
+  box-shadow: var(--shadow-md);
+  cursor: help;
+}
 
 .kpi-card .label {
   font-size: 0.78rem;
@@ -218,6 +256,9 @@ select.btn-secondary {
   letter-spacing: 0.5px;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .kpi-card .value {
@@ -227,6 +268,17 @@ select.btn-secondary {
   letter-spacing: -0.5px;
   line-height: 1.2;
   margin-bottom: 0.4rem;
+  transition: color 0.3s;
+}
+
+.kpi-card .value.updated {
+  color: var(--green);
+  animation: highlight 0.6s ease;
+}
+
+@keyframes highlight {
+  0% { background-color: var(--gold-light); }
+  100% { background-color: transparent; }
 }
 
 .kpi-card .sub {
@@ -244,6 +296,7 @@ select.btn-secondary {
 
 .kpi-card .badge.up { background: #D4EDDA; color: #155724; }
 .kpi-card .badge.down { background: #F8D7DA; color: #721C24; }
+.kpi-card .badge.neutral { background: var(--bg); color: var(--text-muted); }
 
 .kpi-card.accent-green::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--green); }
 .kpi-card.accent-gold::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gold); }
@@ -317,6 +370,68 @@ select.btn-secondary {
   opacity: 0.7;
 }
 
+/* Outlet list (replacing placeholder for outlet card) */
+.outlet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.outlet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  background: var(--bg);
+  border-radius: 8px;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.outlet-item:hover {
+  background: white;
+  transform: translateX(2px);
+}
+
+.outlet-item.top {
+  background: linear-gradient(90deg, var(--gold-light), white);
+  border-left-color: var(--gold);
+}
+
+.outlet-item.zero {
+  opacity: 0.5;
+}
+
+.outlet-item .name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.outlet-item .crown {
+  font-size: 0.85rem;
+}
+
+.outlet-item .amount {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.outlet-item .qty {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.outlet-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
 .skeleton {
   background: linear-gradient(90deg, #F0F0EC 25%, #E5E5E0 50%, #F0F0EC 75%);
   background-size: 200% 100%;
@@ -367,6 +482,7 @@ select.btn-secondary {
   .kpi-grid { grid-template-columns: 1fr; gap: 0.7rem; }
   .kpi-card .value { font-size: 1.4rem; }
   .tab { padding: 0.6rem 0.9rem; font-size: 0.8rem; }
+  .period-filter button { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
 }
 
 .alert {
@@ -396,12 +512,45 @@ footer {
   font-weight: 600;
   margin-left: 0.4rem;
 }
+
+/* Tooltip */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: white;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Period indicator */
+.period-indicator {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: var(--green-light);
+  color: var(--green);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.4rem;
+  text-transform: lowercase;
+}
 </style>
 </head>
 <body>
 
 <div class="staging-banner">
-  ⚠️ STAGING — Phase 1 Day 2: Frontend Layout
+  ⚠️ STAGING — Phase 1 Day 3: Visual Polish + Period Filter
 </div>
 
 <div class="container">
@@ -420,14 +569,14 @@ footer {
         <span class="dot"></span>
         <span id="last-updated-text">Belum ter-update</span>
       </div>
-      <select class="btn-secondary" id="period-filter">
-        <option value="today">Hari Ini</option>
-        <option value="week">Minggu Ini</option>
-        <option value="month" selected>Bulan Ini</option>
-      </select>
-      <button class="btn" id="refresh-btn">
+      <div class="period-filter" id="period-filter">
+        <button data-period="today">Hari Ini</button>
+        <button data-period="week">7 Hari</button>
+        <button data-period="month" class="active">Bulan Ini</button>
+      </div>
+      <button class="btn" id="refresh-btn" data-tooltip="Tekan R untuk refresh">
         <span id="refresh-icon">🔄</span>
-        <span id="refresh-text">Refresh Data</span>
+        <span id="refresh-text">Refresh</span>
       </button>
     </div>
   </header>
@@ -445,32 +594,44 @@ footer {
     <div id="alert-box"></div>
     
     <div class="kpi-grid">
-      <div class="kpi-card accent-green">
-        <div class="label">💰 Penjualan Bulan Ini</div>
+      <div class="kpi-card accent-green" data-tooltip="Total nilai penjualan setelah dikurangi retur">
+        <div class="label">
+          <span>💰 Penjualan</span>
+          <span class="period-indicator" id="kpi-sales-period">bulan ini</span>
+        </div>
         <div class="value" id="kpi-sales">
           <span class="skeleton skeleton-line" style="display:inline-block; width:140px;"></span>
         </div>
         <div class="sub" id="kpi-sales-sub">Memuat data...</div>
       </div>
       
-      <div class="kpi-card accent-warning">
-        <div class="label">💸 Pengeluaran Bulan Ini</div>
+      <div class="kpi-card accent-warning" data-tooltip="Total pengeluaran/biaya operasional yang sudah disetujui">
+        <div class="label">
+          <span>💸 Pengeluaran</span>
+          <span class="period-indicator" id="kpi-expense-period">bulan ini</span>
+        </div>
         <div class="value" id="kpi-expense">
           <span class="skeleton skeleton-line" style="display:inline-block; width:120px;"></span>
         </div>
         <div class="sub" id="kpi-expense-sub">Memuat data...</div>
       </div>
       
-      <div class="kpi-card accent-info">
-        <div class="label">📊 Profit Kasar</div>
+      <div class="kpi-card accent-info" data-tooltip="Penjualan bersih dikurangi pengeluaran operasional (belum termasuk HPP)">
+        <div class="label">
+          <span>📊 Profit Kasar</span>
+          <span class="period-indicator" id="kpi-profit-period">bulan ini</span>
+        </div>
         <div class="value" id="kpi-profit">
           <span class="skeleton skeleton-line" style="display:inline-block; width:130px;"></span>
         </div>
         <div class="sub" id="kpi-profit-sub">Memuat data...</div>
       </div>
       
-      <div class="kpi-card accent-gold">
-        <div class="label">🎯 Pencapaian Target</div>
+      <div class="kpi-card accent-gold" data-tooltip="Persen penjualan terhadap target bulan ini">
+        <div class="label">
+          <span>🎯 Pencapaian Target</span>
+          <span class="period-indicator">bulan ini</span>
+        </div>
         <div class="value" id="kpi-target">
           <span class="skeleton skeleton-line" style="display:inline-block; width:80px;"></span>
         </div>
@@ -495,13 +656,13 @@ footer {
     <div class="chart-grid two-col">
       <div class="chart-card">
         <div class="chart-header">
-          <h3>🏪 Penjualan per Outlet (Hari Ini)</h3>
-          <div class="chart-meta" id="outlet-today-meta">Memuat data...</div>
+          <h3>🏪 Penjualan per Outlet <span class="period-indicator" id="outlet-period-badge">bulan ini</span></h3>
+          <div class="chart-meta" id="outlet-meta">Memuat data...</div>
         </div>
-        <div class="chart-placeholder">
-          <div class="icon">📊</div>
-          <div class="text">Bar Chart per Outlet akan muncul di Day 5</div>
-          <div class="sub">Data sudah tersedia di backend</div>
+        <div id="outlet-list" class="outlet-list">
+          <div class="skeleton skeleton-line" style="width:100%; height:50px; margin-bottom:0.5rem;"></div>
+          <div class="skeleton skeleton-line" style="width:100%; height:50px; margin-bottom:0.5rem;"></div>
+          <div class="skeleton skeleton-line" style="width:100%; height:50px;"></div>
         </div>
       </div>
       
@@ -525,7 +686,7 @@ footer {
     <div class="empty-state">
       <div class="icon">💰</div>
       <h3>Tab Penjualan</h3>
-      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi analisis penjualan mendalam.</p>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
     </div>
   </div>
   
@@ -533,7 +694,7 @@ footer {
     <div class="empty-state">
       <div class="icon">💸</div>
       <h3>Tab Biaya</h3>
-      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi analisis pengeluaran.</p>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
     </div>
   </div>
   
@@ -541,7 +702,7 @@ footer {
     <div class="empty-state">
       <div class="icon">🎯</div>
       <h3>Tab Target</h3>
-      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi pencapaian target.</p>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
     </div>
   </div>
   
@@ -549,12 +710,13 @@ footer {
     <div class="empty-state">
       <div class="icon">🔮</div>
       <h3>Tab Forecast</h3>
-      <p>Akan dikembangkan di tahap berikutnya. Tab ini akan berisi prediksi.</p>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
     </div>
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 2 Build
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 3 Build · 
+    Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
 
@@ -563,6 +725,13 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1m
 
 let currentData = null;
 let isLoading = false;
+let currentPeriod = 'month'; // today, week, month
+
+const PERIOD_LABELS = {
+  today: 'hari ini',
+  week: '7 hari',
+  month: 'bulan ini'
+};
 
 function formatRupiah(num) {
   if (num === null || num === undefined || isNaN(num)) return 'Rp 0';
@@ -628,7 +797,7 @@ async function fetchAnalytics() {
     }
     
     currentData = data.data;
-    renderDashboard(data.data);
+    renderDashboard();
     
     document.getElementById('last-updated-text').textContent = 
       'Updated ' + formatTimestamp(new Date()) + ' (' + duration + 'ms)';
@@ -642,45 +811,112 @@ async function fetchAnalytics() {
     isLoading = false;
     btn.disabled = false;
     icon.textContent = '🔄';
-    text.textContent = 'Refresh Data';
+    text.textContent = 'Refresh';
   }
 }
 
-function renderDashboard(data) {
-  const k = data.kpi || {};
+function getPeriodValue(field) {
+  if (!currentData || !currentData.kpi) return 0;
+  const k = currentData.kpi;
   
-  document.getElementById('kpi-sales').textContent = formatRupiah(k.netSalesMonth);
-  document.getElementById('kpi-sales-sub').innerHTML = 
-    'Hari ini: <strong>' + formatRupiah(k.netSalesToday) + '</strong>' +
-    (k.returMonth > 0 ? ' · Retur: ' + formatRupiah(k.returMonth) : '');
+  if (currentPeriod === 'today') {
+    return k[field + 'Today'] || 0;
+  } else if (currentPeriod === 'week') {
+    return k[field + 'Week'] || 0;
+  } else {
+    return k[field + 'Month'] || 0;
+  }
+}
+
+function getOutletData() {
+  if (!currentData) return [];
+  if (currentPeriod === 'today') return currentData.perOutletToday || [];
+  if (currentPeriod === 'week') return currentData.perOutletWeek || [];
+  return currentData.perOutletMonth || [];
+}
+
+function renderDashboard() {
+  if (!currentData) return;
   
-  document.getElementById('kpi-expense').textContent = formatRupiah(k.expenseMonth);
-  document.getElementById('kpi-expense-sub').innerHTML = 
-    'Hari ini: <strong>' + formatRupiah(k.expenseToday) + '</strong>';
+  const periodLabel = PERIOD_LABELS[currentPeriod];
   
-  document.getElementById('kpi-profit').textContent = formatRupiah(k.profitMonth);
-  const profitClass = k.profitMonth >= 0 ? 'up' : 'down';
-  const margin = k.netSalesMonth > 0 ? ((k.profitMonth/k.netSalesMonth)*100).toFixed(1) : '0';
+  // Update period indicators
+  document.getElementById('kpi-sales-period').textContent = periodLabel;
+  document.getElementById('kpi-expense-period').textContent = periodLabel;
+  document.getElementById('kpi-profit-period').textContent = periodLabel;
+  document.getElementById('outlet-period-badge').textContent = periodLabel;
+  
+  // KPI values per period
+  const sales = getPeriodValue('netSales');
+  const expense = getPeriodValue('expense');
+  const profit = getPeriodValue('profit');
+  const retur = getPeriodValue('retur');
+  
+  // Sales card
+  const salesEl = document.getElementById('kpi-sales');
+  salesEl.textContent = formatRupiah(sales);
+  salesEl.classList.add('updated');
+  setTimeout(function() { salesEl.classList.remove('updated'); }, 600);
+  
+  let salesSubText = '';
+  if (currentPeriod === 'today') {
+    salesSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.netSalesMonth) + '</strong>';
+  } else if (currentPeriod === 'week') {
+    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
+  } else {
+    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
+  }
+  if (retur > 0) {
+    salesSubText += ' · Retur: ' + formatRupiah(retur);
+  }
+  document.getElementById('kpi-sales-sub').innerHTML = salesSubText;
+  
+  // Expense card
+  const expenseEl = document.getElementById('kpi-expense');
+  expenseEl.textContent = formatRupiah(expense);
+  expenseEl.classList.add('updated');
+  setTimeout(function() { expenseEl.classList.remove('updated'); }, 600);
+  
+  let expenseSubText = '';
+  if (currentPeriod === 'today') {
+    expenseSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.expenseMonth) + '</strong>';
+  } else if (currentPeriod === 'week') {
+    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
+  } else {
+    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
+  }
+  document.getElementById('kpi-expense-sub').innerHTML = expenseSubText;
+  
+  // Profit card
+  const profitEl = document.getElementById('kpi-profit');
+  profitEl.textContent = formatRupiah(profit);
+  profitEl.classList.add('updated');
+  setTimeout(function() { profitEl.classList.remove('updated'); }, 600);
+  
+  const profitClass = profit >= 0 ? 'up' : 'down';
+  const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : '0';
   document.getElementById('kpi-profit-sub').innerHTML = 
     '<span class="badge ' + profitClass + '">' + 
-    (k.profitMonth >= 0 ? '↑' : '↓') + ' ' + margin + '% margin</span>';
+    (profit >= 0 ? '↑' : '↓') + ' ' + margin + '% margin</span>';
   
+  // Target card (always month-based)
+  const k = currentData.kpi;
   document.getElementById('kpi-target').textContent = formatPercent(k.targetAchievementPercent);
   document.getElementById('kpi-target-sub').innerHTML = 
     'Target: <strong>' + formatRupiah(k.targetMonth) + '</strong>';
   
-  const trendCount = (data.trend30Days || []).length;
-  const trendTotal = (data.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  // Trend meta (always 30 days)
+  const trendCount = (currentData.trend30Days || []).length;
+  const trendTotal = (currentData.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
   document.getElementById('trend-meta').textContent = 
     trendCount + ' hari · Total: ' + formatRupiah(trendTotal);
   
-  const outletCount = (data.perOutletToday || []).length;
-  const outletTodayTotal = (data.perOutletToday || []).reduce(function(s, o) { return s + (o.amount || 0); }, 0);
-  document.getElementById('outlet-today-meta').textContent = 
-    outletCount + ' outlet · Total: ' + formatRupiah(outletTodayTotal);
+  // Outlet list
+  renderOutletList();
   
-  const c = data.counts || {};
-  document.getElementById('stats-meta').textContent = 'Per ' + data.referenceDate;
+  // Quick stats
+  const c = currentData.counts || {};
+  document.getElementById('stats-meta').textContent = 'Per ' + currentData.referenceDate;
   document.getElementById('quick-stats').innerHTML = 
     '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalReports) + '</strong> total laporan sales</div>' +
     '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.approvedExpenses) + '</strong> dari ' + formatNumber(c.totalExpenses) + ' biaya disetujui</div>' +
@@ -688,6 +924,44 @@ function renderDashboard(data) {
     '<div><strong>' + formatNumber(c.totalSales) + '</strong> sales aktif</div>';
 }
 
+function renderOutletList() {
+  const outlets = getOutletData();
+  const container = document.getElementById('outlet-list');
+  
+  // Calculate total
+  const total = outlets.reduce(function(s, o) { return s + (o.amount || 0); }, 0);
+  document.getElementById('outlet-meta').textContent = 
+    outlets.length + ' outlet · Total: ' + formatRupiah(total);
+  
+  if (total === 0) {
+    container.innerHTML = 
+      '<div class="outlet-empty">' +
+      '<div style="font-size:2rem; opacity:0.3;">🏪</div>' +
+      '<div>Belum ada penjualan untuk periode ' + PERIOD_LABELS[currentPeriod] + '</div>' +
+      '</div>';
+    return;
+  }
+  
+  // Render outlets (sorted by amount, top first)
+  const sortedOutlets = outlets.slice().sort(function(a, b) { return b.amount - a.amount; });
+  
+  container.innerHTML = sortedOutlets.map(function(o, idx) {
+    const isTop = idx === 0 && o.amount > 0;
+    const isZero = o.amount === 0;
+    const cssClass = 'outlet-item' + (isTop ? ' top' : '') + (isZero ? ' zero' : '');
+    const crown = isTop ? '<span class="crown">👑</span>' : '';
+    
+    return '<div class="' + cssClass + '">' +
+      '<div class="name">' + crown + (o.outletName || 'Outlet ' + o.outletId) + '</div>' +
+      '<div style="text-align:right;">' +
+      '<div class="amount">' + formatRupiah(o.amount) + '</div>' +
+      (o.qty > 0 ? '<div class="qty">' + formatNumber(o.qty) + ' qty</div>' : '') +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// Tab switching
 document.querySelectorAll('.tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
@@ -697,12 +971,29 @@ document.querySelectorAll('.tab').forEach(function(tab) {
   });
 });
 
-document.getElementById('refresh-btn').addEventListener('click', fetchAnalytics);
-
-document.getElementById('period-filter').addEventListener('change', function(e) {
-  showAlert('ℹ️ Filter periode "' + e.target.options[e.target.selectedIndex].text + '" akan diaktifkan di tahap berikutnya', 'info');
+// Period filter
+document.querySelectorAll('.period-filter button').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.period-filter button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    renderDashboard(); // Re-render dengan data yang sudah di-cache
+  });
 });
 
+// Refresh button
+document.getElementById('refresh-btn').addEventListener('click', fetchAnalytics);
+
+// Keyboard shortcut: 'R' for refresh
+document.addEventListener('keydown', function(e) {
+  // Ignore kalau sedang typing di input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'r' || e.key === 'R') {
+    fetchAnalytics();
+  }
+});
+
+// Initial load
 fetchAnalytics();
 </script>
 </body>
