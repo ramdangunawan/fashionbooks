@@ -284,8 +284,14 @@ select.btn-secondary {
 }
 
 .kpi-card .sub {
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  color: #5A5A5A;
+  font-weight: 500;
+}
+
+.kpi-card .sub strong {
+  color: var(--green);
+  font-weight: 700;
 }
 
 .kpi-card .badge {
@@ -482,9 +488,45 @@ select.btn-secondary {
   header { padding: 1rem; }
   header h1 { font-size: 1.1rem; }
   .kpi-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+  .kpi-card { padding: 1.2rem 1.3rem; }
   .kpi-card .value { font-size: 1.4rem; }
-  .tab { padding: 0.6rem 0.9rem; font-size: 0.8rem; }
-  .period-filter button { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+  
+  /* Better touch targets for mobile (Apple HIG: min 44x44px) */
+  .tab { 
+    padding: 0.85rem 1.1rem; 
+    font-size: 0.85rem; 
+    min-height: 44px;
+  }
+  .period-filter button { 
+    padding: 0.7rem 0.9rem; 
+    font-size: 0.85rem; 
+    min-height: 44px;
+    min-width: 60px;
+  }
+  .btn { 
+    padding: 0.75rem 1.2rem; 
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .controls { 
+    gap: 0.7rem; 
+    width: 100%; 
+    margin-top: 0.5rem;
+  }
+  .period-filter { 
+    flex: 1; 
+    justify-content: space-between;
+  }
+  .period-filter button { 
+    flex: 1; 
+  }
+  
+  /* Make footer not break on mobile */
+  footer { 
+    padding: 1.2rem 0.8rem; 
+    font-size: 0.75rem; 
+  }
 }
 
 .alert {
@@ -547,12 +589,80 @@ footer {
   margin-left: 0.4rem;
   text-transform: lowercase;
 }
+
+/* === PRINT-FRIENDLY CSS === */
+@media print {
+  /* Hide elements yang tidak perlu di print */
+  .staging-banner,
+  .controls,
+  .tabs,
+  .coming-soon,
+  footer {
+    display: none !important;
+  }
+  
+  /* Maksimalkan space di print */
+  body {
+    background: white;
+    color: black;
+    font-size: 11pt;
+  }
+  
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  /* Simplify cards untuk print */
+  .kpi-card,
+  .chart-card {
+    box-shadow: none;
+    border: 1px solid #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Pastikan text contrast tinggi */
+  .kpi-card .label,
+  .kpi-card .sub,
+  .chart-meta,
+  .last-updated {
+    color: #333 !important;
+  }
+  
+  .kpi-card .value {
+    color: black !important;
+  }
+  
+  /* Remove animations untuk print */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Pastikan chart tetap kelihatan */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Header lebih simple */
+  header {
+    box-shadow: none;
+    border: 1px solid #999;
+    page-break-after: avoid;
+  }
+  
+  header h1 {
+    font-size: 16pt;
+  }
+}
 </style>
 </head>
 <body>
 
 <div class="staging-banner">
-  ⚠️ STAGING — Phase 1 Day 5: Bar Chart per Outlet
+  ⚠️ STAGING — Phase 1 Day 6: Polish & Test
 </div>
 
 <div class="container">
@@ -734,7 +844,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 5 Build · 
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 6 Build · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -784,6 +894,45 @@ function formatTimestamp(date) {
   });
 }
 
+function formatRelativeTime(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  
+  if (diffSec < 10) return 'Baru saja';
+  if (diffSec < 60) return diffSec + ' detik lalu';
+  if (diffMin === 1) return '1 menit lalu';
+  if (diffMin < 60) return diffMin + ' menit lalu';
+  if (diffHour === 1) return '1 jam lalu';
+  if (diffHour < 24) return diffHour + ' jam lalu';
+  if (diffDay === 1) return 'Kemarin';
+  if (diffDay < 7) return diffDay + ' hari lalu';
+  
+  // Fallback to formatted date
+  return formatTimestamp(d);
+}
+
+let lastUpdateTimestamp = null;
+
+function updateRelativeTimestamp() {
+  if (!lastUpdateTimestamp) return;
+  const el = document.getElementById('last-updated-text');
+  if (!el) return;
+  el.textContent = 'Diperbarui ' + formatRelativeTime(lastUpdateTimestamp);
+  // Set tooltip with full timestamp
+  el.parentElement.setAttribute('title', formatTimestamp(lastUpdateTimestamp));
+}
+
+// Auto-refresh relative timestamp every 30 seconds
+setInterval(updateRelativeTimestamp, 30000);
+
+
 function showAlert(message, type) {
   const box = document.getElementById('alert-box');
   box.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
@@ -818,8 +967,10 @@ async function fetchAnalytics() {
     currentData = data.data;
     renderDashboard();
     
-    document.getElementById('last-updated-text').textContent = 
-      'Updated ' + formatTimestamp(new Date()) + ' (' + duration + 'ms)';
+    lastUpdateTimestamp = new Date();
+    const el = document.getElementById('last-updated-text');
+    el.textContent = 'Diperbarui baru saja';
+    el.parentElement.setAttribute('title', formatTimestamp(lastUpdateTimestamp) + ' (' + duration + 'ms)');
     
     return data.data;
   } catch (err) {
