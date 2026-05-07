@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FashionBooks Analytics — Owner Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root {
+  --green: #2C5F2D;
+  --green-dark: #1F4520;
+  --green-light: #E8F0E8;
+  --gold: #D4AF37;
+  --gold-light: #FAF3D9;
+  --bg: #F7F7F4;
+  --card: #FFFFFF;
+  --text: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --border: #E5E5E0;
+  --success: #27AE60;
+  --warning: #F39C12;
+  --danger: #C0392B;
+  --info: #3498DB;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.staging-banner {
+  background: linear-gradient(90deg, #F39C12, #E67E22);
+  color: white;
+  padding: 0.4rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border: 1px solid var(--border);
+}
+
+header .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+header .logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+header .subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.1rem;
+}
+
+header .controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.last-updated .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+select.btn-secondary {
+  appearance: none;
+  background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%236B6B6B' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 0.6rem center;
+  padding-right: 2rem;
+}
+
+/* Period filter as button group */
+.period-filter {
+  display: inline-flex;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.period-filter button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.period-filter button:hover { color: var(--text); }
+.period-filter button.active {
+  background: white;
+  color: var(--green);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tabs {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  padding: 0.4rem;
+  display: flex;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 0.7rem 1.4rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tab:hover { background: var(--bg); color: var(--text); }
+.tab.active { background: var(--green); color: white; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.kpi-card:hover { 
+  transform: translateY(-2px); 
+  box-shadow: var(--shadow-md);
+  cursor: help;
+}
+
+.kpi-card .label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-card .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+  transition: color 0.3s;
+}
+
+.kpi-card .value.updated {
+  color: var(--green);
+  animation: highlight 0.6s ease;
+}
+
+@keyframes highlight {
+  0% { background-color: var(--gold-light); }
+  100% { background-color: transparent; }
+}
+
+.kpi-card .sub {
+  font-size: 0.8rem;
+  color: #5A5A5A;
+  font-weight: 500;
+}
+
+.kpi-card .sub strong {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.kpi-card .badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.kpi-card .badge.up { background: #D4EDDA; color: #155724; }
+.kpi-card .badge.down { background: #F8D7DA; color: #721C24; }
+.kpi-card .badge.neutral { background: var(--bg); color: var(--text-muted); }
+
+.kpi-card.accent-green::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--green); }
+.kpi-card.accent-gold::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gold); }
+.kpi-card.accent-info::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--info); }
+.kpi-card.accent-warning::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--warning); }
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-grid.two-col {
+  grid-template-columns: 2fr 1fr;
+}
+
+.chart-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.chart-card .chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chart-card h3 {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.chart-card .chart-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chart-placeholder {
+  background: linear-gradient(135deg, #F7F7F4, #FFFFFF);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  gap: 0.5rem;
+}
+
+.chart-placeholder .icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.chart-placeholder .text {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.chart-placeholder .sub {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Outlet list (replacing placeholder for outlet card) */
+.outlet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.outlet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  background: var(--bg);
+  border-radius: 8px;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.outlet-item:hover {
+  background: white;
+  transform: translateX(2px);
+}
+
+.outlet-item.top {
+  background: linear-gradient(90deg, var(--gold-light), white);
+  border-left-color: var(--gold);
+}
+
+.outlet-item.zero {
+  opacity: 0.5;
+}
+
+.outlet-item .name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.outlet-item .crown {
+  font-size: 0.85rem;
+}
+
+.outlet-item .amount {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.outlet-item .qty {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.outlet-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #F0F0EC 25%, #E5E5E0 50%, #F0F0EC 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  height: 1.6rem;
+  margin-bottom: 0.5rem;
+  width: 60%;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.empty-state .icon { font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; }
+
+@media (max-width: 968px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid.two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 0.8rem; }
+  header { padding: 1rem; }
+  header h1 { font-size: 1.1rem; }
+  .kpi-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+  .kpi-card { padding: 1.2rem 1.3rem; }
+  .kpi-card .value { font-size: 1.4rem; }
+  
+  /* Better touch targets for mobile (Apple HIG: min 44x44px) */
+  .tab { 
+    padding: 0.85rem 1.1rem; 
+    font-size: 0.85rem; 
+    min-height: 44px;
+  }
+  .period-filter button { 
+    padding: 0.7rem 0.9rem; 
+    font-size: 0.85rem; 
+    min-height: 44px;
+    min-width: 60px;
+  }
+  .btn { 
+    padding: 0.75rem 1.2rem; 
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .controls { 
+    gap: 0.7rem; 
+    width: 100%; 
+    margin-top: 0.5rem;
+  }
+  .period-filter { 
+    flex: 1; 
+    justify-content: space-between;
+  }
+  .period-filter button { 
+    flex: 1; 
+  }
+  
+  /* Make footer not break on mobile */
+  footer { 
+    padding: 1.2rem 0.8rem; 
+    font-size: 0.75rem; 
+  }
+}
+
+.alert {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.alert-info { background: #E7F3FF; border-left: 3px solid var(--info); color: #1976D2; }
+.alert-error { background: #FFEBEE; border-left: 3px solid var(--danger); color: var(--danger); }
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.coming-soon {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: var(--gold-light);
+  color: #826A18;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.4rem;
+}
+
+/* Tooltip */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: white;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Period indicator */
+.period-indicator {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: var(--green-light);
+  color: var(--green);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.4rem;
+  text-transform: lowercase;
+}
+
+/* === PRINT-FRIENDLY CSS === */
+@media print {
+  /* Hide elements yang tidak perlu di print */
+  .staging-banner,
+  .controls,
+  .tabs,
+  .coming-soon,
+  footer {
+    display: none !important;
+  }
+  
+  /* Maksimalkan space di print */
+  body {
+    background: white;
+    color: black;
+    font-size: 11pt;
+  }
+  
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  /* Simplify cards untuk print */
+  .kpi-card,
+  .chart-card {
+    box-shadow: none;
+    border: 1px solid #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Pastikan text contrast tinggi */
+  .kpi-card .label,
+  .kpi-card .sub,
+  .chart-meta,
+  .last-updated {
+    color: #333 !important;
+  }
+  
+  .kpi-card .value {
+    color: black !important;
+  }
+  
+  /* Remove animations untuk print */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Pastikan chart tetap kelihatan */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Header lebih simple */
+  header {
+    box-shadow: none;
+    border: 1px solid #999;
+    page-break-after: avoid;
+  }
+  
+  header h1 {
+    font-size: 16pt;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="staging-banner">
+  ⚠️ STAGING — Phase 1 Day 6: Polish & Test
+</div>
+
+<div class="container">
+  
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <h1>FashionBooks Analytics</h1>
+        <div class="subtitle">Owner Dashboard — Pak Ramdhan</div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <div class="last-updated">
+        <span class="dot"></span>
+        <span id="last-updated-text">Belum ter-update</span>
+      </div>
+      <div class="period-filter" id="period-filter">
+        <button data-period="today">Hari Ini</button>
+        <button data-period="week">7 Hari</button>
+        <button data-period="month" class="active">Bulan Ini</button>
+      </div>
+      <button class="btn" id="refresh-btn" data-tooltip="Tekan R untuk refresh">
+        <span id="refresh-icon">🔄</span>
+        <span id="refresh-text">Refresh</span>
+      </button>
+    </div>
+  </header>
+  
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">📈 Overview</button>
+    <button class="tab" data-tab="penjualan">💰 Penjualan <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="biaya">💸 Biaya <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
+  </div>
+  
+  <div class="tab-content active" id="tab-overview">
+    
+    <div id="alert-box"></div>
+    
+    <div class="kpi-grid">
+      <div class="kpi-card accent-green" data-tooltip="Total nilai penjualan setelah dikurangi retur">
+        <div class="label">
+          <span>💰 Penjualan</span>
+          <span class="period-indicator" id="kpi-sales-period">bulan ini</span>
+        </div>
+        <div class="value" id="kpi-sales">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:140px;"></span>
+        </div>
+        <div class="sub" id="kpi-sales-sub">Memuat data...</div>
+      </div>
+      
+      <div class="kpi-card accent-warning" data-tooltip="Total pengeluaran/biaya operasional yang sudah disetujui">
+        <div class="label">
+          <span>💸 Pengeluaran</span>
+          <span class="period-indicator" id="kpi-expense-period">bulan ini</span>
+        </div>
+        <div class="value" id="kpi-expense">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:120px;"></span>
+        </div>
+        <div class="sub" id="kpi-expense-sub">Memuat data...</div>
+      </div>
+      
+      <div class="kpi-card accent-info" data-tooltip="Penjualan bersih dikurangi pengeluaran operasional (belum termasuk HPP)">
+        <div class="label">
+          <span>📊 Profit Kasar</span>
+          <span class="period-indicator" id="kpi-profit-period">bulan ini</span>
+        </div>
+        <div class="value" id="kpi-profit">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:130px;"></span>
+        </div>
+        <div class="sub" id="kpi-profit-sub">Memuat data...</div>
+      </div>
+      
+      <div class="kpi-card accent-gold" data-tooltip="Persen penjualan terhadap target bulan ini">
+        <div class="label">
+          <span>🎯 Pencapaian Target</span>
+          <span class="period-indicator">bulan ini</span>
+        </div>
+        <div class="value" id="kpi-target">
+          <span class="skeleton skeleton-line" style="display:inline-block; width:80px;"></span>
+        </div>
+        <div class="sub" id="kpi-target-sub">Memuat data...</div>
+      </div>
+    </div>
+    
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📈 Trend Penjualan 30 Hari Terakhir</h3>
+          <div class="chart-meta" id="trend-meta">Memuat data...</div>
+        </div>
+        <div style="position: relative; height: 320px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+        <div class="trend-legend" id="trend-legend" style="display: flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted);">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: var(--green); border-radius: 50%;"></span>
+            Penjualan harian
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: var(--gold); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px var(--gold);"></span>
+            Hari terlaris
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--border);"></span>
+            Weekend
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem; margin-left: auto;">
+            <span id="trend-avg">Rata-rata: -</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chart-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>🏪 Penjualan per Outlet <span class="period-indicator" id="outlet-period-badge">bulan ini</span></h3>
+          <div class="chart-meta" id="outlet-meta">Memuat data...</div>
+        </div>
+        <div id="outlet-chart-wrapper" style="position: relative; min-height: 350px;">
+          <canvas id="outlet-chart"></canvas>
+        </div>
+        <div id="outlet-empty" style="display: none;" class="outlet-empty">
+          <div style="font-size:2rem; opacity:0.3;">🏪</div>
+          <div id="outlet-empty-text">Belum ada penjualan</div>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📋 Quick Stats</h3>
+          <div class="chart-meta" id="stats-meta">Memuat data...</div>
+        </div>
+        <div id="quick-stats" style="padding: 0.5rem 0;">
+          <div class="skeleton skeleton-line" style="width:80%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:70%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:75%; margin-bottom: 0.8rem;"></div>
+          <div class="skeleton skeleton-line" style="width:65%;"></div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="tab-content" id="tab-penjualan">
+    <div class="empty-state">
+      <div class="icon">💰</div>
+      <h3>Tab Penjualan</h3>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-biaya">
+    <div class="empty-state">
+      <div class="icon">💸</div>
+      <h3>Tab Biaya</h3>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-target">
+    <div class="empty-state">
+      <div class="icon">🎯</div>
+      <h3>Tab Target</h3>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tab-forecast">
+    <div class="empty-state">
+      <div class="icon">🔮</div>
+      <h3>Tab Forecast</h3>
+      <p>Akan dikembangkan di tahap berikutnya.</p>
+    </div>
+  </div>
+  
+  <footer>
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 6 Build · 
+    Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
+  </footer>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1mSO9TS-kfK0BTNAyCNm342L_l_bNksJBMlMRjE47rNWjV8b1MYImD/exec';
+
+let currentData = null;
+let isLoading = false;
+let currentPeriod = 'month'; // today, week, month
+
+const PERIOD_LABELS = {
+  today: 'hari ini',
+  week: '7 hari',
+  month: 'bulan ini'
+};
+
+function formatRupiah(num) {
+  if (num === null || num === undefined || isNaN(num)) return 'Rp 0';
+  const n = Number(num);
+  if (Math.abs(n) >= 1000000000) {
+    return 'Rp ' + (n / 1000000000).toFixed(1).replace(/\.0$/, '') + ' M';
+  } else if (Math.abs(n) >= 1000000) {
+    return 'Rp ' + (n / 1000000).toFixed(1).replace(/\.0$/, '') + ' jt';
+  } else if (Math.abs(n) >= 1000) {
+    return 'Rp ' + (n / 1000).toFixed(0) + ' rb';
+  }
+  return 'Rp ' + n.toLocaleString('id-ID');
+}
+
+function formatNumber(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  return Number(num).toLocaleString('id-ID');
+}
+
+function formatPercent(num) {
+  if (num === null || num === undefined || isNaN(num)) return '0%';
+  return Number(num).toFixed(1) + '%';
+}
+
+function formatTimestamp(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleString('id-ID', { 
+    day: '2-digit', month: 'short', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit' 
+  });
+}
+
+function formatRelativeTime(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  
+  if (diffSec < 10) return 'Baru saja';
+  if (diffSec < 60) return diffSec + ' detik lalu';
+  if (diffMin === 1) return '1 menit lalu';
+  if (diffMin < 60) return diffMin + ' menit lalu';
+  if (diffHour === 1) return '1 jam lalu';
+  if (diffHour < 24) return diffHour + ' jam lalu';
+  if (diffDay === 1) return 'Kemarin';
+  if (diffDay < 7) return diffDay + ' hari lalu';
+  
+  // Fallback to formatted date
+  return formatTimestamp(d);
+}
+
+let lastUpdateTimestamp = null;
+
+function updateRelativeTimestamp() {
+  if (!lastUpdateTimestamp) return;
+  const el = document.getElementById('last-updated-text');
+  if (!el) return;
+  el.textContent = 'Diperbarui ' + formatRelativeTime(lastUpdateTimestamp);
+  // Set tooltip with full timestamp
+  el.parentElement.setAttribute('title', formatTimestamp(lastUpdateTimestamp));
+}
+
+// Auto-refresh relative timestamp every 30 seconds
+setInterval(updateRelativeTimestamp, 30000);
+
+
+function showAlert(message, type) {
+  const box = document.getElementById('alert-box');
+  box.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+  if (type !== 'error') {
+    setTimeout(function() { box.innerHTML = ''; }, 5000);
+  }
+}
+
+async function fetchAnalytics() {
+  if (isLoading) return null;
+  isLoading = true;
+  
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  const text = document.getElementById('refresh-text');
+  
+  btn.disabled = true;
+  icon.innerHTML = '<span class="spinner"></span>';
+  text.textContent = 'Memuat...';
+  
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getAnalyticsOverview';
+    const startTime = Date.now();
+    const res = await fetch(url);
+    const data = await res.json();
+    const duration = Date.now() - startTime;
+    
+    if (!data.ok) {
+      throw new Error(data.error || 'Unknown error');
+    }
+    
+    currentData = data.data;
+    renderDashboard();
+    
+    lastUpdateTimestamp = new Date();
+    const el = document.getElementById('last-updated-text');
+    el.textContent = 'Diperbarui baru saja';
+    el.parentElement.setAttribute('title', formatTimestamp(lastUpdateTimestamp) + ' (' + duration + 'ms)');
+    
+    return data.data;
+  } catch (err) {
+    showAlert('❌ Gagal memuat data: ' + err.message, 'error');
+    console.error('Fetch error:', err);
+    return null;
+  } finally {
+    isLoading = false;
+    btn.disabled = false;
+    icon.textContent = '🔄';
+    text.textContent = 'Refresh';
+  }
+}
+
+function getPeriodValue(field) {
+  if (!currentData || !currentData.kpi) return 0;
+  const k = currentData.kpi;
+  
+  if (currentPeriod === 'today') {
+    return k[field + 'Today'] || 0;
+  } else if (currentPeriod === 'week') {
+    return k[field + 'Week'] || 0;
+  } else {
+    return k[field + 'Month'] || 0;
+  }
+}
+
+function getOutletData() {
+  if (!currentData) return [];
+  if (currentPeriod === 'today') return currentData.perOutletToday || [];
+  if (currentPeriod === 'week') return currentData.perOutletWeek || [];
+  return currentData.perOutletMonth || [];
+}
+
+let trendChartInstance = null;
+
+function renderTrendChart() {
+  if (!currentData || !currentData.trend30Days) return;
+  
+  const data = currentData.trend30Days;
+  if (data.length === 0) return;
+  
+  // Destroy existing chart kalau ada (untuk re-render)
+  if (trendChartInstance) {
+    trendChartInstance.destroy();
+    trendChartInstance = null;
+  }
+  
+  // Find peak day
+  let peakAmount = 0;
+  let peakIndex = -1;
+  data.forEach(function(d, i) {
+    if (d.amount > peakAmount) {
+      peakAmount = d.amount;
+      peakIndex = i;
+    }
+  });
+  
+  // Calculate avg
+  const total = data.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  const nonZeroDays = data.filter(function(d) { return d.amount > 0; }).length;
+  const avg = nonZeroDays > 0 ? total / nonZeroDays : 0;
+  document.getElementById('trend-avg').textContent = 'Rata-rata: ' + formatRupiah(avg);
+  
+  // Prepare data
+  const labels = data.map(function(d) {
+    const date = new Date(d.date);
+    return date.getDate() + ' ' + ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][date.getMonth()];
+  });
+  
+  const amounts = data.map(function(d) { return d.amount || 0; });
+  
+  // Point colors (peak day = gold, others = green)
+  const pointColors = data.map(function(d, i) {
+    return i === peakIndex && d.amount > 0 ? '#D4AF37' : '#2C5F2D';
+  });
+  const pointRadii = data.map(function(d, i) {
+    if (i === peakIndex && d.amount > 0) return 8;
+    if (d.amount > 0) return 4;
+    return 2;
+  });
+  const pointBorderWidths = data.map(function(d, i) {
+    return i === peakIndex && d.amount > 0 ? 3 : 1;
+  });
+  
+  // Weekend background highlight (Sabtu = 6, Minggu = 0)
+  const weekendBgPlugin = {
+    id: 'weekendBg',
+    beforeDraw: function(chart) {
+      const ctx = chart.ctx;
+      const chartArea = chart.chartArea;
+      const xScale = chart.scales.x;
+      
+      data.forEach(function(d, i) {
+        const date = new Date(d.date);
+        const dow = date.getDay();
+        if (dow === 0 || dow === 6) {
+          const xPos = xScale.getPixelForValue(i);
+          const xNext = i < data.length - 1 ? xScale.getPixelForValue(i + 1) : xPos + 20;
+          const width = xNext - xPos;
+          
+          ctx.save();
+          ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
+          ctx.fillRect(xPos - width/2, chartArea.top, width, chartArea.bottom - chartArea.top);
+          ctx.restore();
+        }
+      });
+    }
+  };
+  
+  // Create gradient
+  const canvas = document.getElementById('trend-chart');
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+  gradient.addColorStop(0, 'rgba(44, 95, 45, 0.25)');
+  gradient.addColorStop(1, 'rgba(44, 95, 45, 0.02)');
+  
+  trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Penjualan',
+        data: amounts,
+        borderColor: '#2C5F2D',
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: pointBorderWidths,
+        pointRadius: pointRadii,
+        pointHoverRadius: 9,
+        pointHoverBorderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'nearest',
+        intersect: false
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(26, 26, 26, 0.95)',
+          titleColor: '#FFFFFF',
+          bodyColor: '#FFFFFF',
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          titleFont: { size: 12, weight: 'bold' },
+          bodyFont: { size: 14, weight: 'bold' },
+          callbacks: {
+            title: function(items) {
+              if (!items[0]) return '';
+              const idx = items[0].dataIndex;
+              const date = new Date(data[idx].date);
+              const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+              const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+              const dayName = dayNames[date.getDay()];
+              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+              return dayName + (isWeekend ? ' 🌴' : '') + ', ' + date.getDate() + ' ' + monthNames[date.getMonth()] + ' ' + date.getFullYear();
+            },
+            label: function(item) {
+              const idx = item.dataIndex;
+              const isPeak = idx === peakIndex && data[idx].amount > 0;
+              return formatRupiah(item.parsed.y) + (isPeak ? ' ⭐ TERLARIS' : '');
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 10
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            callback: function(value) {
+              if (value >= 1000000000) return 'Rp ' + (value/1000000000).toFixed(1) + ' M';
+              if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(1).replace('.0','') + ' jt';
+              if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + ' rb';
+              return 'Rp ' + value;
+            }
+          }
+        }
+      }
+    },
+    plugins: [weekendBgPlugin]
+  });
+}
+
+function renderDashboard() {
+  if (!currentData) return;
+  
+  const periodLabel = PERIOD_LABELS[currentPeriod];
+  
+  // Update period indicators
+  document.getElementById('kpi-sales-period').textContent = periodLabel;
+  document.getElementById('kpi-expense-period').textContent = periodLabel;
+  document.getElementById('kpi-profit-period').textContent = periodLabel;
+  document.getElementById('outlet-period-badge').textContent = periodLabel;
+  
+  // KPI values per period
+  const sales = getPeriodValue('netSales');
+  const expense = getPeriodValue('expense');
+  const profit = getPeriodValue('profit');
+  const retur = getPeriodValue('retur');
+  
+  // Sales card
+  const salesEl = document.getElementById('kpi-sales');
+  salesEl.textContent = formatRupiah(sales);
+  salesEl.classList.add('updated');
+  setTimeout(function() { salesEl.classList.remove('updated'); }, 600);
+  
+  let salesSubText = '';
+  if (currentPeriod === 'today') {
+    salesSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.netSalesMonth) + '</strong>';
+  } else if (currentPeriod === 'week') {
+    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
+  } else {
+    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
+  }
+  if (retur > 0) {
+    salesSubText += ' · Retur: ' + formatRupiah(retur);
+  }
+  document.getElementById('kpi-sales-sub').innerHTML = salesSubText;
+  
+  // Expense card
+  const expenseEl = document.getElementById('kpi-expense');
+  expenseEl.textContent = formatRupiah(expense);
+  expenseEl.classList.add('updated');
+  setTimeout(function() { expenseEl.classList.remove('updated'); }, 600);
+  
+  let expenseSubText = '';
+  if (currentPeriod === 'today') {
+    expenseSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.expenseMonth) + '</strong>';
+  } else if (currentPeriod === 'week') {
+    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
+  } else {
+    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
+  }
+  document.getElementById('kpi-expense-sub').innerHTML = expenseSubText;
+  
+  // Profit card
+  const profitEl = document.getElementById('kpi-profit');
+  profitEl.textContent = formatRupiah(profit);
+  profitEl.classList.add('updated');
+  setTimeout(function() { profitEl.classList.remove('updated'); }, 600);
+  
+  const profitClass = profit >= 0 ? 'up' : 'down';
+  const margin = sales > 0 ? ((profit / sales) * 100).toFixed(1) : '0';
+  document.getElementById('kpi-profit-sub').innerHTML = 
+    '<span class="badge ' + profitClass + '">' + 
+    (profit >= 0 ? '↑' : '↓') + ' ' + margin + '% margin</span>';
+  
+  // Target card (always month-based)
+  const k = currentData.kpi;
+  document.getElementById('kpi-target').textContent = formatPercent(k.targetAchievementPercent);
+  document.getElementById('kpi-target-sub').innerHTML = 
+    'Target: <strong>' + formatRupiah(k.targetMonth) + '</strong>';
+  
+  // Trend meta (always 30 days)
+  const trendCount = (currentData.trend30Days || []).length;
+  const trendTotal = (currentData.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  document.getElementById('trend-meta').textContent = 
+    trendCount + ' hari · Total: ' + formatRupiah(trendTotal);
+  
+  // Render Chart.js trend chart
+  renderTrendChart();
+  
+  // Outlet list
+  renderOutletList();
+  
+  // Quick stats
+  const c = currentData.counts || {};
+  document.getElementById('stats-meta').textContent = 'Per ' + currentData.referenceDate;
+  document.getElementById('quick-stats').innerHTML = 
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalReports) + '</strong> total laporan sales</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.approvedExpenses) + '</strong> dari ' + formatNumber(c.totalExpenses) + ' biaya disetujui</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalOutlets) + '</strong> outlet aktif</div>' +
+    '<div><strong>' + formatNumber(c.totalSales) + '</strong> sales aktif</div>';
+}
+
+let outletChartInstance = null;
+
+function renderOutletList() {
+  const outlets = getOutletData();
+  const wrapper = document.getElementById('outlet-chart-wrapper');
+  const emptyDiv = document.getElementById('outlet-empty');
+  
+  // Calculate total
+  const total = outlets.reduce(function(s, o) { return s + (o.amount || 0); }, 0);
+  document.getElementById('outlet-meta').textContent = 
+    outlets.length + ' outlet · Total: ' + formatRupiah(total);
+  
+  // Empty state
+  if (total === 0) {
+    if (outletChartInstance) {
+      outletChartInstance.destroy();
+      outletChartInstance = null;
+    }
+    wrapper.style.display = 'none';
+    emptyDiv.style.display = 'block';
+    document.getElementById('outlet-empty-text').textContent = 
+      'Belum ada penjualan untuk periode ' + PERIOD_LABELS[currentPeriod];
+    return;
+  }
+  
+  wrapper.style.display = 'block';
+  emptyDiv.style.display = 'none';
+  
+  // Sort outlets descending by amount
+  const sortedOutlets = outlets.slice().sort(function(a, b) { return b.amount - a.amount; });
+  
+  // Adjust canvas height based on outlet count (40px per outlet)
+  const outletCount = sortedOutlets.length;
+  const chartHeight = Math.max(280, outletCount * 42);
+  wrapper.style.height = chartHeight + 'px';
+  
+  // Prepare labels with ranking + crown for top
+  const labels = sortedOutlets.map(function(o, idx) {
+    const rank = idx + 1;
+    const name = o.outletName || ('Outlet ' + o.outletId);
+    if (idx === 0 && o.amount > 0) {
+      return '👑 #' + rank + ' ' + name;
+    }
+    return '#' + rank + ' ' + name;
+  });
+  
+  const amounts = sortedOutlets.map(function(o) { return o.amount || 0; });
+  const qtys = sortedOutlets.map(function(o) { return o.qty || 0; });
+  
+  // Bar colors: top = gold, others = green gradient (lighter for lower rank)
+  const barColors = sortedOutlets.map(function(o, idx) {
+    if (o.amount === 0) return '#E5E5E0';
+    if (idx === 0) return '#D4AF37'; // Gold for top
+    // Green gradient from dark to lighter
+    const intensity = Math.max(0.4, 1 - (idx * 0.08));
+    return 'rgba(44, 95, 45, ' + intensity + ')';
+  });
+  
+  const borderColors = sortedOutlets.map(function(o, idx) {
+    if (o.amount === 0) return '#E5E5E0';
+    if (idx === 0) return '#B8941F'; // Darker gold border
+    return '#1F4520';
+  });
+  
+  // Destroy existing chart
+  if (outletChartInstance) {
+    outletChartInstance.destroy();
+    outletChartInstance = null;
+  }
+  
+  // Custom plugin: render nominal at bar end
+  const valueLabelPlugin = {
+    id: 'valueLabel',
+    afterDatasetsDraw: function(chart) {
+      const ctx = chart.ctx;
+      const dataset = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
+      
+      meta.data.forEach(function(bar, idx) {
+        const value = dataset.data[idx];
+        if (value === 0) return;
+        
+        const text = formatRupiah(value);
+        const qtyText = qtys[idx] > 0 ? ' (' + formatNumber(qtys[idx]) + ' qty)' : '';
+        
+        ctx.save();
+        ctx.fillStyle = '#1A1A1A';
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        const x = bar.x + 6;
+        const y = bar.y;
+        ctx.fillText(text, x, y);
+        
+        if (qtyText) {
+          ctx.fillStyle = '#6B6B6B';
+          ctx.font = '10px Segoe UI, sans-serif';
+          const textWidth = ctx.measureText(text).width;
+          ctx.fillText(qtyText, x + textWidth, y);
+        }
+        ctx.restore();
+      });
+    }
+  };
+  
+  const ctx = document.getElementById('outlet-chart').getContext('2d');
+  
+  outletChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Penjualan',
+        data: amounts,
+        backgroundColor: barColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        barPercentage: 0.8,
+        categoryPercentage: 0.85
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { right: 130, left: 0, top: 5, bottom: 5 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(26, 26, 26, 0.95)',
+          titleColor: '#FFFFFF',
+          bodyColor: '#FFFFFF',
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          titleFont: { size: 12, weight: 'bold' },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: function(item) {
+              const idx = item.dataIndex;
+              const lines = [formatRupiah(item.parsed.x)];
+              if (qtys[idx] > 0) lines.push(formatNumber(qtys[idx]) + ' qty terjual');
+              if (idx === 0 && amounts[idx] > 0) lines.push('⭐ TOP PERFORMER');
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            callback: function(value) {
+              if (value >= 1000000000) return 'Rp ' + (value/1000000000).toFixed(1) + 'M';
+              if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(0) + 'jt';
+              if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + 'rb';
+              return 'Rp ' + value;
+            }
+          }
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            color: '#1A1A1A',
+            font: { size: 12, weight: '600' },
+            crossAlign: 'far'
+          }
+        }
+      }
+    },
+    plugins: [valueLabelPlugin]
+  });
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Period filter
+document.querySelectorAll('.period-filter button').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.period-filter button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    renderDashboard(); // Re-render dengan data yang sudah di-cache
+  });
+});
+
+// Refresh button
+document.getElementById('refresh-btn').addEventListener('click', fetchAnalytics);
+
+// Keyboard shortcut: 'R' for refresh
+document.addEventListener('keydown', function(e) {
+  // Ignore kalau sedang typing di input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'r' || e.key === 'R') {
+    fetchAnalytics();
+  }
+});
+
+// Initial load
+fetchAnalytics();
+</script>
+</body>
+</html>
