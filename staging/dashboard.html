@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FashionBooks Analytics — Owner Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
 :root {
   --green: #2C5F2D;
@@ -550,7 +552,7 @@ footer {
 <body>
 
 <div class="staging-banner">
-  ⚠️ STAGING — Phase 1 Day 3: Visual Polish + Period Filter
+  ⚠️ STAGING — Phase 1 Day 4: Trend Chart (Chart.js)
 </div>
 
 <div class="container">
@@ -645,10 +647,25 @@ footer {
           <h3>📈 Trend Penjualan 30 Hari Terakhir</h3>
           <div class="chart-meta" id="trend-meta">Memuat data...</div>
         </div>
-        <div class="chart-placeholder">
-          <div class="icon">📈</div>
-          <div class="text">Trend Chart akan muncul di Day 4</div>
-          <div class="sub">Backend sudah siap, tinggal integrasi Chart.js</div>
+        <div style="position: relative; height: 320px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+        <div class="trend-legend" id="trend-legend" style="display: flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted);">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: var(--green); border-radius: 50%;"></span>
+            Penjualan harian
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: var(--gold); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px var(--gold);"></span>
+            Hari terlaris
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--border);"></span>
+            Weekend
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem; margin-left: auto;">
+            <span id="trend-avg">Rata-rata: -</span>
+          </div>
         </div>
       </div>
     </div>
@@ -715,7 +732,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 3 Build · 
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 4 Build · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -835,6 +852,177 @@ function getOutletData() {
   return currentData.perOutletMonth || [];
 }
 
+let trendChartInstance = null;
+
+function renderTrendChart() {
+  if (!currentData || !currentData.trend30Days) return;
+  
+  const data = currentData.trend30Days;
+  if (data.length === 0) return;
+  
+  // Destroy existing chart kalau ada (untuk re-render)
+  if (trendChartInstance) {
+    trendChartInstance.destroy();
+    trendChartInstance = null;
+  }
+  
+  // Find peak day
+  let peakAmount = 0;
+  let peakIndex = -1;
+  data.forEach(function(d, i) {
+    if (d.amount > peakAmount) {
+      peakAmount = d.amount;
+      peakIndex = i;
+    }
+  });
+  
+  // Calculate avg
+  const total = data.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  const nonZeroDays = data.filter(function(d) { return d.amount > 0; }).length;
+  const avg = nonZeroDays > 0 ? total / nonZeroDays : 0;
+  document.getElementById('trend-avg').textContent = 'Rata-rata: ' + formatRupiah(avg);
+  
+  // Prepare data
+  const labels = data.map(function(d) {
+    const date = new Date(d.date);
+    return date.getDate() + ' ' + ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][date.getMonth()];
+  });
+  
+  const amounts = data.map(function(d) { return d.amount || 0; });
+  
+  // Point colors (peak day = gold, others = green)
+  const pointColors = data.map(function(d, i) {
+    return i === peakIndex && d.amount > 0 ? '#D4AF37' : '#2C5F2D';
+  });
+  const pointRadii = data.map(function(d, i) {
+    if (i === peakIndex && d.amount > 0) return 8;
+    if (d.amount > 0) return 4;
+    return 2;
+  });
+  const pointBorderWidths = data.map(function(d, i) {
+    return i === peakIndex && d.amount > 0 ? 3 : 1;
+  });
+  
+  // Weekend background highlight (Sabtu = 6, Minggu = 0)
+  const weekendBgPlugin = {
+    id: 'weekendBg',
+    beforeDraw: function(chart) {
+      const ctx = chart.ctx;
+      const chartArea = chart.chartArea;
+      const xScale = chart.scales.x;
+      
+      data.forEach(function(d, i) {
+        const date = new Date(d.date);
+        const dow = date.getDay();
+        if (dow === 0 || dow === 6) {
+          const xPos = xScale.getPixelForValue(i);
+          const xNext = i < data.length - 1 ? xScale.getPixelForValue(i + 1) : xPos + 20;
+          const width = xNext - xPos;
+          
+          ctx.save();
+          ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
+          ctx.fillRect(xPos - width/2, chartArea.top, width, chartArea.bottom - chartArea.top);
+          ctx.restore();
+        }
+      });
+    }
+  };
+  
+  // Create gradient
+  const canvas = document.getElementById('trend-chart');
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+  gradient.addColorStop(0, 'rgba(44, 95, 45, 0.25)');
+  gradient.addColorStop(1, 'rgba(44, 95, 45, 0.02)');
+  
+  trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Penjualan',
+        data: amounts,
+        borderColor: '#2C5F2D',
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: pointBorderWidths,
+        pointRadius: pointRadii,
+        pointHoverRadius: 9,
+        pointHoverBorderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'nearest',
+        intersect: false
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(26, 26, 26, 0.95)',
+          titleColor: '#FFFFFF',
+          bodyColor: '#FFFFFF',
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          titleFont: { size: 12, weight: 'bold' },
+          bodyFont: { size: 14, weight: 'bold' },
+          callbacks: {
+            title: function(items) {
+              if (!items[0]) return '';
+              const idx = items[0].dataIndex;
+              const date = new Date(data[idx].date);
+              const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+              const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+              const dayName = dayNames[date.getDay()];
+              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+              return dayName + (isWeekend ? ' 🌴' : '') + ', ' + date.getDate() + ' ' + monthNames[date.getMonth()] + ' ' + date.getFullYear();
+            },
+            label: function(item) {
+              const idx = item.dataIndex;
+              const isPeak = idx === peakIndex && data[idx].amount > 0;
+              return formatRupiah(item.parsed.y) + (isPeak ? ' ⭐ TERLARIS' : '');
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 10
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            callback: function(value) {
+              if (value >= 1000000000) return 'Rp ' + (value/1000000000).toFixed(1) + ' M';
+              if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(1).replace('.0','') + ' jt';
+              if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + ' rb';
+              return 'Rp ' + value;
+            }
+          }
+        }
+      }
+    },
+    plugins: [weekendBgPlugin]
+  });
+}
+
 function renderDashboard() {
   if (!currentData) return;
   
@@ -910,6 +1098,9 @@ function renderDashboard() {
   const trendTotal = (currentData.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
   document.getElementById('trend-meta').textContent = 
     trendCount + ' hari · Total: ' + formatRupiah(trendTotal);
+  
+  // Render Chart.js trend chart
+  renderTrendChart();
   
   // Outlet list
   renderOutletList();
