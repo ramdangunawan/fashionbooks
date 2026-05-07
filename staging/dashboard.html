@@ -552,7 +552,7 @@ footer {
 <body>
 
 <div class="staging-banner">
-  ⚠️ STAGING — Phase 1 Day 4: Trend Chart (Chart.js)
+  ⚠️ STAGING — Phase 1 Day 5: Bar Chart per Outlet
 </div>
 
 <div class="container">
@@ -676,10 +676,12 @@ footer {
           <h3>🏪 Penjualan per Outlet <span class="period-indicator" id="outlet-period-badge">bulan ini</span></h3>
           <div class="chart-meta" id="outlet-meta">Memuat data...</div>
         </div>
-        <div id="outlet-list" class="outlet-list">
-          <div class="skeleton skeleton-line" style="width:100%; height:50px; margin-bottom:0.5rem;"></div>
-          <div class="skeleton skeleton-line" style="width:100%; height:50px; margin-bottom:0.5rem;"></div>
-          <div class="skeleton skeleton-line" style="width:100%; height:50px;"></div>
+        <div id="outlet-chart-wrapper" style="position: relative; min-height: 350px;">
+          <canvas id="outlet-chart"></canvas>
+        </div>
+        <div id="outlet-empty" style="display: none;" class="outlet-empty">
+          <div style="font-size:2rem; opacity:0.3;">🏪</div>
+          <div id="outlet-empty-text">Belum ada penjualan</div>
         </div>
       </div>
       
@@ -732,7 +734,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 4 Build · 
+    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 5 Build · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -1115,41 +1117,185 @@ function renderDashboard() {
     '<div><strong>' + formatNumber(c.totalSales) + '</strong> sales aktif</div>';
 }
 
+let outletChartInstance = null;
+
 function renderOutletList() {
   const outlets = getOutletData();
-  const container = document.getElementById('outlet-list');
+  const wrapper = document.getElementById('outlet-chart-wrapper');
+  const emptyDiv = document.getElementById('outlet-empty');
   
   // Calculate total
   const total = outlets.reduce(function(s, o) { return s + (o.amount || 0); }, 0);
   document.getElementById('outlet-meta').textContent = 
     outlets.length + ' outlet · Total: ' + formatRupiah(total);
   
+  // Empty state
   if (total === 0) {
-    container.innerHTML = 
-      '<div class="outlet-empty">' +
-      '<div style="font-size:2rem; opacity:0.3;">🏪</div>' +
-      '<div>Belum ada penjualan untuk periode ' + PERIOD_LABELS[currentPeriod] + '</div>' +
-      '</div>';
+    if (outletChartInstance) {
+      outletChartInstance.destroy();
+      outletChartInstance = null;
+    }
+    wrapper.style.display = 'none';
+    emptyDiv.style.display = 'block';
+    document.getElementById('outlet-empty-text').textContent = 
+      'Belum ada penjualan untuk periode ' + PERIOD_LABELS[currentPeriod];
     return;
   }
   
-  // Render outlets (sorted by amount, top first)
+  wrapper.style.display = 'block';
+  emptyDiv.style.display = 'none';
+  
+  // Sort outlets descending by amount
   const sortedOutlets = outlets.slice().sort(function(a, b) { return b.amount - a.amount; });
   
-  container.innerHTML = sortedOutlets.map(function(o, idx) {
-    const isTop = idx === 0 && o.amount > 0;
-    const isZero = o.amount === 0;
-    const cssClass = 'outlet-item' + (isTop ? ' top' : '') + (isZero ? ' zero' : '');
-    const crown = isTop ? '<span class="crown">👑</span>' : '';
-    
-    return '<div class="' + cssClass + '">' +
-      '<div class="name">' + crown + (o.outletName || 'Outlet ' + o.outletId) + '</div>' +
-      '<div style="text-align:right;">' +
-      '<div class="amount">' + formatRupiah(o.amount) + '</div>' +
-      (o.qty > 0 ? '<div class="qty">' + formatNumber(o.qty) + ' qty</div>' : '') +
-      '</div>' +
-      '</div>';
-  }).join('');
+  // Adjust canvas height based on outlet count (40px per outlet)
+  const outletCount = sortedOutlets.length;
+  const chartHeight = Math.max(280, outletCount * 42);
+  wrapper.style.height = chartHeight + 'px';
+  
+  // Prepare labels with ranking + crown for top
+  const labels = sortedOutlets.map(function(o, idx) {
+    const rank = idx + 1;
+    const name = o.outletName || ('Outlet ' + o.outletId);
+    if (idx === 0 && o.amount > 0) {
+      return '👑 #' + rank + ' ' + name;
+    }
+    return '#' + rank + ' ' + name;
+  });
+  
+  const amounts = sortedOutlets.map(function(o) { return o.amount || 0; });
+  const qtys = sortedOutlets.map(function(o) { return o.qty || 0; });
+  
+  // Bar colors: top = gold, others = green gradient (lighter for lower rank)
+  const barColors = sortedOutlets.map(function(o, idx) {
+    if (o.amount === 0) return '#E5E5E0';
+    if (idx === 0) return '#D4AF37'; // Gold for top
+    // Green gradient from dark to lighter
+    const intensity = Math.max(0.4, 1 - (idx * 0.08));
+    return 'rgba(44, 95, 45, ' + intensity + ')';
+  });
+  
+  const borderColors = sortedOutlets.map(function(o, idx) {
+    if (o.amount === 0) return '#E5E5E0';
+    if (idx === 0) return '#B8941F'; // Darker gold border
+    return '#1F4520';
+  });
+  
+  // Destroy existing chart
+  if (outletChartInstance) {
+    outletChartInstance.destroy();
+    outletChartInstance = null;
+  }
+  
+  // Custom plugin: render nominal at bar end
+  const valueLabelPlugin = {
+    id: 'valueLabel',
+    afterDatasetsDraw: function(chart) {
+      const ctx = chart.ctx;
+      const dataset = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
+      
+      meta.data.forEach(function(bar, idx) {
+        const value = dataset.data[idx];
+        if (value === 0) return;
+        
+        const text = formatRupiah(value);
+        const qtyText = qtys[idx] > 0 ? ' (' + formatNumber(qtys[idx]) + ' qty)' : '';
+        
+        ctx.save();
+        ctx.fillStyle = '#1A1A1A';
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        const x = bar.x + 6;
+        const y = bar.y;
+        ctx.fillText(text, x, y);
+        
+        if (qtyText) {
+          ctx.fillStyle = '#6B6B6B';
+          ctx.font = '10px Segoe UI, sans-serif';
+          const textWidth = ctx.measureText(text).width;
+          ctx.fillText(qtyText, x + textWidth, y);
+        }
+        ctx.restore();
+      });
+    }
+  };
+  
+  const ctx = document.getElementById('outlet-chart').getContext('2d');
+  
+  outletChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Penjualan',
+        data: amounts,
+        backgroundColor: barColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        barPercentage: 0.8,
+        categoryPercentage: 0.85
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { right: 130, left: 0, top: 5, bottom: 5 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(26, 26, 26, 0.95)',
+          titleColor: '#FFFFFF',
+          bodyColor: '#FFFFFF',
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          titleFont: { size: 12, weight: 'bold' },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: function(item) {
+              const idx = item.dataIndex;
+              const lines = [formatRupiah(item.parsed.x)];
+              if (qtys[idx] > 0) lines.push(formatNumber(qtys[idx]) + ' qty terjual');
+              if (idx === 0 && amounts[idx] > 0) lines.push('⭐ TOP PERFORMER');
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false },
+          ticks: {
+            color: '#6B6B6B',
+            font: { size: 10 },
+            callback: function(value) {
+              if (value >= 1000000000) return 'Rp ' + (value/1000000000).toFixed(1) + 'M';
+              if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(0) + 'jt';
+              if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + 'rb';
+              return 'Rp ' + value;
+            }
+          }
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            color: '#1A1A1A',
+            font: { size: 12, weight: '600' },
+            crossAlign: 'far'
+          }
+        }
+      }
+    },
+    plugins: [valueLabelPlugin]
+  });
 }
 
 // Tab switching
