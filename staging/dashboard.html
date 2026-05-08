@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FashionBooks Analytics — Owner Dashboard</title>
+<title>FashionBooks Analytics — Phase 2 Staging</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
@@ -157,6 +157,29 @@ select.btn-secondary {
   appearance: none;
   background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%236B6B6B' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 0.6rem center;
   padding-right: 2rem;
+}
+
+/* Date input styling */
+.date-input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.date-input:hover {
+  border-color: var(--green);
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(44, 95, 45, 0.1);
 }
 
 /* Period filter as button group */
@@ -661,8 +684,8 @@ footer {
 </head>
 <body>
 
-<div class="staging-banner">
-  ⚠️ STAGING — Phase 1 Day 6: Polish & Test
+<div class="staging-banner" style="background: linear-gradient(90deg, #3498DB, #2980B9);">
+  🚀 STAGING — Phase 2: Date Range Filter (Custom Period)
 </div>
 
 <div class="container">
@@ -681,17 +704,52 @@ footer {
         <span class="dot"></span>
         <span id="last-updated-text">Belum ter-update</span>
       </div>
-      <div class="period-filter" id="period-filter">
-        <button data-period="today">Hari Ini</button>
-        <button data-period="week">7 Hari</button>
-        <button data-period="month" class="active">Bulan Ini</button>
-      </div>
       <button class="btn" id="refresh-btn" data-tooltip="Tekan R untuk refresh">
         <span id="refresh-icon">🔄</span>
         <span id="refresh-text">Refresh</span>
       </button>
     </div>
   </header>
+  
+  <!-- ===== PHASE 2: DATE RANGE FILTER ===== -->
+  <div class="filter-card" style="background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 1.2rem 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border);">
+    
+    <!-- Quick Presets -->
+    <div style="margin-bottom: 0.9rem;">
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 0.6rem;">QUICK:</span>
+      <div class="period-filter" id="period-presets" style="display: inline-flex;">
+        <button data-preset="today">Hari Ini</button>
+        <button data-preset="week">7 Hari</button>
+        <button data-preset="month" class="active">Bulan Ini</button>
+        <button data-preset="lastmonth">Bulan Lalu</button>
+      </div>
+    </div>
+    
+    <!-- Custom Range -->
+    <div style="display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;">
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">CUSTOM:</span>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <label style="font-size: 0.85rem; color: var(--text);">Dari:</label>
+        <input type="date" id="filter-start-date" class="date-input">
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <label style="font-size: 0.85rem; color: var(--text);">Sampai:</label>
+        <input type="date" id="filter-end-date" class="date-input">
+      </div>
+      <button class="btn btn-secondary" id="apply-filter-btn" style="background: var(--green); color: white; border: none;">Apply Filter</button>
+    </div>
+    
+    <!-- Active Period Display -->
+    <div id="active-period-display" style="margin-top: 0.8rem; padding: 0.6rem 0.8rem; background: var(--bg); border-radius: 8px; font-size: 0.85rem; color: var(--text);">
+      <span style="opacity: 0.7;">⚙️ Periode aktif:</span>
+      <strong id="active-period-text" style="color: var(--green);">Memuat...</strong>
+    </div>
+    
+    <!-- Warning Box -->
+    <div id="range-warning" style="display: none; margin-top: 0.7rem; padding: 0.7rem 1rem; background: #FFF3CD; border-left: 3px solid #F39C12; border-radius: 6px; font-size: 0.85rem; color: #856404;">
+      ⚠️ <span id="range-warning-text"></span>
+    </div>
+  </div>
   
   <div class="tabs">
     <button class="tab active" data-tab="overview">📈 Overview</button>
@@ -709,7 +767,7 @@ footer {
       <div class="kpi-card accent-green" data-tooltip="Total nilai penjualan setelah dikurangi retur">
         <div class="label">
           <span>💰 Penjualan</span>
-          <span class="period-indicator" id="kpi-sales-period">bulan ini</span>
+          
         </div>
         <div class="value" id="kpi-sales">
           <span class="skeleton skeleton-line" style="display:inline-block; width:140px;"></span>
@@ -720,7 +778,7 @@ footer {
       <div class="kpi-card accent-warning" data-tooltip="Total pengeluaran/biaya operasional yang sudah disetujui">
         <div class="label">
           <span>💸 Pengeluaran</span>
-          <span class="period-indicator" id="kpi-expense-period">bulan ini</span>
+          
         </div>
         <div class="value" id="kpi-expense">
           <span class="skeleton skeleton-line" style="display:inline-block; width:120px;"></span>
@@ -731,7 +789,7 @@ footer {
       <div class="kpi-card accent-info" data-tooltip="Penjualan bersih dikurangi pengeluaran operasional (belum termasuk HPP)">
         <div class="label">
           <span>📊 Profit Kasar</span>
-          <span class="period-indicator" id="kpi-profit-period">bulan ini</span>
+          
         </div>
         <div class="value" id="kpi-profit">
           <span class="skeleton skeleton-line" style="display:inline-block; width:130px;"></span>
@@ -742,7 +800,7 @@ footer {
       <div class="kpi-card accent-gold" data-tooltip="Persen penjualan terhadap target bulan ini">
         <div class="label">
           <span>🎯 Pencapaian Target</span>
-          <span class="period-indicator">bulan ini</span>
+          
         </div>
         <div class="value" id="kpi-target">
           <span class="skeleton skeleton-line" style="display:inline-block; width:80px;"></span>
@@ -783,7 +841,7 @@ footer {
     <div class="chart-grid two-col">
       <div class="chart-card">
         <div class="chart-header">
-          <h3>🏪 Penjualan per Outlet <span class="period-indicator" id="outlet-period-badge">bulan ini</span></h3>
+          <h3>🏪 Penjualan per Outlet </h3>
           <div class="chart-meta" id="outlet-meta">Memuat data...</div>
         </div>
         <div id="outlet-chart-wrapper" style="position: relative; min-height: 350px;">
@@ -844,7 +902,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v1.0 · Phase 1 Day 6 Build · 
+    FashionBooks Analytics Dashboard v2.0 · Phase 2 Staging · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -854,13 +912,68 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1m
 
 let currentData = null;
 let isLoading = false;
-let currentPeriod = 'month'; // today, week, month
+let currentRange = { startDate: null, endDate: null, label: 'Bulan Ini' };
 
-const PERIOD_LABELS = {
-  today: 'hari ini',
-  week: '7 hari',
-  month: 'bulan ini'
-};
+// Helper: format date to YYYY-MM-DD
+function toISODate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return yyyy + '-' + mm + '-' + dd;
+}
+
+// Helper: format date to dd/mm/yyyy
+function toIDDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return dd + '/' + mm + '/' + yyyy;
+}
+
+// Helper: human-readable Indonesian month
+function toIDMonth(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// Get preset date range
+function getPresetRange(preset) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let start, end, label;
+  
+  if (preset === 'today') {
+    start = new Date(today);
+    end = new Date(today);
+    label = 'Hari Ini';
+  } else if (preset === 'week') {
+    end = new Date(today);
+    start = new Date(today);
+    start.setDate(start.getDate() - 6); // 7 hari termasuk hari ini
+    label = '7 Hari Terakhir';
+  } else if (preset === 'month') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = new Date(today);
+    label = 'Bulan Ini';
+  } else if (preset === 'lastmonth') {
+    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    end = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
+    label = 'Bulan Lalu';
+  }
+  
+  return {
+    startDate: toISODate(start),
+    endDate: toISODate(end),
+    label: label
+  };
+}
 
 function formatRupiah(num) {
   if (num === null || num === undefined || isNaN(num)) return 'Rp 0';
@@ -943,6 +1056,11 @@ function showAlert(message, type) {
 
 async function fetchAnalytics() {
   if (isLoading) return null;
+  if (!currentRange.startDate || !currentRange.endDate) {
+    showAlert('Pilih periode terlebih dahulu', 'error');
+    return null;
+  }
+  
   isLoading = true;
   
   const btn = document.getElementById('refresh-btn');
@@ -954,7 +1072,7 @@ async function fetchAnalytics() {
   text.textContent = 'Memuat...';
   
   try {
-    const url = APPS_SCRIPT_URL + '?action=getAnalyticsOverview';
+    const url = APPS_SCRIPT_URL + '?action=getAnalyticsRange&startDate=' + currentRange.startDate + '&endDate=' + currentRange.endDate;
     const startTime = Date.now();
     const res = await fetch(url);
     const data = await res.json();
@@ -965,6 +1083,21 @@ async function fetchAnalytics() {
     }
     
     currentData = data.data;
+    
+    // Show warning if any
+    const warningBox = document.getElementById('range-warning');
+    const warningText = document.getElementById('range-warning-text');
+    if (data.data.warning) {
+      warningBox.style.display = 'block';
+      warningText.textContent = data.data.warning;
+    } else {
+      warningBox.style.display = 'none';
+    }
+    
+    // Update active period display
+    document.getElementById('active-period-text').textContent = 
+      currentRange.label + ' (' + toIDMonth(currentRange.startDate) + ' - ' + toIDMonth(currentRange.endDate) + ', ' + data.data.rangeDays + ' hari)';
+    
     renderDashboard();
     
     lastUpdateTimestamp = new Date();
@@ -987,30 +1120,21 @@ async function fetchAnalytics() {
 
 function getPeriodValue(field) {
   if (!currentData || !currentData.kpi) return 0;
-  const k = currentData.kpi;
-  
-  if (currentPeriod === 'today') {
-    return k[field + 'Today'] || 0;
-  } else if (currentPeriod === 'week') {
-    return k[field + 'Week'] || 0;
-  } else {
-    return k[field + 'Month'] || 0;
-  }
+  // For range mode, all values come from kpi directly
+  return currentData.kpi[field] || 0;
 }
 
 function getOutletData() {
   if (!currentData) return [];
-  if (currentPeriod === 'today') return currentData.perOutletToday || [];
-  if (currentPeriod === 'week') return currentData.perOutletWeek || [];
-  return currentData.perOutletMonth || [];
+  return currentData.perOutlet || [];
 }
 
 let trendChartInstance = null;
 
 function renderTrendChart() {
-  if (!currentData || !currentData.trend30Days) return;
+  if (!currentData || !currentData.trendData) return;
   
-  const data = currentData.trend30Days;
+  const data = currentData.trendData;
   if (data.length === 0) return;
   
   // Destroy existing chart kalau ada (untuk re-render)
@@ -1187,11 +1311,12 @@ function renderDashboard() {
   document.getElementById('kpi-profit-period').textContent = periodLabel;
   document.getElementById('outlet-period-badge').textContent = periodLabel;
   
-  // KPI values per period
+  // KPI values dari range
   const sales = getPeriodValue('netSales');
   const expense = getPeriodValue('expense');
   const profit = getPeriodValue('profit');
   const retur = getPeriodValue('retur');
+  const k = currentData.kpi;
   
   // Sales card
   const salesEl = document.getElementById('kpi-sales');
@@ -1199,17 +1324,8 @@ function renderDashboard() {
   salesEl.classList.add('updated');
   setTimeout(function() { salesEl.classList.remove('updated'); }, 600);
   
-  let salesSubText = '';
-  if (currentPeriod === 'today') {
-    salesSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.netSalesMonth) + '</strong>';
-  } else if (currentPeriod === 'week') {
-    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
-  } else {
-    salesSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.netSalesToday) + '</strong>';
-  }
-  if (retur > 0) {
-    salesSubText += ' · Retur: ' + formatRupiah(retur);
-  }
+  let salesSubText = 'Total: <strong>' + formatRupiah(k.sales) + '</strong>';
+  if (retur > 0) salesSubText += ' · Retur: ' + formatRupiah(retur);
   document.getElementById('kpi-sales-sub').innerHTML = salesSubText;
   
   // Expense card
@@ -1218,15 +1334,9 @@ function renderDashboard() {
   expenseEl.classList.add('updated');
   setTimeout(function() { expenseEl.classList.remove('updated'); }, 600);
   
-  let expenseSubText = '';
-  if (currentPeriod === 'today') {
-    expenseSubText = 'Bulan ini: <strong>' + formatRupiah(currentData.kpi.expenseMonth) + '</strong>';
-  } else if (currentPeriod === 'week') {
-    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
-  } else {
-    expenseSubText = 'Hari ini: <strong>' + formatRupiah(currentData.kpi.expenseToday) + '</strong>';
-  }
-  document.getElementById('kpi-expense-sub').innerHTML = expenseSubText;
+  const avgPerDay = currentData.rangeDays > 0 ? expense / currentData.rangeDays : 0;
+  document.getElementById('kpi-expense-sub').innerHTML = 
+    'Rata-rata/hari: <strong>' + formatRupiah(avgPerDay) + '</strong>';
   
   // Profit card
   const profitEl = document.getElementById('kpi-profit');
@@ -1240,15 +1350,14 @@ function renderDashboard() {
     '<span class="badge ' + profitClass + '">' + 
     (profit >= 0 ? '↑' : '↓') + ' ' + margin + '% margin</span>';
   
-  // Target card (always month-based)
-  const k = currentData.kpi;
+  // Target card
   document.getElementById('kpi-target').textContent = formatPercent(k.targetAchievementPercent);
   document.getElementById('kpi-target-sub').innerHTML = 
-    'Target: <strong>' + formatRupiah(k.targetMonth) + '</strong>';
+    'Target: <strong>' + formatRupiah(k.target) + '</strong>';
   
-  // Trend meta (always 30 days)
-  const trendCount = (currentData.trend30Days || []).length;
-  const trendTotal = (currentData.trend30Days || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+  // Trend meta
+  const trendCount = (currentData.trendData || []).length;
+  const trendTotal = (currentData.trendData || []).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
   document.getElementById('trend-meta').textContent = 
     trendCount + ' hari · Total: ' + formatRupiah(trendTotal);
   
@@ -1459,14 +1568,57 @@ document.querySelectorAll('.tab').forEach(function(tab) {
   });
 });
 
-// Period filter
-document.querySelectorAll('.period-filter button').forEach(function(btn) {
+// Preset filter
+document.querySelectorAll('#period-presets button').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.period-filter button').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('#period-presets button').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    currentPeriod = btn.dataset.period;
-    renderDashboard(); // Re-render dengan data yang sudah di-cache
+    
+    const preset = btn.dataset.preset;
+    const range = getPresetRange(preset);
+    currentRange = range;
+    
+    // Update date inputs
+    document.getElementById('filter-start-date').value = range.startDate;
+    document.getElementById('filter-end-date').value = range.endDate;
+    
+    // Fetch new data
+    fetchAnalytics();
   });
+});
+
+// Custom range Apply button
+document.getElementById('apply-filter-btn').addEventListener('click', function() {
+  const startDate = document.getElementById('filter-start-date').value;
+  const endDate = document.getElementById('filter-end-date').value;
+  
+  if (!startDate) {
+    showAlert('Tanggal Dari wajib diisi', 'error');
+    return;
+  }
+  if (!endDate) {
+    showAlert('Tanggal Sampai wajib diisi', 'error');
+    return;
+  }
+  if (new Date(endDate) < new Date(startDate)) {
+    showAlert('Tanggal Sampai harus setelah Tanggal Dari', 'error');
+    return;
+  }
+  if (new Date(startDate) > new Date()) {
+    showAlert('Tanggal Dari tidak boleh di masa depan', 'error');
+    return;
+  }
+  
+  // Deactivate all preset buttons (custom mode)
+  document.querySelectorAll('#period-presets button').forEach(function(b) { b.classList.remove('active'); });
+  
+  currentRange = {
+    startDate: startDate,
+    endDate: endDate,
+    label: 'Custom'
+  };
+  
+  fetchAnalytics();
 });
 
 // Refresh button
@@ -1481,7 +1633,11 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Initial load
+// Initial load: default ke "Bulan Ini"
+const initialRange = getPresetRange('month');
+currentRange = initialRange;
+document.getElementById('filter-start-date').value = initialRange.startDate;
+document.getElementById('filter-end-date').value = initialRange.endDate;
 fetchAnalytics();
 </script>
 </body>
