@@ -1303,14 +1303,6 @@ function renderTrendChart() {
 function renderDashboard() {
   if (!currentData) return;
   
-  const periodLabel = PERIOD_LABELS[currentPeriod];
-  
-  // Update period indicators
-  document.getElementById('kpi-sales-period').textContent = periodLabel;
-  document.getElementById('kpi-expense-period').textContent = periodLabel;
-  document.getElementById('kpi-profit-period').textContent = periodLabel;
-  document.getElementById('outlet-period-badge').textContent = periodLabel;
-  
   // KPI values dari range
   const sales = getPeriodValue('netSales');
   const expense = getPeriodValue('expense');
@@ -1398,7 +1390,7 @@ function renderOutletList() {
     wrapper.style.display = 'none';
     emptyDiv.style.display = 'block';
     document.getElementById('outlet-empty-text').textContent = 
-      'Belum ada penjualan untuk periode ' + PERIOD_LABELS[currentPeriod];
+      'Belum ada penjualan untuk periode ini';
     return;
   }
   
