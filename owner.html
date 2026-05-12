@@ -184,6 +184,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
   <nav class="sb-nav">
     <div class="sb-section">Utama</div>
     <button class="sb-btn active" data-p="dashboard"><span class="sb-icon">◉</span>Dashboard</button>
+    <button class="sb-btn" onclick="openDashboardAnalytics()" style="background:linear-gradient(135deg, rgba(212,175,55,0.15), rgba(44,95,45,0.15)); border-left:3px solid #D4AF37;"><span class="sb-icon">📊</span>Dashboard Analytics</button>
     <div class="sb-section">Outlet & Sales</div>
     <button class="sb-btn" data-p="outlets"><span class="sb-icon">⌂</span>Outlet & Sales</button>
     <button class="sb-btn" data-p="rekap"><span class="sb-icon">◫</span>Rekap & Bonus</button>
@@ -672,7 +673,12 @@ function saveUrl(){
 }
 function resetUrl(){if(confirm('Keluar & ganti URL?\n\nData di Google Sheets tidak akan terpengaruh.')){localStorage.removeItem(LS_URL);location.reload();}}
 
-async function reload(){
+function openDashboardAnalytics() {
+  // Buka Dashboard Analytics di tab baru
+  window.open('dashboard.html', '_blank');
+}
+
+async function reload(){  
   showLoad(true);
   const res=await apiCall({action:'getAll'});
   showLoad(false);
