@@ -184,7 +184,6 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
   <nav class="sb-nav">
     <div class="sb-section">Utama</div>
     <button class="sb-btn active" data-p="dashboard"><span class="sb-icon">◉</span>Dashboard</button>
-    <button class="sb-btn" onclick="openDashboardAnalytics()" style="background:linear-gradient(135deg, rgba(212,175,55,0.15), rgba(44,95,45,0.15)); border-left:3px solid #D4AF37;"><span class="sb-icon">📊</span>Dashboard Analytics</button>
     <div class="sb-section">Outlet & Sales</div>
     <button class="sb-btn" data-p="outlets"><span class="sb-icon">⌂</span>Outlet & Sales</button>
     <button class="sb-btn" data-p="rekap"><span class="sb-icon">◫</span>Rekap & Bonus</button>
@@ -451,6 +450,21 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
         <div class="fgroup" style="flex:1"><label>Jatuh Tempo</label><input type="date" id="h-due"></div>
         <div class="fgroup" style="flex:1"><label>Jumlah (Rp)</label><input type="number" id="h-amount" value="0"></div>
       </div>
+      <div class="frow">
+        <div class="fgroup" style="flex:1"><label>Akun Hutang (Kredit)</label>
+          <select id="h-payable-acc">
+            <option value="">-- Pilih Akun Hutang --</option>
+            <option value="2-1100">2-1100 Utang Supplier Bahan</option>
+            <option value="2-1200">2-1200 Utang Supplier Barang Jadi</option>
+            <option value="2-1300">2-1300 Utang Supplier Jasa</option>
+          </select>
+        </div>
+        <div class="fgroup" style="flex:1"><label>Akun Lawan (Debit)</label>
+          <select id="h-expense-acc">
+            <option value="">-- Pilih Akun Lawan --</option>
+          </select>
+        </div>
+      </div>
       <button class="btn btn-red" onclick="addHutang()">Catat Hutang</button>
     </div>
     <div class="card">
@@ -459,6 +473,20 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Tanggal Bayar</label><input type="date" id="h-pay-date"></div>
         <div class="fgroup" style="flex:1"><label>Jumlah Bayar</label><input type="number" id="h-pay-amt" value="0"></div>
+      </div>
+      <div class="frow">
+        <div class="fgroup" style="flex:1"><label>Bayar Dari (Akun Kas/Bank)</label>
+          <select id="h-pay-acc">
+            <option value="">-- Pilih Sumber Dana --</option>
+          </select>
+        </div>
+        <div class="fgroup" style="flex:1"><label>Akun Hutang (yang dibayar)</label>
+          <select id="h-pay-payable-acc">
+            <option value="2-1100">2-1100 Utang Supplier Bahan</option>
+            <option value="2-1200">2-1200 Utang Supplier Barang Jadi</option>
+            <option value="2-1300">2-1300 Utang Supplier Jasa</option>
+          </select>
+        </div>
         <div class="fgroup" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-green" onclick="bayarHutang()">Bayar</button></div>
       </div>
     </div>
@@ -865,6 +893,7 @@ async function delReport(id){if(!confirm('Hapus laporan #'+id+'?\n\nCatatan: Jur
 
 // ═══ HUTANG ═══
 function renderHutang(){
+  populateHutangDropdowns();
   const gT=DATA.payables.reduce((s,p)=>s+Number(p.amount||0),0),gP=DATA.payables.reduce((s,p)=>s+Number(p.paid||0),0);
   const supps=[...new Set(DATA.payables.map(p=>p.supplier))];
   document.getElementById('hutang-stats').innerHTML=[{l:'Total Hutang',v:fmt(gT),c:'var(--red)'},{l:'Sudah Dibayar',v:fmt(gP),c:'var(--accent2)'},{l:'Sisa Hutang',v:fmt(gT-gP),c:'var(--accent)'},{l:'Supplier',v:supps.length,c:'var(--purple)'}].map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="color:${s.c};font-size:17px">${s.v}</div></div>`).join('');
@@ -872,8 +901,73 @@ function renderHutang(){
   const sm={};DATA.payables.forEach(p=>{if(!sm[p.supplier])sm[p.supplier]={supplier:p.supplier,total:0,paid:0,items:[]};sm[p.supplier].total+=Number(p.amount);sm[p.supplier].paid+=Number(p.paid||0);sm[p.supplier].items.push(p);});
   document.getElementById('hutang-detail').innerHTML=Object.values(sm).sort((a,b)=>(b.total-b.paid)-(a.total-a.paid)).map(sup=>`<div class="ji"><div class="ji-h"><div style="font-weight:700">${sup.supplier}</div><div style="display:flex;gap:14px;font-size:12px;font-family:'JetBrains Mono',monospace"><span>Total: <b style="color:var(--red)">${fmt(sup.total)}</b></span><span>Dibayar: <b style="color:var(--accent2)">${fmt(sup.paid)}</b></span><span>Sisa: <b style="color:var(--accent)">${fmt(sup.total-sup.paid)}</b></span></div></div><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Jatuh Tempo</th><th class="r">Jumlah</th><th class="r">Dibayar</th><th class="r">Sisa</th><th>Status</th></tr></thead><tbody>${sup.items.map(p=>{const sisa=Number(p.amount)-Number(p.paid||0);const od=sisa>0&&sDate(p.dueDate)<today;return`<tr style="${od?'background:var(--red-light)':''}"><td class="mono">${sDate(p.date)}</td><td>${p.description}</td><td class="mono" style="color:${od?'var(--red)':'inherit'}">${sDate(p.dueDate)}</td><td class="r">${fmt(Number(p.amount))}</td><td class="r" style="color:var(--accent2)">${fmt(Number(p.paid||0))}</td><td class="r" style="font-weight:700;color:${sisa>0?'var(--red)':'var(--accent2)'}">${fmt(sisa)}</td><td><span class="status-badge" style="background:${sisa===0?'var(--accent2-light)':od?'var(--red-light)':'var(--amber-light)'};color:${sisa===0?'var(--accent2)':od?'var(--red)':'var(--amber)'}">${sisa===0?'Lunas':od?'Jatuh Tempo!':'Belum Lunas'}</span></td></tr>`;}).join('')}</tbody></table></div>`).join('')||'<p style="color:var(--muted)">Belum ada data hutang</p>';
 }
-async function addHutang(){const supplier=document.getElementById('h-supplier').value.trim(),description=document.getElementById('h-desc').value.trim(),date=document.getElementById('h-date').value,dueDate=document.getElementById('h-due').value,amount=Number(document.getElementById('h-amount').value)||0;if(!supplier){showA('h-err','Supplier wajib');return;}if(amount<=0){showA('h-err','Jumlah harus > 0');return;}showLoad(true);const r=await apiCall({action:'addPayable',supplier,description,date,dueDate,amount});showLoad(false);if(!r.ok){showA('h-err',r.error);return;}showA('h-ok','Hutang dicatat & jurnal otomatis dibuat');['h-supplier','h-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('h-amount').value='0';await reload();}
-async function bayarHutang(){const id=document.getElementById('h-pay-sel').value,amount=Number(document.getElementById('h-pay-amt').value)||0,date=document.getElementById('h-pay-date').value;if(!id){alert('Pilih hutang');return;}if(amount<=0){alert('Jumlah bayar harus > 0');return;}showLoad(true);const r=await apiCall({action:'payPayable',id,amount,date});showLoad(false);if(!r.ok){alert(r.error);return;}document.getElementById('h-pay-amt').value='0';await reload();}
+
+function populateHutangDropdowns(){
+  // Populate akun beban/aset untuk dropdown 'Akun Lawan' di form Catat Hutang
+  if(!DATA.accounts || DATA.accounts.length===0) return;
+  const expenseSel=document.getElementById('h-expense-acc');
+  const paymentSel=document.getElementById('h-pay-acc');
+  if(expenseSel){
+    const expenseAccs=DATA.accounts.filter(a=>{
+      const t=String(a.type).toUpperCase();
+      // Tipe COGS, EXPENSE, atau ASSET (untuk pembelian inventory)
+      return t==='COGS'||t==='EXPENSE'||t==='ASSET';
+    }).filter(a=>String(a.code).trim().match(/^\d-\d{4}$/));
+    expenseSel.innerHTML='<option value="">-- Pilih Akun Lawan --</option>'+
+      expenseAccs.map(a=>'<option value="'+a.code+'">'+a.code+' '+a.name+'</option>').join('');
+  }
+  if(paymentSel){
+    const paymentAccs=DATA.accounts.filter(a=>{
+      const t=String(a.type).toUpperCase();
+      // Hanya akun ASSET dengan kode 1-1xxx (Kas & Bank)
+      return t==='ASSET'&&String(a.code).match(/^1-1\d{3}$/);
+    });
+    paymentSel.innerHTML='<option value="">-- Pilih Sumber Dana --</option>'+
+      paymentAccs.map(a=>'<option value="'+a.code+'">'+a.code+' '+a.name+'</option>').join('');
+  }
+}
+
+async function addHutang(){
+  const supplier=document.getElementById('h-supplier').value.trim();
+  const description=document.getElementById('h-desc').value.trim();
+  const date=document.getElementById('h-date').value;
+  const dueDate=document.getElementById('h-due').value;
+  const amount=Number(document.getElementById('h-amount').value)||0;
+  const payableAccount=document.getElementById('h-payable-acc').value;
+  const expenseAccount=document.getElementById('h-expense-acc').value;
+  if(!supplier){showA('h-err','Supplier wajib');return;}
+  if(amount<=0){showA('h-err','Jumlah harus > 0');return;}
+  if(!payableAccount){showA('h-err','Akun Hutang wajib dipilih');return;}
+  if(!expenseAccount){showA('h-err','Akun Lawan wajib dipilih');return;}
+  showLoad(true);
+  const r=await apiCall({action:'addPayable',supplier,description,date,dueDate,amount,payableAccount,expenseAccount});
+  showLoad(false);
+  if(!r.ok){showA('h-err',r.error);return;}
+  showA('h-ok','Hutang dicatat & jurnal otomatis dibuat: '+(r.info||''));
+  ['h-supplier','h-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('h-amount').value='0';
+  document.getElementById('h-payable-acc').value='';
+  document.getElementById('h-expense-acc').value='';
+  await reload();
+}
+async function bayarHutang(){
+  const id=document.getElementById('h-pay-sel').value;
+  const amount=Number(document.getElementById('h-pay-amt').value)||0;
+  const date=document.getElementById('h-pay-date').value;
+  const paymentAccount=document.getElementById('h-pay-acc').value;
+  const payableAccount=document.getElementById('h-pay-payable-acc').value;
+  if(!id){alert('Pilih hutang');return;}
+  if(amount<=0){alert('Jumlah bayar harus > 0');return;}
+  if(!paymentAccount){alert('Pilih akun pembayaran (sumber dana)');return;}
+  if(!payableAccount){alert('Pilih akun hutang yang dibayar');return;}
+  showLoad(true);
+  const r=await apiCall({action:'payPayable',id,amount,date,paymentAccount,payableAccount});
+  showLoad(false);
+  if(!r.ok){alert(r.error);return;}
+  alert(r.info||'Pembayaran berhasil');
+  document.getElementById('h-pay-amt').value='0';
+  await reload();
+}
 
 // ═══ PIUTANG ═══
 function renderPiutang(){
@@ -1550,12 +1644,6 @@ function enterDashboard(){
   if(!session){showLoginPage();return;}
   enterDashboard();
 })();
-
-function openDashboardAnalytics() {
-  // Buka Dashboard Analytics di tab baru
-  window.open('dashboard.html', '_blank');
-}
-
 </script>
 </body>
 </html>
