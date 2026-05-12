@@ -509,6 +509,22 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
         <div class="fgroup" style="flex:1"><label>Jatuh Tempo</label><input type="date" id="ar-due"></div>
         <div class="fgroup" style="flex:1"><label>Jumlah (Rp)</label><input type="number" id="ar-amount" value="0"></div>
       </div>
+      <div class="frow">
+        <div class="fgroup" style="flex:1"><label>Jenis Piutang (Debit)</label>
+          <select id="ar-receivable-acc">
+            <option value="">-- Pilih Jenis Piutang --</option>
+            <option value="1-3000">1-3000 Piutang Usaha</option>
+            <option value="1-3100">1-3100 Kasbon Karyawan</option>
+            <option value="1-3200">1-3200 Deposit Vendor Jahit</option>
+            <option value="1-3300">1-3300 Deposit Supplier Bahan</option>
+          </select>
+        </div>
+        <div class="fgroup" style="flex:1"><label>Akun Lawan (Kredit)</label>
+          <select id="ar-counter-acc">
+            <option value="">-- Pilih Akun Lawan --</option>
+          </select>
+        </div>
+      </div>
       <button class="btn btn-blue" onclick="addPiutang()">Catat Piutang</button>
     </div>
     <div class="card">
@@ -523,6 +539,17 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
           <option value="1-1300">BCA PT</option>
           <option value="1-1400">BRI</option>
         </select></div>
+      </div>
+      <div class="frow">
+        <div class="fgroup" style="flex:1"><label>Jenis Piutang yang Dibayar (Kredit)</label>
+          <select id="ar-receivable-acc">
+            <option value="">-- Pilih Jenis Piutang --</option>
+            <option value="1-3000">1-3000 Piutang Usaha</option>
+            <option value="1-3100">1-3100 Kasbon Karyawan</option>
+            <option value="1-3200">1-3200 Deposit Vendor Jahit</option>
+            <option value="1-3300">1-3300 Deposit Supplier Bahan</option>
+          </select>
+        </div>
       </div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Jumlah Diterima</label><input type="number" id="ar-pay-amt" value="0"></div>
@@ -690,6 +717,7 @@ async function reload(){
   if(currentPage==='analytics'){
     await loadAnalytics();
   }
+  populatePiutangCounterDropdown();
 }
 
 // ═══ NEW: ANALYTICS OUTLET (Jam Sibuk) ═══
@@ -984,8 +1012,69 @@ function renderPiutang(){
   const sm={};DATA.receivables.forEach(r=>{if(!sm[r.customer])sm[r.customer]={customer:r.customer,total:0,paid:0,items:[]};sm[r.customer].total+=Number(r.amount);sm[r.customer].paid+=Number(r.paid||0);sm[r.customer].items.push(r);});
   document.getElementById('piutang-detail').innerHTML=Object.values(sm).sort((a,b)=>(b.total-b.paid)-(a.total-a.paid)).map(cust=>`<div class="ji"><div class="ji-h"><div style="font-weight:700">${cust.customer}</div><div style="display:flex;gap:14px;font-size:12px;font-family:'JetBrains Mono',monospace"><span>Total: <b style="color:var(--blue)">${fmt(cust.total)}</b></span><span>Diterima: <b style="color:var(--accent2)">${fmt(cust.paid)}</b></span><span>Sisa: <b style="color:var(--accent)">${fmt(cust.total-cust.paid)}</b></span></div></div><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Jatuh Tempo</th><th class="r">Jumlah</th><th class="r">Diterima</th><th class="r">Sisa</th><th>Status</th></tr></thead><tbody>${cust.items.map(r=>{const sisa=Number(r.amount)-Number(r.paid||0);const od=sisa>0&&sDate(r.dueDate)<today;return`<tr style="${od?'background:var(--red-light)':''}"><td class="mono">${sDate(r.date)}</td><td>${r.description}</td><td class="mono" style="color:${od?'var(--red)':'inherit'}">${sDate(r.dueDate)}</td><td class="r">${fmt(Number(r.amount))}</td><td class="r" style="color:var(--accent2)">${fmt(Number(r.paid||0))}</td><td class="r" style="font-weight:700;color:${sisa>0?'var(--accent)':'var(--accent2)'}">${fmt(sisa)}</td><td><span class="status-badge" style="background:${sisa===0?'var(--accent2-light)':od?'var(--red-light)':'var(--blue-light)'};color:${sisa===0?'var(--accent2)':od?'var(--red)':'var(--blue)'}">${sisa===0?'Lunas':od?'Jatuh Tempo!':'Belum Lunas'}</span></td></tr>`;}).join('')}</tbody></table></div>`).join('')||'<p style="color:var(--muted)">Belum ada data piutang</p>';
 }
-async function addPiutang(){const customer=document.getElementById('ar-customer').value.trim(),description=document.getElementById('ar-desc').value.trim(),date=document.getElementById('ar-date').value,dueDate=document.getElementById('ar-due').value,amount=Number(document.getElementById('ar-amount').value)||0;if(!customer){showA('ar-err','Customer wajib');return;}if(amount<=0){showA('ar-err','Jumlah harus > 0');return;}showLoad(true);const r=await apiCall({action:'addReceivable',customer,description,date,dueDate,amount});showLoad(false);if(!r.ok){showA('ar-err',r.error);return;}showA('ar-ok','Piutang dicatat & jurnal otomatis dibuat');['ar-customer','ar-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('ar-amount').value='0';await reload();}
-async function terimaPiutang(){const id=document.getElementById('ar-pay-sel').value,amount=Number(document.getElementById('ar-pay-amt').value)||0,date=document.getElementById('ar-pay-date').value,paymentAccount=document.getElementById('ar-pay-account').value;if(!id){alert('Pilih piutang');return;}if(amount<=0){alert('Jumlah harus > 0');return;}if(!paymentAccount){alert('Pilih metode pembayaran');return;}showLoad(true);const r=await apiCall({action:'payReceivable',id,amount,date,paymentAccount});showLoad(false);if(!r.ok){alert(r.error);return;}document.getElementById('ar-pay-amt').value='0';await reload();}
+
+ function populatePiutangCounterDropdown(){
+  const dropdown=document.getElementById('ar-counter-acc');
+  if(!dropdown||!DATA||!DATA.accounts)return;
+  // Reset dropdown
+  dropdown.innerHTML='<option value="">-- Pilih Akun Lawan --</option>';
+  // Filter akun: REVENUE (4-xxxx untuk Piutang Usaha) + ASSET 1-1xxx (Kas/Bank untuk Kasbon/Deposit)
+  const filtered=DATA.accounts.filter(a=>{
+    const code=String(a.code||'').trim();
+    return /^4-\d{4}$/.test(code) || /^1-1\d{3}$/.test(code);
+  });
+  // Sort by code
+  filtered.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  // Add options
+  filtered.forEach(a=>{
+    const opt=document.createElement('option');
+    opt.value=a.code;
+    opt.textContent=a.code+' '+a.name;
+    dropdown.appendChild(opt);
+  });
+}
+  
+  async function addPiutang(){
+  const customer=document.getElementById('ar-customer').value.trim(),
+        description=document.getElementById('ar-desc').value.trim(),
+        date=document.getElementById('ar-date').value,
+        dueDate=document.getElementById('ar-due').value,
+        amount=Number(document.getElementById('ar-amount').value)||0,
+        receivableAccount=document.getElementById('ar-receivable-acc').value,
+        counterAccount=document.getElementById('ar-counter-acc').value;
+  if(!customer){showA('ar-err','Customer wajib');return;}
+  if(amount<=0){showA('ar-err','Jumlah harus > 0');return;}
+  if(!receivableAccount){showA('ar-err','Jenis Piutang wajib dipilih');return;}
+  if(!counterAccount){showA('ar-err','Akun Lawan wajib dipilih');return;}
+  showLoad(true);
+  const r=await apiCall({action:'addReceivable',customer,description,date,dueDate,amount,receivableAccount,counterAccount});
+  showLoad(false);
+  if(!r.ok){showA('ar-err',r.error);return;}
+  showA('ar-ok','Piutang dicatat & jurnal otomatis dibuat');
+  ['ar-customer','ar-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ar-amount').value='0';
+  document.getElementById('ar-receivable-acc').value='';
+  document.getElementById('ar-counter-acc').value='';
+  await reload();
+}
+async function terimaPiutang(){
+  const id=document.getElementById('ar-pay-sel').value,
+        amount=Number(document.getElementById('ar-pay-amt').value)||0,
+        date=document.getElementById('ar-pay-date').value,
+        paymentAccount=document.getElementById('ar-pay-account').value,
+        receivableAccount=document.getElementById('ar-receivable-acc').value;
+  if(!id){alert('Pilih piutang');return;}
+  if(amount<=0){alert('Jumlah harus > 0');return;}
+  if(!paymentAccount){alert('Pilih metode pembayaran');return;}
+  if(!receivableAccount){alert('Pilih Jenis Piutang yang Dibayar');return;}
+  showLoad(true);
+  const r=await apiCall({action:'payReceivable',id,amount,date,paymentAccount,receivableAccount});
+  showLoad(false);
+  if(!r.ok){alert(r.error);return;}
+  document.getElementById('ar-pay-amt').value='0';
+  document.getElementById('ar-receivable-acc').value='';
+  await reload();
+}
 
 // ═══ COA ═══
 function renderCOA(){
