@@ -542,7 +542,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
       </div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Jenis Piutang yang Dibayar (Kredit)</label>
-          <select id="ar-receivable-acc">
+          <select id="ar-pay-receivable-acc">
             <option value="">-- Pilih Jenis Piutang --</option>
             <option value="1-3000">1-3000 Piutang Usaha</option>
             <option value="1-3100">1-3100 Kasbon Karyawan</option>
@@ -1062,7 +1062,7 @@ async function terimaPiutang(){
         amount=Number(document.getElementById('ar-pay-amt').value)||0,
         date=document.getElementById('ar-pay-date').value,
         paymentAccount=document.getElementById('ar-pay-account').value,
-        receivableAccount=document.getElementById('ar-receivable-acc').value;
+        receivableAccount=document.getElementById('ar-pay-receivable-acc').value;
   if(!id){alert('Pilih piutang');return;}
   if(amount<=0){alert('Jumlah harus > 0');return;}
   if(!paymentAccount){alert('Pilih metode pembayaran');return;}
@@ -1072,7 +1072,7 @@ async function terimaPiutang(){
   showLoad(false);
   if(!r.ok){alert(r.error);return;}
   document.getElementById('ar-pay-amt').value='0';
-  document.getElementById('ar-receivable-acc').value='';
+  document.getElementById('ar-pay-receivable-acc').value='';
   await reload();
 }
 
