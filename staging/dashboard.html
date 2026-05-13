@@ -1359,12 +1359,13 @@ function renderDashboard() {
   // Outlet list
   renderOutletList();
   
-  // Quick stats
+  // Quick stats - Phase 2: use range data
   const c = currentData.counts || {};
-  document.getElementById('stats-meta').textContent = 'Per ' + currentData.referenceDate;
+  document.getElementById('stats-meta').textContent = 
+    'Periode ' + toIDDate(currentData.startDate) + ' - ' + toIDDate(currentData.endDate);
   document.getElementById('quick-stats').innerHTML = 
-    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalReports) + '</strong> total laporan sales</div>' +
-    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.approvedExpenses) + '</strong> dari ' + formatNumber(c.totalExpenses) + ' biaya disetujui</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.reportsInRange) + '</strong> total laporan sales</div>' +
+    '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.approvedExpensesInRange) + '</strong> dari ' + formatNumber(c.expensesInRange) + ' biaya disetujui</div>' +
     '<div style="margin-bottom: 0.8rem;"><strong>' + formatNumber(c.totalOutlets) + '</strong> outlet aktif</div>' +
     '<div><strong>' + formatNumber(c.totalSales) + '</strong> sales aktif</div>';
 }
