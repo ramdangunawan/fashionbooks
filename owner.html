@@ -444,7 +444,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     <div class="card">
       <div class="card-title"><span class="ct-dot" style="background:var(--red)"></span>Catat Hutang Baru</div>
       <div class="alert alert-err" id="h-err"></div><div class="alert alert-ok" id="h-ok"></div>
-      <div class="frow"><div class="fgroup" style="flex:1"><label>Supplier</label><input id="h-supplier" placeholder="PT Tekstil Jaya"></div></div>
+      <div class="frow"><div class="fgroup" style="flex:1"><label>Supplier</label><input id="h-supplier" placeholder="Ketik atau pilih supplier..." list="h-supplier-list" autocomplete="off"><datalist id="h-supplier-list"></datalist></div></div>
       <div class="frow"><div class="fgroup" style="flex:1"><label>Keterangan</label><input id="h-desc" placeholder="Kain katun 500m"></div></div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Tanggal</label><input type="date" id="h-date"></div>
@@ -707,6 +707,26 @@ function openDashboardAnalytics() {
   window.open('dashboard.html', '_blank');
 }
 
+function populateSupplierDatalist() {
+  const datalist = document.getElementById('h-supplier-list');
+  if (!datalist || !DATA || !DATA.payables) return;
+  
+  // Get unique suppliers from Payables
+  const suppliers = [...new Set(
+    DATA.payables
+      .map(p => p.supplier)
+      .filter(s => s && s.trim() !== '')
+  )].sort();
+  
+  // Populate datalist
+  datalist.innerHTML = '';
+  suppliers.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    datalist.appendChild(opt);
+  });
+}
+  
 async function reload(){  
   showLoad(true);
   const res=await apiCall({action:'getAll'});
@@ -720,6 +740,7 @@ async function reload(){
     await loadAnalytics();
   }
   populatePiutangCounterDropdown();
+  populateSupplierDatalist();
 }
 
 // ═══ NEW: ANALYTICS OUTLET (Jam Sibuk) ═══
