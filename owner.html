@@ -503,7 +503,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     <div class="card">
       <div class="card-title"><span class="ct-dot" style="background:var(--blue)"></span>Catat Piutang Baru</div>
       <div class="alert alert-err" id="ar-err"></div><div class="alert alert-ok" id="ar-ok"></div>
-      <div class="frow"><div class="fgroup" style="flex:1"><label>Customer</label><input id="ar-customer" placeholder="PT Maju Bersama"></div></div>
+      <div class="frow"><div class="fgroup" style="flex:1"><label>Customer</label><input id="ar-customer" placeholder="Ketik atau pilih customer..." list="ar-customer-list" autocomplete="off"><datalist id="ar-customer-list"></datalist></div></div>
       <div class="frow"><div class="fgroup" style="flex:1"><label>Keterangan</label><input id="ar-desc" placeholder="50 pcs kaos kredit"></div></div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Tanggal</label><input type="date" id="ar-date"></div>
@@ -530,6 +530,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     </div>
     <div class="card">
       <div class="card-title"><span class="ct-dot" style="background:var(--accent2)"></span>Terima Pembayaran</div>
+      <div class="frow"><div class="fgroup" style="flex:1"><label>🔍 Cari Customer</label><input id="ar-pay-search" placeholder="Ketik nama customer untuk filter..." autocomplete="off" oninput="filterReceivablePayDropdown()"></div></div>
       <div class="frow"><div class="fgroup" style="flex:1"><label>Pilih Piutang</label><select id="ar-pay-sel"></select></div></div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Tanggal Terima</label><input type="date" id="ar-pay-date"></div>
@@ -727,7 +728,46 @@ function populateSupplierDatalist() {
     datalist.appendChild(opt);
   });
 }
+
+ function populateCustomerDatalist() {
+  const datalist = document.getElementById('ar-customer-list');
+  if (!datalist || !DATA || !DATA.receivables) return;
   
+  const customers = [...new Set(
+    DATA.receivables
+      .map(r => r.customer)
+      .filter(c => c && c.trim() !== '')
+  )].sort();
+  
+  datalist.innerHTML = '';
+  customers.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    datalist.appendChild(opt);
+  });
+}
+
+function filterReceivablePayDropdown() {
+  const search = (document.getElementById('ar-pay-search')?.value || '').toLowerCase().trim();
+  const select = document.getElementById('ar-pay-sel');
+  if (!select) return;
+  
+  const currentVal = select.value;
+  
+  Array.from(select.options).forEach(opt => {
+    if (!opt.value) {
+      opt.style.display = '';
+      return;
+    }
+    const text = opt.textContent.toLowerCase();
+    opt.style.display = (search === '' || text.includes(search)) ? '' : 'none';
+  });
+  
+  const currentOpt = Array.from(select.options).find(o => o.value === currentVal);
+  if (currentOpt && currentOpt.style.display === 'none') {
+    select.value = '';
+  }
+} 
 async function reload(){  
   showLoad(true);
   const res=await apiCall({action:'getAll'});
@@ -742,6 +782,7 @@ async function reload(){
   }
   populatePiutangCounterDropdown();
   populateSupplierDatalist();
+  populateCustomerDatalist();
 }
 
 // ═══ NEW: ANALYTICS OUTLET (Jam Sibuk) ═══
