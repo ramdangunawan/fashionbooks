@@ -158,8 +158,97 @@ select.btn-secondary {
   background: white url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%236B6B6B' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 0.6rem center;
   padding-right: 2rem;
 }
+ /* Sales Leaderboard - Podium cards */
+.sl-podium-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  position: relative;
+  border: 2px solid;
+}
+.sl-podium-card.first {
+  background: linear-gradient(180deg, #FFFBEB 0%, white 100%);
+  border-color: #D4AF37;
+  transform: scale(1.05);
+  padding: 2rem 1rem;
+}
+.sl-podium-card.second {
+  background: linear-gradient(180deg, #F8F8FA 0%, white 100%);
+  border-color: #C0C0C0;
+}
+.sl-podium-card.third {
+  background: linear-gradient(180deg, #FFF5EE 0%, white 100%);
+  border-color: #CD7F32;
+}
+.sl-podium-medal {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 50%;
+  padding: 0.3rem 0.7rem;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.sl-podium-card.first .sl-podium-medal { font-size: 2rem; }
+.sl-podium-rank-text {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.3rem;
+  margin-top: 0.5rem;
+}
+.sl-podium-name {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  color: var(--text);
+}
+.sl-podium-card.first .sl-podium-name { font-size: 1.15rem; }
+.sl-podium-outlet {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+.sl-podium-amount {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 0.2rem;
+}
+.sl-podium-card.first .sl-podium-amount { font-size: 1.5rem; }
+.sl-podium-stats {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.sl-rank-badge {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 32px;
+  font-weight: 700;
+  background: var(--green);
+  color: white;
+  font-size: 0.85rem;
+}
+.sl-table-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.sl-table-row:hover {
+  background: rgba(0,0,0,0.02);
+}
+.sl-growth-up { color: #16A34A; font-size: 0.85rem; }
+.sl-growth-down { color: #DC2626; font-size: 0.85rem; }
+.sl-growth-flat { color: var(--text-muted); font-size: 0.85rem; } 
 
-/* Date input styling */
+  /* Date input styling */
 .date-input {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
@@ -749,7 +838,7 @@ footer {
   
   <div class="tabs">
     <button class="tab active" data-tab="overview">📈 Overview</button>
-    <button class="tab" data-tab="penjualan">💰 Penjualan <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="penjualan">💰 Penjualan</button>
     <button class="tab" data-tab="biaya">💸 Biaya <span class="coming-soon">Soon</span></button>
     <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
     <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
@@ -865,12 +954,79 @@ footer {
     
   </div>
   
-  <div class="tab-content" id="tab-penjualan">
-    <div class="empty-state">
-      <div class="icon">💰</div>
-      <h3>Tab Penjualan</h3>
-      <p>Akan dikembangkan di tahap berikutnya.</p>
+ <div class="tab-content" id="tab-penjualan">
+    
+    <!-- Summary stats -->
+    <div class="card" style="margin-bottom: 1rem;">
+      <div class="card-header">
+        <h3>📊 Ringkasan Penjualan Per Sales Person</h3>
+        <span class="last-updated"><span id="sl-period">Memuat...</span></span>
+      </div>
+      <div id="sl-summary" style="display:flex; gap:2rem; flex-wrap:wrap; font-size:0.9rem; color:var(--text); padding-top:0.5rem;">
+        <div><strong id="sl-total-person">-</strong> sales aktif</div>
+        <div><strong id="sl-total-sales">-</strong> total penjualan</div>
+        <div><strong id="sl-total-trans">-</strong> total transaksi</div>
+        <div><strong id="sl-comparison">-</strong></div>
+      </div>
     </div>
+    
+    <!-- Filter Bar -->
+    <div class="card" style="margin-bottom: 1rem; padding: 1rem;">
+      <div style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">FILTER:</span>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <label style="font-size:0.85rem;">Outlet:</label>
+          <select id="sl-outlet-filter" class="date-input">
+            <option value="0">Semua Outlet</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <label style="font-size:0.85rem;">Sort:</label>
+          <select id="sl-sort-filter" class="date-input">
+            <option value="netSales">Total Sales</option>
+            <option value="transactions">Jumlah Transaksi</option>
+            <option value="atv">ATV (Avg Transaction)</option>
+            <option value="qty">Total Qty</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TOP 3 PODIUM -->
+    <div class="card" style="margin-bottom: 1rem;">
+      <div class="card-header">
+        <h3>🏆 Top 3 Sales Person</h3>
+      </div>
+      <div id="sl-podium" style="display:grid; grid-template-columns: 1fr 1.3fr 1fr; gap:1rem; align-items:end; margin-top:1rem;">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+    
+    <!-- TABLE 4-N -->
+    <div class="card">
+      <div class="card-header">
+        <h3>📋 Ranking Lengkap</h3>
+      </div>
+      <div id="sl-table-wrapper" style="overflow-x:auto;">
+        <table id="sl-table" style="width:100%; border-collapse:collapse; margin-top:1rem;">
+          <thead>
+            <tr style="background:var(--bg); border-bottom:2px solid var(--border);">
+              <th style="padding:0.8rem; text-align:left; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Rank</th>
+              <th style="padding:0.8rem; text-align:left; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Sales Person</th>
+              <th style="padding:0.8rem; text-align:left; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Outlet</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Total Sales</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Trans</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ATV</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">vs Periode Lalu</th>
+            </tr>
+          </thead>
+          <tbody id="sl-tbody">
+            <tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
   </div>
   
   <div class="tab-content" id="tab-biaya">
@@ -898,7 +1054,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v2.0 · Production ·
+    FashionBooks Analytics Dashboard v2.0 · Phase 2 Staging · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -1622,6 +1778,179 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== PHASE 3: SALES LEADERBOARD =====
+let salesLeaderboardData = null;
+
+async function fetchSalesLeaderboard() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  
+  const outletId = document.getElementById('sl-outlet-filter')?.value || 0;
+  
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getSalesLeaderboard' +
+                '&startDate=' + currentRange.startDate +
+                '&endDate=' + currentRange.endDate +
+                '&outletId=' + outletId;
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (!data.ok) {
+      console.error('Sales Leaderboard error:', data.error);
+      document.getElementById('sl-tbody').innerHTML = 
+        '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+      return;
+    }
+    
+    salesLeaderboardData = data.data;
+    renderSalesLeaderboard();
+    
+  } catch (err) {
+    console.error('Sales Leaderboard fetch error:', err);
+    document.getElementById('sl-tbody').innerHTML = 
+      '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+  }
+}
+
+function renderSalesLeaderboard() {
+  if (!salesLeaderboardData) return;
+  
+  const data = salesLeaderboardData;
+  const sortBy = document.getElementById('sl-sort-filter')?.value || 'netSales';
+  
+  // Sort leaderboard based on selected criteria
+  const leaderboard = data.leaderboard.slice().sort(function(a, b) {
+    return (b[sortBy] || 0) - (a[sortBy] || 0);
+  });
+  
+  // Re-assign ranks after sort
+  leaderboard.forEach(function(s, idx) { s.rank = idx + 1; });
+  
+  // Update period display
+  document.getElementById('sl-period').textContent = 
+    'Periode: ' + toIDMonth(data.startDate) + ' - ' + toIDMonth(data.endDate);
+  
+  // Update summary
+  document.getElementById('sl-total-person').textContent = data.summary.totalSalesPerson;
+  document.getElementById('sl-total-sales').textContent = formatRupiah(data.summary.totalNetSales);
+  document.getElementById('sl-total-trans').textContent = formatNumber(data.summary.totalTransactions);
+  document.getElementById('sl-comparison').textContent = 
+    'vs ' + data.comparison.label + ' (' + toIDDate(data.comparison.startDate) + ' - ' + toIDDate(data.comparison.endDate) + ')';
+  
+  // Render TOP 3 Podium
+  const podiumEl = document.getElementById('sl-podium');
+  if (leaderboard.length === 0) {
+    podiumEl.innerHTML = '<div style="grid-column:1/-1; padding:2rem; text-align:center; color:var(--text-muted);">Belum ada data sales untuk periode ini</div>';
+  } else {
+    const top3 = leaderboard.slice(0, 3);
+    let podiumHtml = '';
+    
+    // Display order: #2 (left), #1 (center), #3 (right)
+    const displayOrder = [];
+    if (top3[1]) displayOrder.push({rank: 2, data: top3[1], medal: '🥈', cls: 'second', label: 'Rank 2'});
+    if (top3[0]) displayOrder.push({rank: 1, data: top3[0], medal: '🥇', cls: 'first', label: 'Champion'});
+    if (top3[2]) displayOrder.push({rank: 3, data: top3[2], medal: '🥉', cls: 'third', label: 'Rank 3'});
+    
+    displayOrder.forEach(function(item) {
+      const s = item.data;
+      podiumHtml += 
+        '<div class="sl-podium-card ' + item.cls + '">' +
+          '<div class="sl-podium-medal">' + item.medal + '</div>' +
+          '<div class="sl-podium-rank-text">' + item.label + '</div>' +
+          '<div class="sl-podium-name">' + s.salesName + '</div>' +
+          '<div class="sl-podium-outlet">' + s.outletName + '</div>' +
+          '<div class="sl-podium-amount">' + formatRupiah(s.netSales) + '</div>' +
+          '<div class="sl-podium-stats">' + s.transactions + ' trans · ATV ' + formatRupiah(s.atv) + '</div>' +
+        '</div>';
+    });
+    
+    // If less than 3 sales person, fill empty slots
+    while (displayOrder.length < 3) {
+      podiumHtml += '<div style="background:var(--bg); border-radius:12px; padding:1.5rem; text-align:center; color:var(--text-muted); border: 2px dashed var(--border);">-</div>';
+    }
+    
+    podiumEl.innerHTML = podiumHtml;
+  }
+  
+  // Render Table (semua rank, mulai dari rank 1)
+  const tbody = document.getElementById('sl-tbody');
+  if (leaderboard.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
+  } else {
+    let tableHtml = '';
+    leaderboard.forEach(function(s) {
+      let growthHtml = '';
+      if (s.compNetSales > 0 || s.compTransactions > 0) {
+        const isUp = s.growthPercent >= 0;
+        const arrow = isUp ? '↑' : '↓';
+        const cls = isUp ? 'sl-growth-up' : 'sl-growth-down';
+        growthHtml = '<span class="' + cls + '">' + arrow + ' ' + Math.abs(s.growthPercent).toFixed(1) + '%</span>';
+      } else {
+        growthHtml = '<span class="sl-growth-flat">— (baru)</span>';
+      }
+      
+      let rankBadge = '';
+      if (s.rank === 1) rankBadge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg, #FFD700, #D4AF37);">🥇</span>';
+      else if (s.rank === 2) rankBadge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg, #E5E7EB, #C0C0C0);">🥈</span>';
+      else if (s.rank === 3) rankBadge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg, #DAA06D, #CD7F32);">🥉</span>';
+      else rankBadge = '<span class="sl-rank-badge">' + s.rank + '</span>';
+      
+      tableHtml += 
+        '<tr class="sl-table-row">' +
+          '<td style="padding:0.8rem;">' + rankBadge + '</td>' +
+          '<td style="padding:0.8rem; font-weight:600; color:var(--green);">' + s.salesName + '</td>' +
+          '<td style="padding:0.8rem; color:var(--text-muted); font-size:0.85rem;">' + s.outletName + '</td>' +
+          '<td style="padding:0.8rem; text-align:right; font-weight:700; color:var(--green);">' + formatRupiah(s.netSales) + '</td>' +
+          '<td style="padding:0.8rem; text-align:right;">' + formatNumber(s.transactions) + '</td>' +
+          '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
+          '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = tableHtml;
+  }
+}
+
+function populateSalesOutletFilter() {
+  if (!currentData || !currentData.perOutlet) return;
+  const filter = document.getElementById('sl-outlet-filter');
+  if (!filter) return;
+  
+  const currentVal = filter.value;
+  filter.innerHTML = '<option value="0">Semua Outlet</option>';
+  
+  currentData.perOutlet.forEach(function(o) {
+    const opt = document.createElement('option');
+    opt.value = o.outletId;
+    opt.textContent = o.outletName;
+    filter.appendChild(opt);
+  });
+  
+  filter.value = currentVal;
+}
+
+// Hook: Filter outlet change
+document.addEventListener('DOMContentLoaded', function() {
+  const outletFilter = document.getElementById('sl-outlet-filter');
+  if (outletFilter) {
+    outletFilter.addEventListener('change', function() {
+      fetchSalesLeaderboard();
+    });
+  }
+  
+  const sortFilter = document.getElementById('sl-sort-filter');
+  if (sortFilter) {
+    sortFilter.addEventListener('change', function() {
+      renderSalesLeaderboard();
+    });
+  }
+});
+
+// Hook: Tab click - fetch when "Penjualan" tab clicked
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.matches('.tab[data-tab="penjualan"]')) {
+    populateSalesOutletFilter();
+    fetchSalesLeaderboard();
+  }
+});
 // Initial load: default ke "Bulan Ini"
 const initialRange = getPresetRange('month');
 currentRange = initialRange;
