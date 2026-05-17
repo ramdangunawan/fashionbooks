@@ -470,6 +470,7 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     </div>
     <div class="card">
       <div class="card-title"><span class="ct-dot" style="background:var(--accent2)"></span>Bayar Hutang</div>
+     <div class="frow"><div class="fgroup" style="flex:1"><label>🔍 Cari Supplier</label><input id="h-pay-search" placeholder="Ketik nama supplier untuk filter..." autocomplete="off"></div></div>
       <div class="frow"><div class="fgroup" style="flex:1"><label>Pilih Hutang</label><select id="h-pay-sel"></select></div></div>
       <div class="frow">
         <div class="fgroup" style="flex:1"><label>Tanggal Bayar</label><input type="date" id="h-pay-date"></div>
@@ -1007,6 +1008,42 @@ async function addHutang(){
   document.getElementById('h-expense-acc').value='';
   await reload();
 }
+
+// Filter dropdown Pilih Hutang berdasarkan search input
+function filterPayDropdown() {
+  const search = (document.getElementById('h-pay-search')?.value || '').toLowerCase().trim();
+  const select = document.getElementById('h-pay-sel');
+  if (!select) return;
+  
+  // Save current selection
+  const currentVal = select.value;
+  
+  // Filter options
+  Array.from(select.options).forEach(opt => {
+    if (!opt.value) {
+      // Keep default option ("-- Pilih --")
+      opt.style.display = '';
+      return;
+    }
+    const text = opt.textContent.toLowerCase();
+    opt.style.display = (search === '' || text.includes(search)) ? '' : 'none';
+  });
+  
+  // If current selection is hidden, reset
+  const currentOpt = Array.from(select.options).find(o => o.value === currentVal);
+  if (currentOpt && currentOpt.style.display === 'none') {
+    select.value = '';
+  }
+}
+
+// Hook search input
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('h-pay-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterPayDropdown);
+  }
+});
+  
 async function bayarHutang(){
   const id=document.getElementById('h-pay-sel').value;
   const amount=Number(document.getElementById('h-pay-amt').value)||0;
