@@ -303,6 +303,13 @@ select.btn-secondary {
   display: block;
   margin-top: 0.2rem;
 }
+  .hm-cell .hm-cell-basket {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.1rem;
+  font-weight: 500;
+}
 .hm-legend-box {
   display: inline-block;
   width: 16px;
@@ -2199,9 +2206,10 @@ function renderDailyHeatmap() {
                     '</td>';
       } else {
         const color = getHeatmapColor(day.amount, data.colorScale.min, data.colorScale.max);
-        gridHtml += '<td class="hm-cell" style="background:' + color + ';" title="' + day.date + ': Rp ' + formatRupiah(day.amount) + ' (' + day.transactions + ' trans)">' +
+        gridHtml += '<td class="hm-cell" style="background:' + color + ';" title="' + day.date + ': ' + formatRupiah(day.amount) + ' (' + day.transactions + ' trans, ' + day.qty + ' pcs, basket ' + day.basketSize.toFixed(1) + ')">' +
                     '<span class="hm-cell-amount">' + formatRupiahShort(day.amount) + '</span>' +
                     '<span class="hm-cell-trans">' + day.transactions + ' trans</span>' +
+                    '<span class="hm-cell-basket">' + day.basketSize.toFixed(1) + ' pcs</span>' +
                     '</td>';
       }
     });
@@ -2224,7 +2232,7 @@ function renderDailyHeatmap() {
       '<div class="hm-day-rank-card">' +
         '<div class="hm-rank-day">' + medal + ' ' + d.dayLabel + '</div>' +
         '<div class="hm-rank-amount">' + formatRupiahShort(d.averageAmount) + '</div>' +
-        '<div class="hm-rank-detail">' + d.totalTransactions + ' trans total</div>' +
+        '<div class="hm-rank-detail">' + d.totalTransactions + ' trans · ' + d.averageBasketSize.toFixed(1) + ' pcs/trans</div>' +
       '</div>';
   });
   dayRankContent.innerHTML = rankHtml;
@@ -2238,6 +2246,8 @@ function renderDailyHeatmap() {
       if (ins.type === 'highest') icon = '🟢';
       else if (ins.type === 'lowest') icon = '🔵';
       else if (ins.type === 'peak') icon = '🏆';
+      else if (ins.type === 'basket_highest') icon = '🛒';
+      else if (ins.type === 'basket_lowest') icon = '🛍️';
       insightsHtml += '<div class="hm-insight-item">' + icon + ' ' + ins.text + '</div>';
     });
   } else {
