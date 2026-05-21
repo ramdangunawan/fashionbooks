@@ -1117,11 +1117,12 @@ footer {
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Total Sales</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Trans</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ATV</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ABS</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">vs Periode Lalu</th>
             </tr>
           </thead>
           <tbody id="sl-tbody">
-            <tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+            <tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1959,7 +1960,7 @@ async function fetchSalesLeaderboard() {
     if (!data.ok) {
       console.error('Sales Leaderboard error:', data.error);
       document.getElementById('sl-tbody').innerHTML = 
-        '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+        '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
       return;
     }
     
@@ -1969,7 +1970,7 @@ async function fetchSalesLeaderboard() {
   } catch (err) {
     console.error('Sales Leaderboard fetch error:', err);
     document.getElementById('sl-tbody').innerHTML = 
-      '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+      '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
   }
 }
 
@@ -2036,7 +2037,7 @@ function renderSalesLeaderboard() {
   // Render Table (semua rank, mulai dari rank 1)
   const tbody = document.getElementById('sl-tbody');
   if (leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
   } else {
     let tableHtml = '';
     leaderboard.forEach(function(s) {
@@ -2056,16 +2057,20 @@ function renderSalesLeaderboard() {
       else if (s.rank === 3) rankBadge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg, #DAA06D, #CD7F32);">🥉</span>';
       else rankBadge = '<span class="sl-rank-badge">' + s.rank + '</span>';
       
-      tableHtml += 
-        '<tr class="sl-table-row">' +
-          '<td style="padding:0.8rem;">' + rankBadge + '</td>' +
-          '<td style="padding:0.8rem; font-weight:600; color:var(--green);">' + s.salesName + '</td>' +
-          '<td style="padding:0.8rem; color:var(--text-muted); font-size:0.85rem;">' + s.outletName + '</td>' +
-          '<td style="padding:0.8rem; text-align:right; font-weight:700; color:var(--green);">' + formatRupiah(s.netSales) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + formatNumber(s.transactions) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
-        '</tr>';
+      // Calculate ABS (Average Basket Size)
+        const abs = s.transactions > 0 ? (s.qty / s.transactions) : 0;
+        
+        tableHtml += 
+          '<tr class="sl-table-row">' +
+            '<td style="padding:0.8rem;">' + rankBadge + '</td>' +
+            '<td style="padding:0.8rem; font-weight:600; color:var(--green);">' + s.salesName + '</td>' +
+            '<td style="padding:0.8rem; color:var(--text-muted); font-size:0.85rem;">' + s.outletName + '</td>' +
+            '<td style="padding:0.8rem; text-align:right; font-weight:700; color:var(--green);">' + formatRupiah(s.netSales) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + formatNumber(s.transactions) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + abs.toFixed(1) + ' pcs</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
+          '</tr>';
     });
     tbody.innerHTML = tableHtml;
   }
