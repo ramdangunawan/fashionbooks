@@ -248,6 +248,102 @@ select.btn-secondary {
 .sl-growth-down { color: #DC2626; font-size: 0.85rem; }
 .sl-growth-flat { color: var(--text-muted); font-size: 0.85rem; } 
 
+/* Heatmap Penjualan Harian (Phase 3.2) */
+.hm-day-header {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg);
+  border-radius: 4px;
+}
+.hm-week-label {
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  font-weight: 600;
+  background: var(--bg);
+  border-radius: 4px;
+  text-align: center;
+}
+.hm-cell {
+  padding: 0.8rem 0.4rem;
+  text-align: center;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 60px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+.hm-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1;
+}
+.hm-cell.out-of-range {
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+.hm-cell.no-data {
+  background: #F3F4F6;
+  color: var(--text-muted);
+}
+.hm-cell .hm-cell-amount {
+  font-size: 0.8rem;
+  display: block;
+}
+.hm-cell .hm-cell-trans {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.2rem;
+}
+  .hm-cell .hm-cell-basket {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.1rem;
+  font-weight: 500;
+}
+.hm-legend-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+.hm-day-rank-card {
+  padding: 0.7rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+}
+.hm-day-rank-card .hm-rank-day {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+.hm-day-rank-card .hm-rank-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--green);
+}
+.hm-day-rank-card .hm-rank-detail {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+.hm-insight-item {
+  margin: 0.3rem 0;
+  padding-left: 0.5rem;
+}
+  
   /* Date input styling */
 .date-input {
   padding: 0.5rem 0.7rem;
@@ -1017,13 +1113,76 @@ footer {
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Total Sales</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Trans</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ATV</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ABS</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">vs Periode Lalu</th>
             </tr>
           </thead>
           <tbody id="sl-tbody">
-            <tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+            <tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+    
+    <!-- HEATMAP PENJUALAN HARIAN (Phase 3.2) -->
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header">
+        <h3>📅 Heatmap Penjualan Harian</h3>
+        <span class="last-updated"><span id="hm-period">Memuat...</span></span>
+      </div>
+      
+      <!-- Color Scale Legend -->
+      <div style="display:flex; gap:1rem; align-items:center; padding:0.5rem 0; font-size:0.8rem; color:var(--text-muted);">
+        <span>Color Scale:</span>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span class="hm-legend-box" style="background:#86EFAC;"></span> Rendah
+        </div>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span class="hm-legend-box" style="background:#FCD34D;"></span> Sedang
+        </div>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span class="hm-legend-box" style="background:#FB923C;"></span> Tinggi
+        </div>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span class="hm-legend-box" style="background:#EF4444;"></span> Sangat Tinggi
+        </div>
+      </div>
+      
+      <!-- Heatmap Grid -->
+      <div id="hm-grid-wrapper" style="overflow-x:auto; margin-top:1rem;">
+        <table id="hm-grid" style="width:100%; border-collapse:separate; border-spacing:4px; min-width:600px;">
+          <thead>
+            <tr>
+              <th style="padding:0.5rem; text-align:left; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; min-width:60px;">Week</th>
+              <th class="hm-day-header">Sen</th>
+              <th class="hm-day-header">Sel</th>
+              <th class="hm-day-header">Rab</th>
+              <th class="hm-day-header">Kam</th>
+              <th class="hm-day-header">Jum</th>
+              <th class="hm-day-header">Sab</th>
+              <th class="hm-day-header">Min</th>
+            </tr>
+          </thead>
+          <tbody id="hm-tbody">
+            <tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Day-of-Week Aggregates -->
+      <div id="hm-day-ranking" style="margin-top:1.5rem;">
+        <h4 style="font-size:0.9rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.8rem;">📊 Rata-rata per Hari (Sorted)</h4>
+        <div id="hm-day-ranking-content" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:0.5rem;">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+      
+      <!-- Auto Insights -->
+      <div id="hm-insights" style="margin-top:1.5rem; padding:1rem; background:var(--bg); border-radius:8px; border-left:4px solid var(--green);">
+        <h4 style="font-size:0.9rem; color:var(--green); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 0.6rem 0;">🎯 Insight Otomatis</h4>
+        <div id="hm-insights-content" style="font-size:0.9rem; line-height:1.6;">
+          <!-- Generated by JS -->
+        </div>
       </div>
     </div>
     
@@ -1054,7 +1213,7 @@ footer {
   </div>
   
   <footer>
-    FashionBooks Analytics Dashboard v2.0 · Phase 2 Staging · 
+    FashionBooks Analytics Dashboard v2.0 · Production · 
     Tip: Tekan <kbd style="background:var(--bg); padding:1px 5px; border-radius:3px; border:1px solid var(--border); font-family:monospace;">R</kbd> untuk refresh
   </footer>
 </div>
@@ -1797,7 +1956,7 @@ async function fetchSalesLeaderboard() {
     if (!data.ok) {
       console.error('Sales Leaderboard error:', data.error);
       document.getElementById('sl-tbody').innerHTML = 
-        '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+        '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
       return;
     }
     
@@ -1807,7 +1966,7 @@ async function fetchSalesLeaderboard() {
   } catch (err) {
     console.error('Sales Leaderboard fetch error:', err);
     document.getElementById('sl-tbody').innerHTML = 
-      '<tr><td colspan="7" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+      '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
   }
 }
 
@@ -1874,7 +2033,7 @@ function renderSalesLeaderboard() {
   // Render Table (semua rank, mulai dari rank 1)
   const tbody = document.getElementById('sl-tbody');
   if (leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
   } else {
     let tableHtml = '';
     leaderboard.forEach(function(s) {
@@ -1894,16 +2053,20 @@ function renderSalesLeaderboard() {
       else if (s.rank === 3) rankBadge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg, #DAA06D, #CD7F32);">🥉</span>';
       else rankBadge = '<span class="sl-rank-badge">' + s.rank + '</span>';
       
-      tableHtml += 
-        '<tr class="sl-table-row">' +
-          '<td style="padding:0.8rem;">' + rankBadge + '</td>' +
-          '<td style="padding:0.8rem; font-weight:600; color:var(--green);">' + s.salesName + '</td>' +
-          '<td style="padding:0.8rem; color:var(--text-muted); font-size:0.85rem;">' + s.outletName + '</td>' +
-          '<td style="padding:0.8rem; text-align:right; font-weight:700; color:var(--green);">' + formatRupiah(s.netSales) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + formatNumber(s.transactions) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
-          '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
-        '</tr>';
+      // Calculate ABS (Average Basket Size)
+        const abs = s.transactions > 0 ? (s.qty / s.transactions) : 0;
+        
+        tableHtml += 
+          '<tr class="sl-table-row">' +
+            '<td style="padding:0.8rem;">' + rankBadge + '</td>' +
+            '<td style="padding:0.8rem; font-weight:600; color:var(--green);">' + s.salesName + '</td>' +
+            '<td style="padding:0.8rem; color:var(--text-muted); font-size:0.85rem;">' + s.outletName + '</td>' +
+            '<td style="padding:0.8rem; text-align:right; font-weight:700; color:var(--green);">' + formatRupiah(s.netSales) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + formatNumber(s.transactions) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + abs.toFixed(1) + ' pcs</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
+          '</tr>';
     });
     tbody.innerHTML = tableHtml;
   }
@@ -1933,6 +2096,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (outletFilter) {
     outletFilter.addEventListener('change', function() {
       fetchSalesLeaderboard();
+      fetchDailyHeatmap();
     });
   }
   
@@ -1944,11 +2108,161 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ===== PHASE 3.2: HEATMAP PENJUALAN HARIAN =====
+let dailyHeatmapData = null;
+
+async function fetchDailyHeatmap() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  
+  const outletId = document.getElementById('sl-outlet-filter')?.value || 0;
+  
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getDailyHeatmap' +
+                '&startDate=' + currentRange.startDate +
+                '&endDate=' + currentRange.endDate +
+                '&outletId=' + outletId;
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (!data.ok) {
+      console.error('Heatmap error:', data.error);
+      document.getElementById('hm-tbody').innerHTML = 
+        '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+      return;
+    }
+    
+    dailyHeatmapData = data.data;
+    renderDailyHeatmap();
+    
+  } catch (err) {
+    console.error('Heatmap fetch error:', err);
+    document.getElementById('hm-tbody').innerHTML = 
+      '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+  }
+}
+
+// Color gradient helper: amount → background color (green → yellow → orange → red)
+function getHeatmapColor(amount, minAmount, maxAmount) {
+  if (amount <= 0) return '#F3F4F6';
+  
+  const range = maxAmount - minAmount;
+  let normalized = range > 0 ? (amount - minAmount) / range : 0.5;
+  normalized = Math.max(0, Math.min(1, normalized));
+  
+  let r, g, b;
+  if (normalized < 0.33) {
+    const t = normalized / 0.33;
+    r = Math.round(134 + (252 - 134) * t);
+    g = Math.round(239 + (211 - 239) * t);
+    b = Math.round(172 + (77 - 172) * t);
+  } else if (normalized < 0.66) {
+    const t = (normalized - 0.33) / 0.33;
+    r = Math.round(252 + (251 - 252) * t);
+    g = Math.round(211 + (146 - 211) * t);
+    b = Math.round(77 + (60 - 77) * t);
+  } else {
+    const t = (normalized - 0.66) / 0.34;
+    r = Math.round(251 + (239 - 251) * t);
+    g = Math.round(146 + (68 - 146) * t);
+    b = Math.round(60 + (68 - 60) * t);
+  }
+  
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+// Format Rupiah short (e.g. 1.5jt, 850rb, 25M)
+function formatRupiahShort(amount) {
+  amount = Number(amount) || 0;
+  if (amount >= 1000000000) {
+    return (amount / 1000000000).toFixed(1) + 'M';
+  } else if (amount >= 1000000) {
+    return (amount / 1000000).toFixed(1) + 'jt';
+  } else if (amount >= 1000) {
+    return Math.round(amount / 1000) + 'rb';
+  }
+  return amount.toString();
+}
+
+function renderDailyHeatmap() {
+  if (!dailyHeatmapData) return;
+  
+  const data = dailyHeatmapData;
+  
+  document.getElementById('hm-period').textContent = 
+    'Periode: ' + toIDMonth(data.startDate) + ' - ' + toIDMonth(data.endDate);
+  
+  const tbody = document.getElementById('hm-tbody');
+  let gridHtml = '';
+  
+  data.weeks.forEach(function(week) {
+    gridHtml += '<tr>';
+    gridHtml += '<td class="hm-week-label">' + week.weekLabel + '</td>';
+    
+    week.days.forEach(function(day) {
+      if (!day.inRange) {
+        gridHtml += '<td class="hm-cell out-of-range">-</td>';
+      } else if (day.amount <= 0) {
+        gridHtml += '<td class="hm-cell no-data" title="' + day.date + ': No data">' +
+                    '<span class="hm-cell-amount">-</span>' +
+                    '</td>';
+      } else {
+        const color = getHeatmapColor(day.amount, data.colorScale.min, data.colorScale.max);
+        gridHtml += '<td class="hm-cell" style="background:' + color + ';" title="' + day.date + ': ' + formatRupiah(day.amount) + ' (' + day.transactions + ' trans, ' + day.qty + ' pcs, basket ' + day.basketSize.toFixed(1) + ')">' +
+                    '<span class="hm-cell-amount">' + formatRupiahShort(day.amount) + '</span>' +
+                    '<span class="hm-cell-trans">' + day.transactions + ' trans</span>' +
+                    '<span class="hm-cell-basket">' + day.basketSize.toFixed(1) + ' pcs</span>' +
+                    '</td>';
+      }
+    });
+    
+    gridHtml += '</tr>';
+  });
+  
+  tbody.innerHTML = gridHtml;
+  
+  // Day-of-week ranking
+  const dayRankContent = document.getElementById('hm-day-ranking-content');
+  const sortedDays = data.dayOfWeekAggregates.slice().sort(function(a, b) {
+    return b.averageAmount - a.averageAmount;
+  });
+  
+  let rankHtml = '';
+  sortedDays.forEach(function(d, idx) {
+    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1 + '.')));
+    rankHtml += 
+      '<div class="hm-day-rank-card">' +
+        '<div class="hm-rank-day">' + medal + ' ' + d.dayLabel + '</div>' +
+        '<div class="hm-rank-amount">' + formatRupiahShort(d.averageAmount) + '</div>' +
+        '<div class="hm-rank-detail">' + d.totalTransactions + ' trans · ' + d.averageBasketSize.toFixed(1) + ' pcs/trans</div>' +
+      '</div>';
+  });
+  dayRankContent.innerHTML = rankHtml;
+  
+  // Insights
+  const insightsContent = document.getElementById('hm-insights-content');
+  let insightsHtml = '';
+  if (data.insights && data.insights.length > 0) {
+    data.insights.forEach(function(ins) {
+      let icon = '📊';
+      if (ins.type === 'highest') icon = '🟢';
+      else if (ins.type === 'lowest') icon = '🔵';
+      else if (ins.type === 'peak') icon = '🏆';
+      else if (ins.type === 'basket_highest') icon = '🛒';
+      else if (ins.type === 'basket_lowest') icon = '🛍️';
+      insightsHtml += '<div class="hm-insight-item">' + icon + ' ' + ins.text + '</div>';
+    });
+  } else {
+    insightsHtml = '<div style="color:var(--text-muted);">Belum ada insight</div>';
+  }
+  insightsContent.innerHTML = insightsHtml;
+}
+  
 // Hook: Tab click - fetch when "Penjualan" tab clicked
 document.addEventListener('click', function(e) {
   if (e.target && e.target.matches('.tab[data-tab="penjualan"]')) {
     populateSalesOutletFilter();
     fetchSalesLeaderboard();
+    fetchDailyHeatmap();
   }
 });
 // Initial load: default ke "Bulan Ini"
