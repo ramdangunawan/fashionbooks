@@ -865,6 +865,395 @@ footer {
     font-size: 16pt;
   }
 }
+/* ========================================
+   PHASE 4: LAPORAN LABA RUGI STYLES
+   ======================================== */
+
+/* Filter Section */
+.lr-filter-section {
+  background: var(--card-bg, #fff);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.lr-filter-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+.lr-filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lr-filter-label {
+  font-size: 0.8rem;
+  color: var(--text-muted, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.lr-filter-value {
+  font-size: 1rem;
+  color: var(--text, #333);
+  font-weight: 600;
+  padding: 0.6rem 0;
+}
+
+.lr-select,
+.lr-input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: white;
+}
+
+.lr-input {
+  width: 80px;
+}
+
+.lr-btn-apply {
+  background: var(--green, #2D6A4F);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.lr-btn-apply:hover {
+  background: #1F4F3A;
+}
+
+/* Info Box */
+.lr-info-box {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.lr-info-estimate {
+  background: #FFF8E7;
+  border-left: 4px solid #F59E0B;
+  color: #92400E;
+}
+
+.lr-info-actual {
+  background: #E7F5FF;
+  border-left: 4px solid #2563EB;
+  color: #1E40AF;
+}
+
+/* Loading State */
+.lr-loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted, #666);
+}
+
+.lr-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--green, #2D6A4F);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: lr-spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes lr-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Summary Cards */
+.lr-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.lr-summary-card {
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.lr-card-revenue {
+  background: linear-gradient(135deg, #3B82F6, #1E40AF);
+}
+
+.lr-card-gross {
+  background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.lr-card-net {
+  background: linear-gradient(135deg, #2D6A4F, #1F4F3A);
+}
+
+.lr-card-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.lr-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lr-card-subtext {
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+/* Statement Container */
+.lr-statement-container {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.lr-statement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--green, #2D6A4F);
+}
+
+.lr-statement-header h3 {
+  margin: 0;
+  color: var(--green, #2D6A4F);
+  font-size: 1.2rem;
+}
+
+.lr-mode-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lr-badge-estimate {
+  background: #FFF8E7;
+  color: #92400E;
+  border: 1px solid #F59E0B;
+}
+
+.lr-badge-actual {
+  background: #E7F5FF;
+  color: #1E40AF;
+  border: 1px solid #2563EB;
+}
+
+/* Sections */
+.lr-section {
+  margin-bottom: 1.5rem;
+}
+
+.lr-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--green, #2D6A4F);
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* P&L Rows */
+.lr-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.lr-row:last-child {
+  border-bottom: none;
+}
+
+.lr-row-bold {
+  font-weight: 700;
+  background: #f9fafb;
+  padding: 0.6rem 0.8rem;
+  margin: 0.3rem -0.8rem;
+}
+
+.lr-row-label {
+  color: var(--text, #333);
+  flex: 1;
+}
+
+.lr-amount {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text, #333);
+  text-align: right;
+  min-width: 150px;
+}
+
+.lr-amount-negative {
+  color: #DC2626;
+}
+
+/* Section Total */
+.lr-section-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 6px;
+}
+
+.lr-total-revenue {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.lr-total-hpp {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.lr-total-beban {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+/* Laba Lines (HIGHLIGHT BIG) */
+.lr-laba-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.lr-laba-kotor {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 2px solid #10B981;
+}
+
+.lr-laba-bersih {
+  background: linear-gradient(135deg, #2D6A4F, #1F4F3A);
+  color: white;
+  border: 2px solid #1F4F3A;
+  font-size: 1.3rem;
+  padding: 1.2rem 1.5rem;
+}
+
+.lr-margin-pct {
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* Beban Group */
+.lr-beban-group {
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.lr-beban-category {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--green, #2D6A4F);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.lr-beban-subtotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.6rem;
+  margin-top: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid var(--green, #2D6A4F);
+}
+
+/* Footer Note */
+.lr-footer-note {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Error State */
+.lr-error {
+  padding: 2rem;
+  background: #FEE2E2;
+  border-radius: 8px;
+  text-align: center;
+  color: #991B1B;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lr-filter-row {
+    grid-template-columns: 1fr;
+  }
+  .lr-summary-cards {
+    grid-template-columns: 1fr;
+  }
+  .lr-statement-container {
+    padding: 1rem;
+  }
+  .lr-card-value {
+    font-size: 1.4rem;
+  }
+}  
 </style>
 </head>
 <body>
@@ -939,6 +1328,7 @@ footer {
   <div class="tabs">
     <button class="tab active" data-tab="overview">📈 Overview</button>
     <button class="tab" data-tab="penjualan">💰 Penjualan</button>
+    <button class="tab" data-tab="laba-rugi">📊 Laba Rugi</button>
     <button class="tab" data-tab="biaya">💸 Biaya <span class="coming-soon">Soon</span></button>
     <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
     <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
@@ -1191,6 +1581,140 @@ footer {
     </div>
     
   </div>
+
+  <!-- ========================================== -->
+<!-- TAB LABA RUGI (Phase 4) -->
+<!-- ========================================== -->
+<div id="tab-laba-rugi" class="tab-content" style="display:none;">
+  
+  <!-- Filter Section -->
+  <div class="lr-filter-section">
+    <div class="lr-filter-row">
+      <div class="lr-filter-item">
+        <label class="lr-filter-label">📅 Periode</label>
+        <span id="lr-period-display" class="lr-filter-value">-</span>
+      </div>
+      
+      <div class="lr-filter-item">
+        <label class="lr-filter-label" for="lr-mode">⚙️ Mode HPP</label>
+        <select id="lr-mode" class="lr-select">
+          <option value="estimate" selected>📊 Estimate (Margin Asumsi)</option>
+          <option value="actual">✅ Actual (Post Stock Opname)</option>
+        </select>
+      </div>
+      
+      <div class="lr-filter-item" id="lr-margin-container">
+        <label class="lr-filter-label" for="lr-margin">📈 Margin Kotor (%)</label>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input type="number" id="lr-margin" class="lr-input" value="19" min="0" max="100" step="0.1" />
+          <button class="lr-btn-apply" onclick="fetchLabaRugi()">Apply</button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="lr-info-box" class="lr-info-box">
+      ⓘ Mode Estimate: HPP dihitung dari margin asumsi historikal. Switch ke Actual setelah stock opname akhir bulan untuk nilai HPP akurat.
+    </div>
+  </div>
+  
+  <!-- Loading State -->
+  <div id="lr-loading" class="lr-loading">
+    <div class="lr-spinner"></div>
+    <p>Memuat laporan...</p>
+  </div>
+  
+  <!-- Report Body -->
+  <div id="lr-report-body" style="display:none;">
+    
+    <!-- Header Cards: Quick Summary -->
+    <div class="lr-summary-cards">
+      <div class="lr-summary-card lr-card-revenue">
+        <div class="lr-card-label">📊 PENJUALAN BERSIH</div>
+        <div class="lr-card-value" id="lr-summary-sales">Rp 0</div>
+      </div>
+      <div class="lr-summary-card lr-card-gross">
+        <div class="lr-card-label">💰 LABA KOTOR</div>
+        <div class="lr-card-value" id="lr-summary-gross">Rp 0</div>
+        <div class="lr-card-subtext" id="lr-summary-gross-margin">0%</div>
+      </div>
+      <div class="lr-summary-card lr-card-net">
+        <div class="lr-card-label">🎯 LABA BERSIH</div>
+        <div class="lr-card-value" id="lr-summary-net">Rp 0</div>
+        <div class="lr-card-subtext" id="lr-summary-net-margin">0%</div>
+      </div>
+    </div>
+    
+    <!-- Detailed P&L Statement -->
+    <div class="lr-statement-container">
+      <div class="lr-statement-header">
+        <h3>📋 Laporan Laba Rugi Lengkap</h3>
+        <span id="lr-mode-badge" class="lr-mode-badge">Estimate</span>
+      </div>
+      
+      <!-- Pendapatan Section -->
+      <div class="lr-section">
+        <div class="lr-section-title">PENDAPATAN</div>
+        <div id="lr-pendapatan-rows"></div>
+        <div class="lr-section-total lr-total-revenue">
+          <span>PENJUALAN BERSIH</span>
+          <span id="lr-penjualan-bersih">Rp 0</span>
+        </div>
+      </div>
+      
+      <!-- HPP Section -->
+      <div class="lr-section">
+        <div class="lr-section-title">HARGA POKOK PENJUALAN (HPP)</div>
+        <div id="lr-hpp-rows"></div>
+        <div class="lr-section-total lr-total-hpp">
+          <span>TOTAL HPP</span>
+          <span id="lr-total-hpp">Rp 0</span>
+        </div>
+      </div>
+      
+      <!-- Laba Kotor -->
+      <div class="lr-laba-line lr-laba-kotor">
+        <span>LABA KOTOR</span>
+        <span>
+          <span id="lr-laba-kotor-amount">Rp 0</span>
+          <span class="lr-margin-pct" id="lr-laba-kotor-pct">(0%)</span>
+        </span>
+      </div>
+      
+      <!-- Beban Operasional Section -->
+      <div class="lr-section">
+        <div class="lr-section-title">BEBAN OPERASIONAL</div>
+        <div id="lr-beban-rows"></div>
+        <div class="lr-section-total lr-total-beban">
+          <span>TOTAL BEBAN OPERASIONAL</span>
+          <span id="lr-total-beban">Rp 0</span>
+        </div>
+      </div>
+      
+      <!-- Laba Bersih -->
+      <div class="lr-laba-line lr-laba-bersih">
+        <span>LABA BERSIH</span>
+        <span>
+          <span id="lr-laba-bersih-amount">Rp 0</span>
+          <span class="lr-margin-pct" id="lr-laba-bersih-pct">(0%)</span>
+        </span>
+      </div>
+      
+    </div>
+    
+    <!-- Footer Note -->
+    <div class="lr-footer-note">
+      <p id="lr-footer-text">📊 Mode Estimate aktif. Untuk laporan PSAK formal, gunakan mode Actual setelah stock opname.</p>
+    </div>
+    
+  </div>
+  
+  <!-- Error State -->
+  <div id="lr-error" class="lr-error" style="display:none;">
+    <p>❌ <span id="lr-error-message">Gagal memuat laporan</span></p>
+  </div>
+  
+</div>
+<!-- END Tab Laba Rugi -->
   
   <div class="tab-content" id="tab-biaya">
     <div class="empty-state">
@@ -2269,12 +2793,205 @@ document.addEventListener('click', function(e) {
     fetchDailyHeatmap();
   }
 });
+// Hook: Tab click - fetch when "Laba Rugi" tab clicked
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.matches('.tab[data-tab="laba-rugi"]')) {
+    fetchLabaRugi();
+  }
+});  
 // Initial load: default ke "Bulan Ini"
 const initialRange = getPresetRange('month');
 currentRange = initialRange;
 document.getElementById('filter-start-date').value = initialRange.startDate;
 document.getElementById('filter-end-date').value = initialRange.endDate;
 fetchAnalytics();
+// ========================================
+// PHASE 4: LAPORAN LABA RUGI
+// ========================================
+
+let labaRugiData = null;
+
+async function fetchLabaRugi() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  
+  const mode = document.getElementById('lr-mode')?.value || 'estimate';
+  const marginPercent = document.getElementById('lr-margin')?.value || 19;
+  
+  // Show loading
+  document.getElementById('lr-loading').style.display = 'block';
+  document.getElementById('lr-report-body').style.display = 'none';
+  document.getElementById('lr-error').style.display = 'none';
+  
+  // Update period display
+  document.getElementById('lr-period-display').textContent = 
+    formatDateID(currentRange.startDate) + ' - ' + formatDateID(currentRange.endDate);
+  
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getLabaRugi' +
+                '&startDate=' + currentRange.startDate +
+                '&endDate=' + currentRange.endDate +
+                '&mode=' + mode +
+                '&marginPercent=' + marginPercent;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (!data.ok) {
+      console.error('Laba Rugi error:', data.error);
+      document.getElementById('lr-loading').style.display = 'none';
+      document.getElementById('lr-error').style.display = 'block';
+      document.getElementById('lr-error-message').textContent = data.error;
+      return;
+    }
+    
+    labaRugiData = data.data;
+    renderLabaRugi();
+    
+  } catch (err) {
+    console.error('Laba Rugi fetch error:', err);
+    document.getElementById('lr-loading').style.display = 'none';
+    document.getElementById('lr-error').style.display = 'block';
+    document.getElementById('lr-error-message').textContent = 'Gagal memuat data';
+  }
+}
+
+function renderLabaRugi() {
+  if (!labaRugiData) return;
+  const d = labaRugiData;
+  
+  // Hide loading, show body
+  document.getElementById('lr-loading').style.display = 'none';
+  document.getElementById('lr-report-body').style.display = 'block';
+  document.getElementById('lr-error').style.display = 'none';
+  
+  // === Toggle margin input visibility ===
+  const marginContainer = document.getElementById('lr-margin-container');
+  if (d.mode === 'estimate') {
+    marginContainer.style.display = 'block';
+  } else {
+    marginContainer.style.display = 'none';
+  }
+  
+  // === Update info box ===
+  const infoBox = document.getElementById('lr-info-box');
+  if (d.mode === 'estimate') {
+    infoBox.innerHTML = 'ⓘ <strong>Mode Estimate:</strong> HPP dihitung dari margin asumsi <strong>' + d.marginPercent + '%</strong>. Untuk laporan PSAK formal, switch ke Mode Actual setelah stock opname.';
+    infoBox.className = 'lr-info-box lr-info-estimate';
+  } else {
+    infoBox.innerHTML = 'ⓘ <strong>Mode Actual:</strong> HPP dihitung dari formula PSAK (Persediaan Awal + Pembelian - Persediaan Akhir). Pastikan stock opname sudah dilakukan untuk akurasi.';
+    infoBox.className = 'lr-info-box lr-info-actual';
+  }
+  
+  // === Mode badge ===
+  const modeBadge = document.getElementById('lr-mode-badge');
+  if (d.mode === 'estimate') {
+    modeBadge.textContent = 'Estimate (' + d.marginPercent + '%)';
+    modeBadge.className = 'lr-mode-badge lr-badge-estimate';
+  } else {
+    modeBadge.textContent = 'Actual (PSAK)';
+    modeBadge.className = 'lr-mode-badge lr-badge-actual';
+  }
+  
+  // === Summary cards ===
+  document.getElementById('lr-summary-sales').textContent = 'Rp ' + formatRupiahShort(d.pendapatan.penjualanBersih);
+  document.getElementById('lr-summary-gross').textContent = 'Rp ' + formatRupiahShort(d.labaKotor);
+  document.getElementById('lr-summary-gross-margin').textContent = d.marginKotor.toFixed(1) + '%';
+  document.getElementById('lr-summary-net').textContent = 'Rp ' + formatRupiahShort(d.labaBersih);
+  document.getElementById('lr-summary-net-margin').textContent = d.marginBersih.toFixed(1) + '%';
+  
+  // === PENDAPATAN section ===
+  let pendapatanHtml = '';
+  pendapatanHtml += renderLRRow('Penjualan Produk', d.pendapatan.penjualanProduk);
+  if (d.pendapatan.returPenjualan > 0) {
+    pendapatanHtml += renderLRRow('(-) Retur Penjualan', d.pendapatan.returPenjualan, true);
+  }
+  if (d.pendapatan.potonganPenjualan > 0) {
+    pendapatanHtml += renderLRRow('(-) Potongan Penjualan', d.pendapatan.potonganPenjualan, true);
+  }
+  if (d.pendapatan.potonganReject > 0) {
+    pendapatanHtml += renderLRRow('(-) Potongan Reject', d.pendapatan.potonganReject, true);
+  }
+  if (d.pendapatan.bebanAdminMarketplace > 0) {
+    pendapatanHtml += renderLRRow('(-) Beban Admin Marketplace', d.pendapatan.bebanAdminMarketplace, true);
+  }
+  document.getElementById('lr-pendapatan-rows').innerHTML = pendapatanHtml;
+  document.getElementById('lr-penjualan-bersih').textContent = 'Rp ' + formatRupiah(d.pendapatan.penjualanBersih);
+  
+  // === HPP section ===
+  let hppHtml = '';
+  if (d.mode === 'estimate') {
+    hppHtml += renderLRRow('HPP Estimate (' + (100 - d.marginPercent) + '% × Penjualan Bersih)', d.hpp.hppEstimate);
+  } else {
+    // Actual mode - detail breakdown
+    hppHtml += renderLRRow('Persediaan Awal', d.hpp.persediaanAwal);
+    
+    if (d.hpp.totalBiayaProduksi > 0) {
+      hppHtml += renderLRRow('(+) Total Biaya Produksi', d.hpp.totalBiayaProduksi);
+    }
+    if (d.hpp.pembelianBrgJadi > 0) {
+      hppHtml += renderLRRow('(+) Pembelian Barang Jadi', d.hpp.pembelianBrgJadi);
+    }
+    if (d.hpp.ongkirPembelian > 0) {
+      hppHtml += renderLRRow('(+) Ongkir Pembelian', d.hpp.ongkirPembelian);
+    }
+    if (d.hpp.potonganPembelian > 0) {
+      hppHtml += renderLRRow('(-) Potongan Pembelian', d.hpp.potonganPembelian, true);
+    }
+    hppHtml += renderLRRow('= Barang Tersedia Dijual', d.hpp.barangTersediaDijual, false, true);
+    hppHtml += renderLRRow('(-) Persediaan Akhir', d.hpp.persediaanAkhir, true);
+  }
+  document.getElementById('lr-hpp-rows').innerHTML = hppHtml;
+  document.getElementById('lr-total-hpp').textContent = 'Rp ' + formatRupiah(d.totalHPP);
+  
+  // === LABA KOTOR ===
+  document.getElementById('lr-laba-kotor-amount').textContent = 'Rp ' + formatRupiah(d.labaKotor);
+  document.getElementById('lr-laba-kotor-pct').textContent = '(' + d.marginKotor.toFixed(1) + '%)';
+  
+  // === BEBAN OPERASIONAL ===
+  let bebanHtml = '';
+  d.bebanOperasional.groups.forEach(function(group) {
+    if (group.subtotal === 0) return; // skip empty groups
+    
+    bebanHtml += '<div class="lr-beban-group">';
+    bebanHtml += '<div class="lr-beban-category">' + group.category + '</div>';
+    group.items.forEach(function(item) {
+      if (item.amount > 0) {
+        bebanHtml += renderLRRow(item.name, item.amount);
+      }
+    });
+    bebanHtml += '<div class="lr-beban-subtotal">';
+    bebanHtml += '<span>Subtotal ' + group.category + '</span>';
+    bebanHtml += '<span>Rp ' + formatRupiah(group.subtotal) + '</span>';
+    bebanHtml += '</div>';
+    bebanHtml += '</div>';
+  });
+  document.getElementById('lr-beban-rows').innerHTML = bebanHtml;
+  document.getElementById('lr-total-beban').textContent = 'Rp ' + formatRupiah(d.bebanOperasional.total);
+  
+  // === LABA BERSIH ===
+  document.getElementById('lr-laba-bersih-amount').textContent = 'Rp ' + formatRupiah(d.labaBersih);
+  document.getElementById('lr-laba-bersih-pct').textContent = '(' + d.marginBersih.toFixed(1) + '%)';
+  
+  // === Footer text ===
+  document.getElementById('lr-footer-text').textContent = d.hpp.explanation || '';
+}
+
+function renderLRRow(label, amount, isNegative, isBold) {
+  const cssClass = isBold ? 'lr-row lr-row-bold' : 'lr-row';
+  const amountClass = isNegative ? 'lr-amount lr-amount-negative' : 'lr-amount';
+  return '<div class="' + cssClass + '">' +
+         '<span class="lr-row-label">' + label + '</span>' +
+         '<span class="' + amountClass + '">Rp ' + formatRupiah(amount) + '</span>' +
+         '</div>';
+}
+
+// Listen mode change
+document.addEventListener('DOMContentLoaded', function() {
+  const modeSelector = document.getElementById('lr-mode');
+  if (modeSelector) {
+    modeSelector.addEventListener('change', fetchLabaRugi);
+  }
+});  
 </script>
 </body>
 </html>
