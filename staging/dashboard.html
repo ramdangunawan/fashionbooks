@@ -2823,8 +2823,8 @@ async function fetchLabaRugi() {
   document.getElementById('lr-error').style.display = 'none';
   
   // Update period display
-  document.getElementById('lr-period-display').textContent = 
-    formatDateID(currentRange.startDate) + ' - ' + formatDateID(currentRange.endDate);
+document.getElementById('lr-period-display').textContent = 
+  currentRange.startDate.split('-').reverse().join('/') + ' - ' + currentRange.endDate.split('-').reverse().join('/');
   
   try {
     const url = APPS_SCRIPT_URL + '?action=getLabaRugi' +
