@@ -2961,7 +2961,7 @@ function renderLabaRugi() {
     });
     bebanHtml += '<div class="lr-beban-subtotal">';
     bebanHtml += '<span>Subtotal ' + group.category + '</span>';
-    bebanHtml += '<span>formatRupiah(group.subtotal) + '</span>';
+    bebanHtml += '<span>' + formatRupiah(group.subtotal) + '</span>';
     bebanHtml += '</div>';
     bebanHtml += '</div>';
   });
@@ -2981,7 +2981,7 @@ function renderLRRow(label, amount, isNegative, isBold) {
   const amountClass = isNegative ? 'lr-amount lr-amount-negative' : 'lr-amount';
   return '<div class="' + cssClass + '">' +
          '<span class="lr-row-label">' + label + '</span>' +
-         '<span class="' + amountClass + '">formatRupiah(amount) + '</span>' +
+         '<span class="' + amountClass + '">' + formatRupiah(amount) + '</span>' +
          '</div>';
 }
 
