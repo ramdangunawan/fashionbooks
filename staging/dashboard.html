@@ -2915,7 +2915,7 @@ function renderLabaRugi() {
     pendapatanHtml += renderLRRow('(-) Beban Admin Marketplace', d.pendapatan.bebanAdminMarketplace, true);
   }
   document.getElementById('lr-pendapatan-rows').innerHTML = pendapatanHtml;
-  document.getElementById('lr-penjualan-bersih').textContent = 'Rp ' + formatRupiah(d.pendapatan.penjualanBersih);
+  document.getElementById('lr-penjualan-bersih').textContent = formatRupiah(d.pendapatan.penjualanBersih);
   
   // === HPP section ===
   let hppHtml = '';
@@ -2941,10 +2941,10 @@ function renderLabaRugi() {
     hppHtml += renderLRRow('(-) Persediaan Akhir', d.hpp.persediaanAkhir, true);
   }
   document.getElementById('lr-hpp-rows').innerHTML = hppHtml;
-  document.getElementById('lr-total-hpp').textContent = 'Rp ' + formatRupiah(d.totalHPP);
+  document.getElementById('lr-total-hpp').textContent = formatRupiah(d.totalHPP);
   
   // === LABA KOTOR ===
-  document.getElementById('lr-laba-kotor-amount').textContent = 'Rp ' + formatRupiah(d.labaKotor);
+  document.getElementById('lr-laba-kotor-amount').textContent = formatRupiah(d.labaKotor);
   document.getElementById('lr-laba-kotor-pct').textContent = '(' + d.marginKotor.toFixed(1) + '%)';
   
   // === BEBAN OPERASIONAL ===
@@ -2966,10 +2966,10 @@ function renderLabaRugi() {
     bebanHtml += '</div>';
   });
   document.getElementById('lr-beban-rows').innerHTML = bebanHtml;
-  document.getElementById('lr-total-beban').textContent = 'Rp ' + formatRupiah(d.bebanOperasional.total);
+  document.getElementById('lr-total-beban').textContent = formatRupiah(d.bebanOperasional.total);
   
   // === LABA BERSIH ===
-  document.getElementById('lr-laba-bersih-amount').textContent = 'Rp ' + formatRupiah(d.labaBersih);
+  document.getElementById('lr-laba-bersih-amount').textContent = formatRupiah(d.labaBersih);
   document.getElementById('lr-laba-bersih-pct').textContent = '(' + d.marginBersih.toFixed(1) + '%)';
   
   // === Footer text ===
