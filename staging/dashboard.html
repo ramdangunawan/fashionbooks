@@ -1204,6 +1204,24 @@ footer {
   letter-spacing: 0.5px;
   margin-bottom: 0.5rem;
 }
+  .lr-beban-pct-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid #FDE68A;
+}
+
+.lr-beban-pct-text {
+  font-size: 0.8rem;
+  color: var(--text-muted, #666);
+  font-weight: 600;
+  margin-left: 0.3rem;
+}
 
 .lr-beban-subtotal {
   display: flex;
@@ -2949,22 +2967,25 @@ function renderLabaRugi() {
   
   // === BEBAN OPERASIONAL ===
   let bebanHtml = '';
-  d.bebanOperasional.groups.forEach(function(group) {
-    if (group.subtotal === 0) return; // skip empty groups
-    
-    bebanHtml += '<div class="lr-beban-group">';
-    bebanHtml += '<div class="lr-beban-category">' + group.category + '</div>';
-    group.items.forEach(function(item) {
-      if (item.amount > 0) {
-        bebanHtml += renderLRRow(item.name, item.amount);
-      }
-    });
-    bebanHtml += '<div class="lr-beban-subtotal">';
-    bebanHtml += '<span>Subtotal ' + group.category + '</span>';
-    bebanHtml += '<span>' + formatRupiah(group.subtotal) + '</span>';
-    bebanHtml += '</div>';
-    bebanHtml += '</div>';
+  const totalBeban = d.bebanOperasional.total;
+d.bebanOperasional.groups.forEach(function(group) {
+  if (group.subtotal === 0) return; // skip empty groups
+  
+  const groupPct = totalBeban > 0 ? (group.subtotal / totalBeban * 100) : 0;
+  
+  bebanHtml += '<div class="lr-beban-group">';
+  bebanHtml += '<div class="lr-beban-category">' + group.category + ' <span class="lr-beban-pct-badge">' + groupPct.toFixed(1) + '%</span></div>';
+  group.items.forEach(function(item) {
+    if (item.amount > 0) {
+      bebanHtml += renderLRRow(item.name, item.amount);
+    }
   });
+  bebanHtml += '<div class="lr-beban-subtotal">';
+  bebanHtml += '<span>Subtotal ' + group.category + '</span>';
+  bebanHtml += '<span>' + formatRupiah(group.subtotal) + ' <span class="lr-beban-pct-text">(' + groupPct.toFixed(1) + '%)</span></span>';
+  bebanHtml += '</div>';
+  bebanHtml += '</div>';
+});
   document.getElementById('lr-beban-rows').innerHTML = bebanHtml;
   document.getElementById('lr-total-beban').textContent = formatRupiah(d.bebanOperasional.total);
   
