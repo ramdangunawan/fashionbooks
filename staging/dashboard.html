@@ -1271,6 +1271,472 @@ footer {
   .lr-card-value {
     font-size: 1.4rem;
   }
+}
+/* ========================================
+   PHASE 5: TAB BIAYA — Cost Analytics
+   Style mirror Phase 4 dengan prefix .tb-
+   ======================================== */
+
+.tb-filter-section {
+  background: var(--card, #fff);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.tb-filter-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.tb-filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tb-filter-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.tb-filter-value {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+  padding: 0.6rem 0;
+}
+
+.tb-select {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: white;
+  font-family: inherit;
+}
+
+.tb-btn-apply {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  height: 42px;
+}
+
+.tb-btn-apply:hover {
+  background: var(--green-dark);
+}
+
+/* Loading & Error States */
+.tb-loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.tb-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--green);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: lr-spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.tb-error {
+  background: #FEE;
+  border-left: 4px solid var(--danger);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+/* Summary Cards */
+.tb-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tb-summary-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tb-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.tb-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+.tb-card-total::before { background: var(--green); }
+.tb-card-avg::before { background: var(--gold); }
+.tb-card-outlet::before { background: var(--info); }
+.tb-card-kategori::before { background: var(--warning); }
+
+.tb-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.tb-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.tb-card-value-sm {
+  font-size: 1.1rem;
+}
+
+.tb-card-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.tb-card-pill {
+  display: inline-block;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+
+/* Section Container */
+.tb-section {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.tb-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tb-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tb-section-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Grid 2 Column */
+.tb-grid-2 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Table */
+.tb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tb-table th {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tb-table th:last-child,
+.tb-table td:last-child {
+  text-align: right;
+}
+
+.tb-table td {
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tb-table tbody tr:hover {
+  background: var(--green-light);
+}
+
+.tb-outlet-name {
+  font-weight: 600;
+}
+
+.tb-role-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.tb-role-HEAD_OFFICE {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.tb-role-RETAIL {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.tb-role-PRODUCTION {
+  background: var(--gold-light);
+  color: #92400E;
+}
+
+.tb-amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-share-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.tb-bar-track {
+  width: 50px;
+  height: 5px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tb-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.tb-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chart Containers */
+.tb-chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.tb-chart-tall {
+  position: relative;
+  height: 320px;
+}
+
+/* Role/Region Mini Bars */
+.tb-mini-bar-item {
+  margin-bottom: 1rem;
+}
+
+.tb-mini-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.tb-mini-bar-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tb-mini-bar-value {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-mini-bar-track {
+  background: var(--bg);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tb-mini-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+/* Heatmap */
+.tb-heatmap-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.tb-heatmap-grid {
+  display: grid;
+  gap: 3px;
+  min-width: max-content;
+}
+
+.tb-heat-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+}
+
+.tb-heat-cell:hover {
+  transform: scale(1.3);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+}
+
+.tb-heat-label {
+  background: transparent;
+  cursor: default;
+  width: auto;
+  padding-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tb-heat-date {
+  background: transparent;
+  cursor: default;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  height: 40px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.tb-heat-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--text);
+  color: white;
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 100;
+}
+
+.tb-heat-cell:hover .tb-heat-tooltip {
+  opacity: 1;
+}
+
+/* Heatmap Color Scale (green theme) */
+.tb-heat-0 { background: #F4F7F4; }
+.tb-heat-1 { background: #E2ECE0; }
+.tb-heat-2 { background: #C5D9C0; }
+.tb-heat-3 { background: #94BC8B; }
+.tb-heat-4 { background: #5F9C57; }
+.tb-heat-5 { background: var(--green); }
+
+.tb-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.tb-legend-scale {
+  display: flex;
+  gap: 2px;
+}
+
+.tb-legend-cell {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tb-summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .tb-grid-2 { grid-template-columns: 1fr; }
+  .tb-filter-row { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  .tb-summary-cards { grid-template-columns: 1fr; }
+  .tb-filter-row { grid-template-columns: 1fr; }
 }  
 </style>
 </head>
@@ -1347,7 +1813,7 @@ footer {
     <button class="tab active" data-tab="overview">📈 Overview</button>
     <button class="tab" data-tab="penjualan">💰 Penjualan</button>
     <button class="tab" data-tab="laba-rugi">📊 Laba Rugi</button>
-    <button class="tab" data-tab="biaya">💸 Biaya <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="biaya">💸 Biaya</button>
     <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
     <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
   </div>
@@ -1735,12 +2201,171 @@ footer {
 <!-- END Tab Laba Rugi -->
   
   <div class="tab-content" id="tab-biaya">
-    <div class="empty-state">
-      <div class="icon">💸</div>
-      <h3>Tab Biaya</h3>
-      <p>Akan dikembangkan di tahap berikutnya.</p>
+  
+  <!-- Filter Section -->
+  <div class="tb-filter-section">
+    <div class="tb-filter-row">
+      <div class="tb-filter-item">
+        <label class="tb-filter-label">📅 Periode</label>
+        <span id="tb-period-display" class="tb-filter-value">-</span>
+      </div>
+      
+      <div class="tb-filter-item">
+        <label class="tb-filter-label" for="tb-outlet-filter">🏪 Outlet</label>
+        <select id="tb-outlet-filter" class="tb-select">
+          <option value="all">Semua Outlet</option>
+          <option value="Busana Indah WH">Busana Indah WH (HO)</option>
+          <option value="Oleh-Oleh">Oleh-Oleh (HO)</option>
+          <option value="HO General">HO General</option>
+          <option value="Busana Indah">Busana Indah</option>
+          <option value="Market Jeans">Market Jeans</option>
+          <option value="ER Grosir">ER Grosir</option>
+          <option value="Litzee Bali">Litzee Bali</option>
+          <option value="Litzee Lombok">Litzee Lombok</option>
+          <option value="Pekalongan">Pekalongan (Produksi)</option>
+        </select>
+      </div>
+      
+      <div class="tb-filter-item">
+        <label class="tb-filter-label" for="tb-granularity">📊 Granularitas</label>
+        <select id="tb-granularity" class="tb-select">
+          <option value="day">Harian</option>
+          <option value="week">Mingguan</option>
+          <option value="month">Bulanan</option>
+        </select>
+      </div>
+      
+      <div class="tb-filter-item">
+        <label class="tb-filter-label">&nbsp;</label>
+        <button class="tb-btn-apply" onclick="fetchTabBiaya()">Terapkan</button>
+      </div>
     </div>
   </div>
+  
+  <!-- Loading State -->
+  <div id="tb-loading" class="tb-loading">
+    <div class="tb-spinner"></div>
+    <p>Memuat data biaya...</p>
+  </div>
+  
+  <!-- Error State -->
+  <div id="tb-error" class="tb-error" style="display:none;">
+    <p>❌ <span id="tb-error-message">Gagal memuat data</span></p>
+  </div>
+  
+  <!-- Report Body -->
+  <div id="tb-report-body" style="display:none;">
+    
+    <!-- Summary Cards -->
+    <div class="tb-summary-cards">
+      <div class="tb-summary-card tb-card-total">
+        <div class="tb-card-label">💰 Total Beban</div>
+        <div class="tb-card-value" id="tb-sum-total">Rp 0</div>
+        <div class="tb-card-sub" id="tb-sum-meta">0 transaksi · 0 hari</div>
+      </div>
+      
+      <div class="tb-summary-card tb-card-avg">
+        <div class="tb-card-label">📊 Rata-rata Harian</div>
+        <div class="tb-card-value" id="tb-sum-avg">Rp 0</div>
+        <div class="tb-card-sub">Per hari operasional</div>
+      </div>
+      
+      <div class="tb-summary-card tb-card-outlet">
+        <div class="tb-card-label">🏪 Outlet Tertinggi</div>
+        <div class="tb-card-value tb-card-value-sm" id="tb-sum-top-outlet">-</div>
+        <div class="tb-card-sub" id="tb-sum-top-outlet-detail">-</div>
+      </div>
+      
+      <div class="tb-summary-card tb-card-kategori">
+        <div class="tb-card-label">📂 Kategori Tertinggi</div>
+        <div class="tb-card-value tb-card-value-sm" id="tb-sum-top-kategori">-</div>
+        <div class="tb-card-sub" id="tb-sum-top-kategori-detail">-</div>
+      </div>
+    </div>
+    
+    <!-- By Outlet Table + Kategori Donut -->
+    <div class="tb-grid-2">
+      <div class="tb-section">
+        <div class="tb-section-header">
+          <div class="tb-section-title">🏪 Beban per Outlet</div>
+          <div class="tb-section-meta" id="tb-outlet-count">0 outlet</div>
+        </div>
+        <table class="tb-table">
+          <thead>
+            <tr>
+              <th>Outlet</th>
+              <th>Total</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody id="tb-outlet-tbody"></tbody>
+        </table>
+      </div>
+      
+      <div class="tb-section">
+        <div class="tb-section-header">
+          <div class="tb-section-title">📂 Distribusi Kategori</div>
+          <div class="tb-section-meta" id="tb-kategori-count">0 kategori</div>
+        </div>
+        <div class="tb-chart-container">
+          <canvas id="tb-kategori-chart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Role + Region Breakdown -->
+    <div class="tb-grid-2">
+      <div class="tb-section">
+        <div class="tb-section-header">
+          <div class="tb-section-title">🏢 Berdasarkan Peran Bisnis</div>
+        </div>
+        <div id="tb-role-breakdown"></div>
+      </div>
+      
+      <div class="tb-section">
+        <div class="tb-section-header">
+          <div class="tb-section-title">📍 Berdasarkan Wilayah</div>
+        </div>
+        <div id="tb-region-breakdown"></div>
+      </div>
+    </div>
+    
+    <!-- Heatmap -->
+    <div class="tb-section">
+      <div class="tb-section-header">
+        <div class="tb-section-title">🔥 Heatmap Beban: Outlet × Waktu</div>
+        <div class="tb-section-meta">Hover untuk detail</div>
+      </div>
+      <div class="tb-heatmap-scroll">
+        <div id="tb-heatmap-grid"></div>
+      </div>
+      <div class="tb-heatmap-legend">
+        <span>Rendah</span>
+        <div class="tb-legend-scale">
+          <div class="tb-legend-cell tb-heat-0"></div>
+          <div class="tb-legend-cell tb-heat-1"></div>
+          <div class="tb-legend-cell tb-heat-2"></div>
+          <div class="tb-legend-cell tb-heat-3"></div>
+          <div class="tb-legend-cell tb-heat-4"></div>
+          <div class="tb-legend-cell tb-heat-5"></div>
+        </div>
+        <span>Tinggi</span>
+      </div>
+    </div>
+    
+    <!-- Trend Chart -->
+    <div class="tb-section">
+      <div class="tb-section-header">
+        <div class="tb-section-title">📈 Tren Beban per Kategori</div>
+        <div class="tb-section-meta" id="tb-trend-meta">-</div>
+      </div>
+      <div class="tb-chart-tall">
+        <canvas id="tb-trend-chart"></canvas>
+      </div>
+    </div>
+    
+  </div>
+</div>
   
   <div class="tab-content" id="tab-target">
     <div class="empty-state">
@@ -2816,6 +3441,12 @@ document.addEventListener('click', function(e) {
   if (e.target && e.target.matches('.tab[data-tab="laba-rugi"]')) {
     fetchLabaRugi();
   }
+});
+// Hook: Tab click - fetch when "Biaya" tab clicked
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.matches('.tab[data-tab="biaya"]')) {
+    fetchTabBiaya();
+  }
 });  
 // Initial load: default ke "Bulan Ini"
 const initialRange = getPresetRange('month');
@@ -3012,7 +3643,393 @@ document.addEventListener('DOMContentLoaded', function() {
   if (modeSelector) {
     modeSelector.addEventListener('change', fetchLabaRugi);
   }
-});  
+});
+// ========================================
+// PHASE 5: TAB BIAYA — Cost Analytics
+// ========================================
+
+let tabBiayaData = null;
+let tbKategoriChartInstance = null;
+let tbTrendChartInstance = null;
+
+// Color palette untuk kategori beban
+const TB_CATEGORY_COLORS = {
+  'DISTRIBUSI': '#2C5F2D',
+  'ADMIN & UMUM': '#5B4636',
+  'OPERASIONAL': '#D4AF37',
+  'MARKETING': '#3498DB',
+  'SDM': '#27AE60'
+};
+
+const TB_ROLE_COLORS = {
+  'HEAD_OFFICE': '#3498DB',
+  'RETAIL': '#2C5F2D',
+  'PRODUCTION': '#D4AF37'
+};
+
+const TB_REGION_COLORS = {
+  'Denpasar': '#2C5F2D',
+  'Lombok': '#3498DB',
+  'Pekalongan': '#D4AF37'
+};
+
+// Helper format Rupiah
+function tbFormatRupiah(amount) {
+  const n = Math.round(amount || 0);
+  return 'Rp ' + n.toLocaleString('id-ID');
+}
+
+function tbFormatPct(val) {
+  return (val || 0).toFixed(1) + '%';
+}
+
+function tbGetHeatClass(value, max) {
+  if (!value || value === 0) return 'tb-heat-0';
+  const ratio = value / max;
+  if (ratio < 0.05) return 'tb-heat-1';
+  if (ratio < 0.2) return 'tb-heat-2';
+  if (ratio < 0.5) return 'tb-heat-3';
+  if (ratio < 0.8) return 'tb-heat-4';
+  return 'tb-heat-5';
+}
+
+
+// ========================================
+// FETCH: Main entry point
+// ========================================
+async function fetchTabBiaya() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  
+  const outletFilter = document.getElementById('tb-outlet-filter')?.value || 'all';
+  const granularity = document.getElementById('tb-granularity')?.value || 'day';
+  
+  // Show loading
+  document.getElementById('tb-loading').style.display = 'block';
+  document.getElementById('tb-report-body').style.display = 'none';
+  document.getElementById('tb-error').style.display = 'none';
+  
+  // Update period display
+  document.getElementById('tb-period-display').textContent = 
+    currentRange.startDate.split('-').reverse().join('/') + ' - ' + 
+    currentRange.endDate.split('-').reverse().join('/');
+  
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getCostBreakdown' +
+                '&startDate=' + currentRange.startDate +
+                '&endDate=' + currentRange.endDate +
+                '&outletFilter=' + encodeURIComponent(outletFilter) +
+                '&granularity=' + granularity;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (!data.ok) {
+      console.error('Tab Biaya error:', data.error);
+      document.getElementById('tb-loading').style.display = 'none';
+      document.getElementById('tb-error').style.display = 'block';
+      document.getElementById('tb-error-message').textContent = data.error;
+      return;
+    }
+    
+    tabBiayaData = data.data;
+    renderTabBiaya();
+    
+  } catch (err) {
+    console.error('Tab Biaya fetch error:', err);
+    document.getElementById('tb-loading').style.display = 'none';
+    document.getElementById('tb-error').style.display = 'block';
+    document.getElementById('tb-error-message').textContent = 'Gagal memuat data: ' + err.message;
+  }
+}
+
+
+// ========================================
+// RENDER: Main dispatcher
+// ========================================
+function renderTabBiaya() {
+  if (!tabBiayaData) return;
+  const d = tabBiayaData;
+  
+  document.getElementById('tb-loading').style.display = 'none';
+  document.getElementById('tb-report-body').style.display = 'block';
+  document.getElementById('tb-error').style.display = 'none';
+  
+  tbRenderSummaryCards(d.summary);
+  tbRenderOutletTable(d.byOutlet, d.summary.totalBeban);
+  tbRenderKategoriChart(d.byKategori);
+  tbRenderRoleBreakdown(d.byRole);
+  tbRenderRegionBreakdown(d.byRegion);
+  tbRenderHeatmap(d.heatmap);
+  tbRenderTrendChart(d.trend, d.byKategori, d.granularity);
+  
+  document.getElementById('tb-outlet-count').textContent = d.byOutlet.length + ' outlet';
+  document.getElementById('tb-kategori-count').textContent = d.byKategori.length + ' kategori';
+  
+  const granLabel = d.granularity === 'day' ? 'Harian' : d.granularity === 'week' ? 'Mingguan' : 'Bulanan';
+  document.getElementById('tb-trend-meta').textContent = granLabel;
+}
+
+
+// ========================================
+// RENDER: Summary Cards
+// ========================================
+function tbRenderSummaryCards(summary) {
+  document.getElementById('tb-sum-total').textContent = tbFormatRupiah(summary.totalBeban);
+  document.getElementById('tb-sum-meta').textContent = 
+    summary.transactionCount + ' transaksi · ' + summary.periodDays + ' hari';
+  document.getElementById('tb-sum-avg').textContent = tbFormatRupiah(summary.avgPerDay);
+  
+  if (summary.topOutlet) {
+    document.getElementById('tb-sum-top-outlet').textContent = summary.topOutlet.name;
+    document.getElementById('tb-sum-top-outlet-detail').innerHTML = 
+      '<span class="tb-card-pill">' + tbFormatPct(summary.topOutlet.share) + '</span>' + 
+      tbFormatRupiah(summary.topOutlet.total);
+  }
+  
+  if (summary.topKategori) {
+    document.getElementById('tb-sum-top-kategori').textContent = summary.topKategori.name;
+    document.getElementById('tb-sum-top-kategori-detail').innerHTML = 
+      '<span class="tb-card-pill">' + tbFormatPct(summary.topKategori.share) + '</span>' + 
+      tbFormatRupiah(summary.topKategori.total);
+  }
+}
+
+
+// ========================================
+// RENDER: Outlet Table
+// ========================================
+function tbRenderOutletTable(outlets, totalBeban) {
+  const tbody = document.getElementById('tb-outlet-tbody');
+  tbody.innerHTML = outlets.map(function(o) {
+    const roleLabel = o.role === 'HEAD_OFFICE' ? 'HO' : o.role;
+    return '<tr>' +
+      '<td>' +
+        '<span class="tb-outlet-name">' + o.outlet + '</span>' +
+        '<span class="tb-role-badge tb-role-' + o.role + '">' + roleLabel + '</span>' +
+      '</td>' +
+      '<td class="tb-amount">' + tbFormatRupiah(o.total) + '</td>' +
+      '<td>' +
+        '<div class="tb-share-bar">' +
+          '<div class="tb-bar-track">' +
+            '<div class="tb-bar-fill" style="width:' + o.share + '%"></div>' +
+          '</div>' +
+          '<span class="tb-pct">' + tbFormatPct(o.share) + '</span>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+
+// ========================================
+// RENDER: Kategori Donut Chart
+// ========================================
+function tbRenderKategoriChart(kategoris) {
+  if (tbKategoriChartInstance) {
+    tbKategoriChartInstance.destroy();
+  }
+  
+  const ctx = document.getElementById('tb-kategori-chart');
+  tbKategoriChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: kategoris.map(function(k) { return k.kategori; }),
+      datasets: [{
+        data: kategoris.map(function(k) { return k.total; }),
+        backgroundColor: kategoris.map(function(k) { return TB_CATEGORY_COLORS[k.kategori] || '#999'; }),
+        borderWidth: 2,
+        borderColor: '#FFFFFF'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 12,
+            font: { size: 11 },
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const total = ctx.dataset.data.reduce(function(a,b) { return a+b; }, 0);
+              const pct = ((ctx.parsed/total)*100).toFixed(1);
+              return ' ' + ctx.label + ': ' + tbFormatRupiah(ctx.parsed) + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+
+// ========================================
+// RENDER: Role & Region Breakdown
+// ========================================
+function tbRenderRoleBreakdown(roles) {
+  const labelMap = {
+    'HEAD_OFFICE': 'Head Office',
+    'RETAIL': 'Outlet Retail',
+    'PRODUCTION': 'Produksi'
+  };
+  
+  document.getElementById('tb-role-breakdown').innerHTML = roles.map(function(r) {
+    const color = TB_ROLE_COLORS[r.role] || '#999';
+    return '<div class="tb-mini-bar-item">' +
+      '<div class="tb-mini-bar-header">' +
+        '<span class="tb-mini-bar-label">' + (labelMap[r.role] || r.role) + '</span>' +
+        '<span class="tb-mini-bar-value">' + tbFormatRupiah(r.total) + ' (' + tbFormatPct(r.share) + ')</span>' +
+      '</div>' +
+      '<div class="tb-mini-bar-track">' +
+        '<div class="tb-mini-bar-fill" style="background:' + color + '; width:' + r.share + '%"></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function tbRenderRegionBreakdown(regions) {
+  document.getElementById('tb-region-breakdown').innerHTML = regions.map(function(r) {
+    const color = TB_REGION_COLORS[r.region] || '#999';
+    return '<div class="tb-mini-bar-item">' +
+      '<div class="tb-mini-bar-header">' +
+        '<span class="tb-mini-bar-label">📍 ' + r.region + '</span>' +
+        '<span class="tb-mini-bar-value">' + tbFormatRupiah(r.total) + ' (' + tbFormatPct(r.share) + ')</span>' +
+      '</div>' +
+      '<div class="tb-mini-bar-track">' +
+        '<div class="tb-mini-bar-fill" style="background:' + color + '; width:' + r.share + '%"></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+
+// ========================================
+// RENDER: Heatmap
+// ========================================
+function tbRenderHeatmap(heatmap) {
+  const grid = document.getElementById('tb-heatmap-grid');
+  const outlets = heatmap.outlets;
+  const periods = heatmap.periods;
+  const matrix = heatmap.matrix;
+  
+  let maxValue = 0;
+  matrix.forEach(function(row) {
+    row.forEach(function(val) { if (val > maxValue) maxValue = val; });
+  });
+  
+  grid.className = 'tb-heatmap-grid';
+  grid.style.gridTemplateColumns = 'auto repeat(' + periods.length + ', 28px)';
+  
+  let html = '';
+  
+  html += '<div class="tb-heat-cell tb-heat-label" style="height:40px"></div>';
+  periods.forEach(function(p) {
+    const shortDate = p.length === 10 ? p.slice(8) : p;
+    html += '<div class="tb-heat-cell tb-heat-date">' + shortDate + '</div>';
+  });
+  
+  outlets.forEach(function(outlet, rowIdx) {
+    html += '<div class="tb-heat-cell tb-heat-label">' + outlet + '</div>';
+    matrix[rowIdx].forEach(function(val, colIdx) {
+      const heatClass = tbGetHeatClass(val, maxValue);
+      const period = periods[colIdx];
+      const tooltipText = val > 0 
+        ? outlet + ' · ' + period + ' · ' + tbFormatRupiah(val)
+        : outlet + ' · ' + period + ' · Tidak ada beban';
+      html += '<div class="tb-heat-cell ' + heatClass + '">' +
+                '<div class="tb-heat-tooltip">' + tooltipText + '</div>' +
+              '</div>';
+    });
+  });
+  
+  grid.innerHTML = html;
+}
+
+
+// ========================================
+// RENDER: Trend Chart
+// ========================================
+function tbRenderTrendChart(trend, kategoris, granularity) {
+  if (tbTrendChartInstance) {
+    tbTrendChartInstance.destroy();
+  }
+  
+  const datasets = kategoris.map(function(k) {
+    return {
+      label: k.kategori,
+      data: trend.map(function(p) { return p[k.kategori] || 0; }),
+      borderColor: TB_CATEGORY_COLORS[k.kategori] || '#999',
+      backgroundColor: (TB_CATEGORY_COLORS[k.kategori] || '#999') + '20',
+      borderWidth: 2,
+      tension: 0.3,
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      fill: false
+    };
+  });
+  
+  const ctx = document.getElementById('tb-trend-chart');
+  tbTrendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: trend.map(function(p) { return p.period; }),
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            padding: 14,
+            font: { size: 11 },
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ' ' + ctx.dataset.label + ': ' + tbFormatRupiah(ctx.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(val) {
+              if (val >= 1000000) return 'Rp ' + (val/1000000).toFixed(1) + 'jt';
+              if (val >= 1000) return 'Rp ' + (val/1000).toFixed(0) + 'rb';
+              return 'Rp ' + val;
+            },
+            font: { size: 10 }
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45,
+            font: { size: 9 }
+          },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}  
 </script>
 </body>
 </html>
