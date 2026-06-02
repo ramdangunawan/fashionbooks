@@ -3059,6 +3059,19 @@ document.querySelectorAll('#period-presets button').forEach(function(btn) {
     
     // Fetch new data
     fetchAnalytics();
+    
+    // ─── Auto re-fetch tab aktif setelah preset diubah ───
+    const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+    if (activeTab === 'penjualan') {
+      if (typeof fetchSalesLeaderboard === 'function') fetchSalesLeaderboard();
+      if (typeof fetchDailyHeatmap === 'function') fetchDailyHeatmap();
+    }
+    if (activeTab === 'laba-rugi') {
+      if (typeof fetchLabaRugi === 'function') fetchLabaRugi();
+    }
+    if (activeTab === 'biaya') {
+      if (typeof fetchTabBiaya === 'function') fetchTabBiaya();
+    }
   });
 });
 
