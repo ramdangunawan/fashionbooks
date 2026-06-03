@@ -1716,7 +1716,7 @@ function generateActionableInsights() {
   
   if (data.peakHourLabel && data.peakHourCount > 0) {
     insights.push({
-      icon: '⏰',
+      icon: 'JAM',
       title: 'Manfaatkan Jam Ramai',
       text: 'Peak transaksi di jam <b>' + data.peakHourLabel + '</b> dengan <b>' + data.peakHourCount + ' transaksi</b>. Schedule promo atau staff terbaik di jam ini.',
       color: '#2C5F2D'
@@ -1725,7 +1725,7 @@ function generateActionableInsights() {
   
   if (data.peakRevenueLabel && data.peakRevenueLabel !== data.peakHourLabel) {
     insights.push({
-      icon: '💎',
+      icon: 'TOP',
       title: 'Jam Customer Big-Spender',
       text: 'Jam <b>' + data.peakRevenueLabel + '</b> punya revenue tertinggi (' + fmt(data.peakRevenueAmount) + ') meski bukan jam terramai. Target premium product untuk slot ini.',
       color: '#D4AF37'
@@ -1735,7 +1735,7 @@ function generateActionableInsights() {
   if (data.lostTopReasons && data.lostTopReasons.length > 0) {
     const top = data.lostTopReasons[0];
     const reasonAction = {
-      'Stock habis': 'Restock prioritas — analisa SKU yang sering habis',
+      'Stock habis': 'Restock prioritas - analisa SKU yang sering habis',
       'Ukuran tidak tersedia': 'Review size distribution stock (M & L biasanya paling banyak diminta)',
       'Warna tidak tersedia': 'Diversifikasi warna untuk produk best-seller',
       'Harga tidak cocok': 'Review pricing strategy atau adakan promo diskon',
@@ -1744,7 +1744,7 @@ function generateActionableInsights() {
     const action = reasonAction[top.reason] || 'Investigasi lebih lanjut dengan tim sales';
     
     insights.push({
-      icon: '📉',
+      icon: 'LOST',
       title: 'Lost Sale: Action Required',
       text: 'Top alasan lost sale: <b>' + top.reason + '</b> (' + top.count + 'x). <br><b>Action:</b> ' + action + '.',
       color: '#C43328'
@@ -1753,7 +1753,7 @@ function generateActionableInsights() {
   
   if (data.lostAmount > 100000) {
     insights.push({
-      icon: '💸',
+      icon: 'Rp',
       title: 'Estimasi Revenue Hilang',
       text: 'Periode ini ada estimasi <b>' + fmt(data.lostAmount) + '</b> revenue hilang. Kalau 50% bisa di-recover, itu setara <b>' + fmt(data.lostAmount * 0.5) + '</b> tambahan pendapatan.',
       color: '#D4AF37'
@@ -1763,7 +1763,7 @@ function generateActionableInsights() {
   if (data.totalTransactions > 0) {
     const avgPerSlot = Math.round(data.totalTransactions / 6);
     insights.push({
-      icon: '📊',
+      icon: 'AVG',
       title: 'Pattern Recommendation',
       text: 'Rata-rata <b>' + avgPerSlot + ' transaksi per slot jam</b>. Untuk planning promo: target +10-15% di jam yang traffic-nya di bawah rata-rata.',
       color: '#3498DB'
@@ -1776,12 +1776,19 @@ function generateActionableInsights() {
     return;
   }
   
-  container.innerHTML = insights.map(ins => 
-    '<div style="background:white;border-left:4px solid ' + ins.color + ';padding:1rem 1.25rem;border-radius:8px;margin-bottom:0.75rem;box-shadow:var(--shadow)">' +
+  container.innerHTML = insights.map(function(ins) {
+    return '<div style="background:white;border-left:4px solid ' + ins.color + ';padding:1rem 1.25rem;border-radius:8px;margin-bottom:0.75rem;box-shadow:var(--shadow)">' +
       '<div style="display:flex;align-items:flex-start;gap:0.75rem">' +
-        '<div style="font-size:24px;flex-shrink:0">' + ins.icon + '</div>' +
-        '<div  
-
+        '<div style="font-size:18px;font-weight:800;flex-shrink:0;color:' + ins.color + '">[' + ins.icon + ']</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:700;color:' + ins.color + ';font-size:14px;margin-bottom:0.3rem">' + ins.title + '</div>' +
+          '<div style="font-size:13px;color:var(--text);line-height:1.5">' + ins.text + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+  
 // ═══ HELPER ═══
 function filterReportsByDate(reports) {
   return reports.filter(r => {
