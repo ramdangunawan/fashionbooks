@@ -875,6 +875,12 @@ function updatePreview(){
 async function submitReport(){
   // ANTI-DOUBLE-SUBMIT: Cek flag global
   if(window.isSubmitting){console.warn('Submit already in progress');return;}
+  
+  // ─── IDEMPOTENCY KEY: Unique ID untuk submit ini ───
+  // Mencegah double data kalau browser retry karena network lambat
+  const submitId = 'sub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  console.log('📤 Submit attempt with submitId:', submitId);
+  
   const date=document.getElementById('input-date').value;
   const validPays=payRows.filter(r=>Number(r.amount)>0);
   const totalPay=validPays.reduce((s,r)=>s+Number(r.amount),0);
@@ -916,7 +922,7 @@ async function submitReport(){
   const btn=document.getElementById('submit-btn');btn.innerHTML='<span class="loading"></span> Mengirim...';btn.disabled=true;
   try {
     const payments=validPays.map(r=>({accountCode:r.accountCode,amount:Number(r.amount)}));
-    const res=await apiCall({action:'addReport',date,outletId:session.outlet.id,salesId:session.sales.id,
+    const res=await apiCall({action:'addReport',submitId:submitId,date,outletId:session.outlet.id,salesId:session.sales.id,
       followup:Number(document.getElementById('f-followup').value)||0,
       feedback:Number(document.getElementById('f-feedback').value)||0,
       qty:Number(document.getElementById('f-qty').value)||0,
