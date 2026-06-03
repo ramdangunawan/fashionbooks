@@ -785,6 +785,7 @@ body {
   <div class="tabs">
     <button class="tab active" data-tab="overview" onclick="switchTab('overview', this)">📈 Overview</button>
     <button class="tab" data-tab="penjualan" onclick="switchTab('penjualan', this)">💰 Penjualan</button>
+    <button class="tab" data-tab="analytics" onclick="switchTab('analytics', this)">📊 Outlet Analytics</button>
   </div>
   
   <!-- LOADING -->
@@ -872,6 +873,102 @@ body {
       </div>
       <div class="heatmap-scroll">
         <div id="heatmap-grid"></div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- ─── TAB: OUTLET ANALYTICS (NEW) ─── -->
+  <div id="tab-analytics" class="tab-content">
+    
+    <!-- Filter Outlet -->
+    <div class="filter-section" style="padding:1rem 1.25rem;margin-bottom:1rem">
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <span class="filter-label">🏪 Filter Outlet:</span>
+        <select id="analytics-outlet-filter" class="date-input" style="min-width:240px;padding:0.5rem 0.75rem" onchange="renderAnalytics()">
+          <option value="all">Semua Outlet (Agregat)</option>
+        </select>
+        <span id="analytics-meta" style="font-size:11px;color:var(--text-muted);margin-left:auto"></span>
+      </div>
+    </div>
+    
+    <!-- SECTION 1: Jam Ramai Transaksi -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">⏰ Jam Ramai Transaksi</div>
+        <div class="section-meta" id="peak-hour-meta">Peak: -</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="hour-count-chart"></canvas>
+      </div>
+    </div>
+    
+    <!-- SECTION 2: Revenue per Slot Jam -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">💰 Revenue per Slot Jam</div>
+        <div class="section-meta" id="peak-revenue-meta">Peak revenue: -</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="hour-revenue-chart"></canvas>
+      </div>
+    </div>
+    
+    <!-- SECTION 3: Lost Sale Insights -->
+    <div class="grid-2">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">📉 Lost Sale Summary</div>
+          <div class="section-meta" id="lostsale-period">Periode terpilih</div>
+        </div>
+        <div class="summary-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+          <div class="summary-card card-aov" style="padding:1rem">
+            <div class="card-label">Total Lapor</div>
+            <div class="card-value" id="lost-total-count" style="font-size:20px">0</div>
+            <div class="card-sub">Kali lost sale</div>
+          </div>
+          <div class="summary-card card-aov" style="padding:1rem">
+            <div class="card-label">Total Qty</div>
+            <div class="card-value" id="lost-total-qty" style="font-size:20px">0</div>
+            <div class="card-sub">Pcs missed</div>
+          </div>
+          <div class="summary-card card-revenue" style="padding:1rem;grid-column:1/-1">
+            <div class="card-label">💸 Estimasi Revenue Hilang</div>
+            <div class="card-value" id="lost-total-amount" style="font-size:22px;color:var(--danger)">Rp 0</div>
+            <div class="card-sub" id="lost-top-reason-text">Top alasan: -</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">📊 Top Alasan Lost Sale</div>
+        </div>
+        <div class="chart-container" style="height:260px">
+          <canvas id="lostsale-reasons-chart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- SECTION 4: Daily Trend Lost Sale -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📈 Daily Trend Lost Sale</div>
+        <div class="section-meta">Tren harian</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="lostsale-trend-chart"></canvas>
+      </div>
+    </div>
+    
+    <!-- SECTION 5: Actionable Insights -->
+    <div class="section" style="background:linear-gradient(135deg, var(--green-light), var(--gold-light));border:2px solid var(--gold)">
+      <div class="section-header" style="border-bottom-color:var(--gold)">
+        <div class="section-title" style="color:var(--green-dark)">🎯 Actionable Insights untuk Marketing</div>
+        <div class="section-meta">Auto-generated</div>
+      </div>
+      <div id="actionable-insights">
+        <div style="text-align:center;padding:1.5rem;color:var(--text-muted)">Pilih periode & klik tab untuk lihat insights...</div>
       </div>
     </div>
     
@@ -1075,9 +1172,14 @@ function switchTab(tabName, btn) {
   btn.classList.add('active');
   document.getElementById('tab-' + tabName).classList.add('active');
   
-  if (tabName === 'penjualan') {
+ if (tabName === 'penjualan') {
     renderLeaderboard();
     renderHeatmap();
+  }
+  
+  if (tabName === 'analytics') {
+    populateOutletFilter();
+    renderAnalytics();
   }
 }
 
@@ -1375,6 +1477,310 @@ function renderHeatmap() {
   
   grid.innerHTML = html;
 }
+
+// ═══ OUTLET ANALYTICS (NEW) ═══
+
+let hourCountChartInstance = null;
+let hourRevenueChartInstance = null;
+let lostReasonsChartInstance = null;
+let lostTrendChartInstance = null;
+let outletsLoadedForFilter = false;
+
+function populateOutletFilter() {
+  if (outletsLoadedForFilter || !dashboardData) return;
+  const select = document.getElementById('analytics-outlet-filter');
+  const outlets = dashboardData.outlets || [];
+  
+  outlets.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = o.name;
+    select.appendChild(opt);
+  });
+  outletsLoadedForFilter = true;
+}
+
+async function renderAnalytics() {
+  if (!dashboardData) return;
+  
+  const outletId = document.getElementById('analytics-outlet-filter').value;
+  const isAll = outletId === 'all';
+  
+  const start = new Date(currentRange.startDate);
+  const end = new Date(currentRange.endDate);
+  const days = Math.max(1, Math.floor((end - start) / (1000*60*60*24)) + 1);
+  
+  document.getElementById('analytics-meta').textContent = 
+    'Periode: ' + days + ' hari' + (isAll ? ' · Semua outlet' : ' · 1 outlet');
+  document.getElementById('lostsale-period').textContent = days + ' hari periode terpilih';
+  
+  await Promise.all([
+    renderBusinessHours(isAll ? null : outletId, days),
+    renderLostSaleAnalytics(isAll ? null : outletId, days)
+  ]);
+  
+  generateActionableInsights();
+}
+
+async function renderBusinessHours(outletId, days) {
+  const params = {action: 'getBusinessHoursAnalytics', days: days};
+  if (outletId) params.outletId = outletId;
+  
+  const res = await apiCall(params);
+  if (!res.ok) {
+    console.error('Failed to load business hours:', res.error);
+    return;
+  }
+  
+  const slots = res.slots;
+  const labels = ['08-10', '10-12', '12-14', '14-16', '16-18', '18-20', 'Lainnya'];
+  const keys = ['08-10', '10-12', '12-14', '14-16', '16-18', '18-20', 'lainnya'];
+  
+  const countData = keys.map(k => slots[k]?.count || 0);
+  const revenueData = keys.map(k => slots[k]?.totalAmount || 0);
+  
+  const peakIdx = countData.indexOf(Math.max(...countData));
+  const peakRevenueIdx = revenueData.indexOf(Math.max(...revenueData));
+  
+  document.getElementById('peak-hour-meta').textContent = 
+    '🏆 Peak: ' + labels[peakIdx] + ' (' + countData[peakIdx] + ' transaksi)';
+  document.getElementById('peak-revenue-meta').textContent = 
+    '🏆 Peak revenue: ' + labels[peakRevenueIdx] + ' (' + fmt(revenueData[peakRevenueIdx]) + ')';
+  
+  if (hourCountChartInstance) hourCountChartInstance.destroy();
+  hourCountChartInstance = new Chart(document.getElementById('hour-count-chart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Transaksi',
+        data: countData,
+        backgroundColor: countData.map((v, i) => i === peakIdx ? '#D4AF37' : '#2C5F2D'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => 'Transaksi: ' + ctx.parsed.y } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+  
+  if (hourRevenueChartInstance) hourRevenueChartInstance.destroy();
+  hourRevenueChartInstance = new Chart(document.getElementById('hour-revenue-chart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Revenue',
+        data: revenueData,
+        backgroundColor: revenueData.map((v, i) => i === peakRevenueIdx ? '#D4AF37' : '#2C5F2D'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => 'Revenue: ' + fmt(ctx.parsed.y) } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => {
+              if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'jt';
+              if (v >= 1000) return 'Rp ' + (v/1000).toFixed(0) + 'rb';
+              return 'Rp ' + v;
+            },
+            font: { size: 10 }
+          }
+        },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+  
+  window._analyticsData = window._analyticsData || {};
+  window._analyticsData.peakHourLabel = labels[peakIdx];
+  window._analyticsData.peakHourCount = countData[peakIdx];
+  window._analyticsData.peakRevenueLabel = labels[peakRevenueIdx];
+  window._analyticsData.peakRevenueAmount = revenueData[peakRevenueIdx];
+  window._analyticsData.totalTransactions = countData.reduce((s, v) => s + v, 0);
+}
+
+async function renderLostSaleAnalytics(outletId, days) {
+  const params = {action: 'getLostSaleAnalytics', days: days};
+  if (outletId) params.outletId = outletId;
+  
+  const res = await apiCall(params);
+  if (!res.ok) {
+    console.error('Failed to load lost sale:', res.error);
+    return;
+  }
+  
+  document.getElementById('lost-total-count').textContent = fmtNum(res.totalLost || 0);
+  document.getElementById('lost-total-qty').textContent = fmtNum(res.totalQty || 0);
+  document.getElementById('lost-total-amount').textContent = fmt(res.totalAmount || 0);
+  
+  const topReason = res.topReasons && res.topReasons[0];
+  document.getElementById('lost-top-reason-text').textContent = 
+    topReason ? 'Top alasan: ' + topReason.reason + ' (' + topReason.count + 'x)' : 'Belum ada data';
+  
+  if (lostReasonsChartInstance) lostReasonsChartInstance.destroy();
+  
+  const reasons = res.topReasons || [];
+  if (reasons.length > 0) {
+    const reasonColors = ['#C43328', '#D4AF37', '#3498DB', '#7c3aed', '#2C5F2D', '#5B4636'];
+    lostReasonsChartInstance = new Chart(document.getElementById('lostsale-reasons-chart'), {
+      type: 'doughnut',
+      data: {
+        labels: reasons.map(r => r.reason),
+        datasets: [{
+          data: reasons.map(r => r.count),
+          backgroundColor: reasons.map((r, i) => reasonColors[i % reasonColors.length]),
+          borderWidth: 2,
+          borderColor: '#FFFFFF'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 }, usePointStyle: true } },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                return ' ' + ctx.label + ': ' + ctx.parsed + 'x (' + pct + '%)';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  if (lostTrendChartInstance) lostTrendChartInstance.destroy();
+  const trend = res.dailyTrend || [];
+  if (trend.length > 0) {
+    lostTrendChartInstance = new Chart(document.getElementById('lostsale-trend-chart'), {
+      type: 'line',
+      data: {
+        labels: trend.map(d => {
+          const parts = d.date.split('-');
+          return parts[2] + '/' + parts[1];
+        }),
+        datasets: [{
+          label: 'Lost Sale',
+          data: trend.map(d => d.count),
+          borderColor: '#C43328',
+          backgroundColor: 'rgba(196,51,40,0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => 'Lost sale: ' + ctx.parsed.y + ' kali' } }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+          x: { ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } }
+        }
+      }
+    });
+  }
+  
+  window._analyticsData = window._analyticsData || {};
+  window._analyticsData.lostTotal = res.totalLost || 0;
+  window._analyticsData.lostAmount = res.totalAmount || 0;
+  window._analyticsData.lostTopReasons = res.topReasons || [];
+}
+
+function generateActionableInsights() {
+  const data = window._analyticsData || {};
+  const insights = [];
+  
+  if (data.peakHourLabel && data.peakHourCount > 0) {
+    insights.push({
+      icon: '⏰',
+      title: 'Manfaatkan Jam Ramai',
+      text: 'Peak transaksi di jam <b>' + data.peakHourLabel + '</b> dengan <b>' + data.peakHourCount + ' transaksi</b>. Schedule promo atau staff terbaik di jam ini.',
+      color: '#2C5F2D'
+    });
+  }
+  
+  if (data.peakRevenueLabel && data.peakRevenueLabel !== data.peakHourLabel) {
+    insights.push({
+      icon: '💎',
+      title: 'Jam Customer Big-Spender',
+      text: 'Jam <b>' + data.peakRevenueLabel + '</b> punya revenue tertinggi (' + fmt(data.peakRevenueAmount) + ') meski bukan jam terramai. Target premium product untuk slot ini.',
+      color: '#D4AF37'
+    });
+  }
+  
+  if (data.lostTopReasons && data.lostTopReasons.length > 0) {
+    const top = data.lostTopReasons[0];
+    const reasonAction = {
+      'Stock habis': 'Restock prioritas — analisa SKU yang sering habis',
+      'Ukuran tidak tersedia': 'Review size distribution stock (M & L biasanya paling banyak diminta)',
+      'Warna tidak tersedia': 'Diversifikasi warna untuk produk best-seller',
+      'Harga tidak cocok': 'Review pricing strategy atau adakan promo diskon',
+      'Lainnya': 'Detail review per case untuk identifikasi pattern'
+    };
+    const action = reasonAction[top.reason] || 'Investigasi lebih lanjut dengan tim sales';
+    
+    insights.push({
+      icon: '📉',
+      title: 'Lost Sale: Action Required',
+      text: 'Top alasan lost sale: <b>' + top.reason + '</b> (' + top.count + 'x). <br><b>Action:</b> ' + action + '.',
+      color: '#C43328'
+    });
+  }
+  
+  if (data.lostAmount > 100000) {
+    insights.push({
+      icon: '💸',
+      title: 'Estimasi Revenue Hilang',
+      text: 'Periode ini ada estimasi <b>' + fmt(data.lostAmount) + '</b> revenue hilang. Kalau 50% bisa di-recover, itu setara <b>' + fmt(data.lostAmount * 0.5) + '</b> tambahan pendapatan.',
+      color: '#D4AF37'
+    });
+  }
+  
+  if (data.totalTransactions > 0) {
+    const avgPerSlot = Math.round(data.totalTransactions / 6);
+    insights.push({
+      icon: '📊',
+      title: 'Pattern Recommendation',
+      text: 'Rata-rata <b>' + avgPerSlot + ' transaksi per slot jam</b>. Untuk planning promo: target +10-15% di jam yang traffic-nya di bawah rata-rata.',
+      color: '#3498DB'
+    });
+  }
+  
+  const container = document.getElementById('actionable-insights');
+  if (insights.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted)">Belum ada data cukup untuk generate insights. Coba pilih periode lebih panjang.</div>';
+    return;
+  }
+  
+  container.innerHTML = insights.map(ins => 
+    '<div style="background:white;border-left:4px solid ' + ins.color + ';padding:1rem 1.25rem;border-radius:8px;margin-bottom:0.75rem;box-shadow:var(--shadow)">' +
+      '<div style="display:flex;align-items:flex-start;gap:0.75rem">' +
+        '<div style="font-size:24px;flex-shrink:0">' + ins.icon + '</div>' +
+        '<div  
 
 // ═══ HELPER ═══
 function filterReportsByDate(reports) {
