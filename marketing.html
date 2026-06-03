@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FashionBooks Marketing — Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --green: #2C5F2D;
+  --green-dark: #1F4520;
+  --green-light: #E8F0E8;
+  --gold: #D4AF37;
+  --gold-light: #FAF3D7;
+  --bg: #F7F7F4;
+  --card: #FFFFFF;
+  --text: #1C1714;
+  --text-muted: #6B5E52;
+  --border: #E6DFD6;
+  --info: #3498DB;
+  --warning: #D4AF37;
+  --danger: #C43328;
+  --shadow: 0 1px 3px rgba(28,23,20,0.08);
+  --shadow-md: 0 4px 12px rgba(28,23,20,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* ─── LOGIN SCREEN ─── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--green-light) 0%, var(--gold-light) 100%);
+}
+
+.login-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(28,23,20,0.1);
+  max-width: 420px;
+  width: 100%;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-logo-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--green);
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  font-weight: 900;
+  margin-bottom: 0.75rem;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.login-form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(44,95,45,0.15);
+}
+
+.login-input-pin {
+  letter-spacing: 8px;
+  font-size: 20px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.login-btn {
+  width: 100%;
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 0.95rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: background 0.2s;
+}
+
+.login-btn:hover { background: var(--green-dark); }
+.login-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+.login-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.alert {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.alert-err {
+  background: #FEE;
+  color: var(--danger);
+  border: 1px solid #f5c6c3;
+}
+
+.alert-info {
+  background: #EFF4FF;
+  color: var(--info);
+  border: 1px solid #C6D9F5;
+}
+
+.alert-warn {
+  background: var(--gold-light);
+  color: #92400E;
+  border: 1px solid #E8D4A8;
+}
+
+/* ─── MAIN DASHBOARD ─── */
+.header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.header-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--green);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+  font-weight: 900;
+}
+
+.header-info { flex: 1; }
+.header-title { font-size: 16px; font-weight: 800; }
+.header-subtitle { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+
+.header-user {
+  background: var(--green-light);
+  color: var(--green-dark);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-logout {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-logout:hover { background: #FEE; color: var(--danger); }
+
+/* ─── FILTER ─── */
+.filter-section {
+  background: var(--card);
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.filter-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.filter-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.preset-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.preset-btn:hover { background: var(--green-light); color: var(--green-dark); }
+.preset-btn.active { background: var(--green); color: white; border-color: var(--green); }
+
+.custom-date-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.date-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.btn-apply {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-apply:hover { background: var(--green-dark); }
+
+.period-info {
+  background: var(--green-light);
+  color: var(--green-dark);
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+/* ─── TABS ─── */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.4rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.tab {
+  flex: 1;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.tab.active { background: var(--green); color: white; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ─── SUMMARY CARDS ─── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card {
+  background: var(--card);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+.card-revenue::before { background: var(--green); }
+.card-transactions::before { background: var(--gold); }
+.card-aov::before { background: var(--info); }
+.card-conversion::before { background: #7c3aed; }
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -1px;
+}
+
+.card-value-sm { font-size: 16px; }
+
+.card-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* ─── SECTION ─── */
+.section {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title { font-size: 15px; font-weight: 700; }
+.section-meta { font-size: 12px; color: var(--text-muted); }
+
+/* ─── GRID 2 COL ─── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ─── TABLE ─── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-table th:last-child,
+.data-table td:last-child { text-align: right; }
+
+.data-table td {
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody tr:hover { background: var(--green-light); }
+
+.amount { font-weight: 600; font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
+
+/* ─── BAR ─── */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.bar-track {
+  width: 60px;
+  height: 5px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 40px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── CHARTS ─── */
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.chart-container-tall {
+  position: relative;
+  height: 320px;
+}
+
+/* ─── LEADERBOARD ─── */
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.leaderboard-item:last-child { border-bottom: none; }
+
+.leaderboard-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.leaderboard-rank.rank-1 { background: var(--gold); color: white; }
+.leaderboard-rank.rank-2 { background: #C0C0C0; color: white; }
+.leaderboard-rank.rank-3 { background: #CD7F32; color: white; }
+
+.leaderboard-info { flex: 1; }
+.leaderboard-name { font-weight: 700; font-size: 14px; }
+.leaderboard-outlet { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.leaderboard-amount {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--green-dark);
+}
+
+/* ─── HEATMAP ─── */
+.heatmap-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.heatmap-grid {
+  display: grid;
+  gap: 3px;
+  min-width: max-content;
+}
+
+.heat-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+}
+
+.heat-cell:hover {
+  transform: scale(1.3);
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+}
+
+.heat-label {
+  background: transparent;
+  cursor: default;
+  width: auto;
+  padding-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.heat-date {
+  background: transparent;
+  cursor: default;
+  font-size: 10px;
+  color: var(--text-muted);
+  height: 36px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.heat-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--text);
+  color: white;
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 100;
+}
+
+.heat-cell:hover .heat-tooltip { opacity: 1; }
+
+.heat-0 { background: #F4F7F4; }
+.heat-1 { background: #E2ECE0; }
+.heat-2 { background: #C5D9C0; }
+.heat-3 { background: #94BC8B; }
+.heat-4 { background: #5F9C57; }
+.heat-5 { background: var(--green); }
+
+/* ─── LOADING ─── */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.spinner {
+  border: 3px solid var(--bg);
+  border-top: 3px solid var(--green);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── ACCESS DENIED ─── */
+.access-denied {
+  background: var(--gold-light);
+  border: 1px solid #E8D4A8;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 480px;
+  margin: 2rem auto;
+}
+
+.access-denied-icon { font-size: 48px; margin-bottom: 1rem; }
+.access-denied-title { font-size: 20px; font-weight: 800; color: #92400E; margin-bottom: 0.5rem; }
+.access-denied-msg { color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .summary-grid { grid-template-columns: 1fr; }
+  .header { flex-wrap: wrap; }
+  .tabs { flex-direction: column; }
+  .filter-row { justify-content: stretch; }
+  .preset-btn { flex: 1; }
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.empty-state .icon { font-size: 48px; margin-bottom: 0.75rem; opacity: 0.5; }
+.empty-state h3 { font-size: 18px; margin-bottom: 0.5rem; color: var(--text); }
+.empty-state p { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ─── PAGE: SETUP URL (first time) ─── -->
+<div id="page-setup" class="login-wrap" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">F</div>
+      <div class="login-title">Setup Marketing Dashboard</div>
+      <div class="login-subtitle">FashionBooks Analytics</div>
+    </div>
+    <div class="alert alert-info">📋 Masukkan URL Google Apps Script dari admin.</div>
+    <label class="login-form-label">URL Google Apps Script</label>
+    <input id="setup-url" class="login-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:11px;font-family:'JetBrains Mono',monospace">
+    <div id="setup-err" class="alert alert-err" style="display:none;margin-top:1rem"></div>
+    <button id="setup-btn" class="login-btn" onclick="saveUrl()">Simpan & Lanjutkan</button>
+  </div>
+</div>
+
+<!-- ─── PAGE: LOGIN ─── -->
+<div id="page-login" class="login-wrap" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">F</div>
+      <div class="login-title">Marketing Dashboard</div>
+      <div class="login-subtitle">FashionBooks Analytics</div>
+    </div>
+    <div id="login-err" class="alert alert-err" style="display:none"></div>
+    <label class="login-form-label">Nama Anda</label>
+    <input id="login-name" class="login-input" placeholder="Contoh: Marketing Test" autocomplete="off">
+    <label class="login-form-label">PIN (4 Angka)</label>
+    <input id="login-pin" class="login-input login-input-pin" type="tel" maxlength="4" placeholder="••••" autocomplete="off">
+    <button id="login-btn" class="login-btn" onclick="doLogin()">Masuk</button>
+    <button class="login-link" onclick="resetUrl()">Ganti URL Sistem</button>
+  </div>
+</div>
+
+<!-- ─── PAGE: ACCESS DENIED (kalau bukan marketing) ─── -->
+<div id="page-denied" class="login-wrap" style="display:none;">
+  <div class="access-denied">
+    <div class="access-denied-icon">🚫</div>
+    <div class="access-denied-title">Akses Ditolak</div>
+    <div class="access-denied-msg">
+      Akun Anda <b id="denied-role">tidak memiliki</b> akses ke Marketing Dashboard.<br><br>
+      Marketing Dashboard hanya untuk tim marketing & manager sales. Hubungi admin atau owner kalau Anda butuh akses.
+    </div>
+    <button class="login-btn" onclick="logout()" style="max-width:200px;margin:0 auto">Kembali ke Login</button>
+  </div>
+</div>
+
+<!-- ─── PAGE: MAIN DASHBOARD ─── -->
+<div id="page-main" class="container" style="display:none;">
+  
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">F</div>
+    <div class="header-info">
+      <div class="header-title">FashionBooks Marketing</div>
+      <div class="header-subtitle">Analytics Dashboard</div>
+    </div>
+    <div class="header-user" id="user-badge">👤 -</div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+  
+  <!-- FILTER -->
+  <div class="filter-section">
+    <div class="filter-row">
+      <span class="filter-label">📅 Quick:</span>
+      <button class="preset-btn" data-preset="today" onclick="applyPreset('today', this)">Hari Ini</button>
+      <button class="preset-btn" data-preset="7days" onclick="applyPreset('7days', this)">7 Hari</button>
+      <button class="preset-btn active" data-preset="month" onclick="applyPreset('month', this)">Bulan Ini</button>
+      <button class="preset-btn" data-preset="lastmonth" onclick="applyPreset('lastmonth', this)">Bulan Lalu</button>
+    </div>
+    <div class="custom-date-row">
+      <span class="filter-label">Custom:</span>
+      <span style="font-size:12px;color:var(--text-muted)">Dari:</span>
+      <input type="date" id="filter-start-date" class="date-input">
+      <span style="font-size:12px;color:var(--text-muted)">Sampai:</span>
+      <input type="date" id="filter-end-date" class="date-input">
+      <button class="btn-apply" onclick="applyCustomDate()">Apply</button>
+    </div>
+    <div class="period-info" id="period-info">📅 Periode: -</div>
+  </div>
+  
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview" onclick="switchTab('overview', this)">📈 Overview</button>
+    <button class="tab" data-tab="penjualan" onclick="switchTab('penjualan', this)">💰 Penjualan</button>
+  </div>
+  
+  <!-- LOADING -->
+  <div id="loading" class="loading" style="display:none;">
+    <div class="spinner"></div>
+    <p>Memuat data...</p>
+  </div>
+  
+  <!-- ─── TAB: OVERVIEW ─── -->
+  <div id="tab-overview" class="tab-content active">
+    
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card card-revenue">
+        <div class="card-label">💰 Total Penjualan</div>
+        <div class="card-value" id="sum-revenue">Rp 0</div>
+        <div class="card-sub" id="sum-revenue-sub">Net sales periode</div>
+      </div>
+      <div class="summary-card card-transactions">
+        <div class="card-label">📦 Total Transaksi</div>
+        <div class="card-value" id="sum-transactions">0</div>
+        <div class="card-sub" id="sum-transactions-sub">Laporan masuk</div>
+      </div>
+      <div class="summary-card card-aov">
+        <div class="card-label">📊 Avg Order Value</div>
+        <div class="card-value card-value-sm" id="sum-aov">Rp 0</div>
+        <div class="card-sub">Per transaksi</div>
+      </div>
+      <div class="summary-card card-conversion">
+        <div class="card-label">🎯 Conversion Rate</div>
+        <div class="card-value card-value-sm" id="sum-conversion">0%</div>
+        <div class="card-sub" id="sum-conversion-sub">Feedback / Follow-up</div>
+      </div>
+    </div>
+    
+    <!-- Performa Outlet -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🏪 Performa Outlet</div>
+        <div class="section-meta" id="outlet-count">0 outlet</div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Outlet</th>
+            <th>Transaksi</th>
+            <th>Total Penjualan</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody id="outlet-tbody"></tbody>
+      </table>
+    </div>
+    
+    <!-- Tren Penjualan -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📈 Tren Penjualan Harian</div>
+        <div class="section-meta">Periode terpilih</div>
+      </div>
+      <div class="chart-container-tall">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- ─── TAB: PENJUALAN ─── -->
+  <div id="tab-penjualan" class="tab-content">
+    
+    <!-- Sales Leaderboard -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🏆 Sales Leaderboard</div>
+        <div class="section-meta" id="leaderboard-meta">Periode terpilih</div>
+      </div>
+      <div id="leaderboard-content"></div>
+    </div>
+    
+    <!-- Heatmap -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🔥 Heatmap Penjualan: Outlet × Tanggal</div>
+        <div class="section-meta">Hover untuk detail</div>
+      </div>
+      <div class="heatmap-scroll">
+        <div id="heatmap-grid"></div>
+      </div>
+    </div>
+    
+  </div>
+  
+</div>
+
+<script>
+const LS_URL = 'fb_mkt_url';
+const LS_SESSION = 'fb_mkt_session';
+let API_URL = '';
+let session = null;
+let currentRange = { startDate: '', endDate: '' };
+let dashboardData = null;
+let trendChartInstance = null;
+
+const fmt = n => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(n);
+const fmtNum = n => new Intl.NumberFormat('id-ID').format(n);
+const fmtPct = n => (n||0).toFixed(1) + '%';
+
+function show(pageId) {
+  ['page-setup', 'page-login', 'page-denied', 'page-main'].forEach(p => {
+    const el = document.getElementById(p);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById(pageId).style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+async function apiCall(params) {
+  const url = new URL(API_URL);
+  Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+  try {
+    const r = await fetch(url.toString(), {method:'GET', redirect:'follow'});
+    return await r.json();
+  } catch(err) {
+    return {ok:false, error:'Gagal terhubung: ' + err.message};
+  }
+}
+
+function saveUrl() {
+  const url = document.getElementById('setup-url').value.trim();
+  if (!url || !url.startsWith('https://script.google.com/') || !url.endsWith('/exec')) {
+    const e = document.getElementById('setup-err');
+    e.textContent = 'URL tidak valid';
+    e.style.display = 'block';
+    return;
+  }
+  localStorage.setItem(LS_URL, url);
+  API_URL = url;
+  show('page-login');
+}
+
+function resetUrl() {
+  if (confirm('Ganti URL sistem?')) {
+    localStorage.removeItem(LS_URL);
+    localStorage.removeItem(LS_SESSION);
+    location.reload();
+  }
+}
+
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const pin = document.getElementById('login-pin').value.trim();
+  if (!name || !pin) {
+    const e = document.getElementById('login-err');
+    e.textContent = 'Nama dan PIN wajib diisi';
+    e.style.display = 'block';
+    return;
+  }
+  
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML = 'Memeriksa...';
+  btn.disabled = true;
+  
+  const res = await apiCall({action:'login', name, pin});
+  btn.innerHTML = 'Masuk';
+  btn.disabled = false;
+  
+  if (!res.ok) {
+    const e = document.getElementById('login-err');
+    e.textContent = res.error || 'Login gagal';
+    e.style.display = 'block';
+    return;
+  }
+  
+  // ─── ROLE CHECK ───
+  const role = (res.role || 'sales').toLowerCase();
+  
+  if (role !== 'marketing' && role !== 'owner' && role !== 'manager') {
+    document.getElementById('denied-role').textContent = `dengan role "${role}"`;
+    show('page-denied');
+    return;
+  }
+  
+  // Success
+  session = {
+    sales: res.sales,
+    outlet: res.outlet,
+    role: role,
+    loginAt: new Date().toISOString()
+  };
+  localStorage.setItem(LS_SESSION, JSON.stringify(session));
+  goToMain();
+}
+
+function logout() {
+  localStorage.removeItem(LS_SESSION);
+  session = null;
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-pin').value = '';
+  show('page-login');
+}
+
+function goToMain() {
+  document.getElementById('user-badge').innerHTML = '👤 <b>' + session.sales.name + '</b> · ' + session.role.toUpperCase();
+  show('page-main');
+  
+  // Set default to current month
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  currentRange = {
+    startDate: formatDate(start),
+    endDate: formatDate(end)
+  };
+  document.getElementById('filter-start-date').value = currentRange.startDate;
+  document.getElementById('filter-end-date').value = currentRange.endDate;
+  updatePeriodInfo();
+  fetchData();
+}
+
+function formatDate(d) {
+  return d.getFullYear() + '-' + 
+         String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+         String(d.getDate()).padStart(2, '0');
+}
+
+function formatDateID(s) {
+  if (!s) return '-';
+  const [y, m, d] = s.split('-');
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return parseInt(d) + ' ' + months[parseInt(m)-1] + ' ' + y;
+}
+
+function updatePeriodInfo() {
+  const dayCount = Math.floor((new Date(currentRange.endDate) - new Date(currentRange.startDate)) / (1000*60*60*24)) + 1;
+  document.getElementById('period-info').innerHTML = 
+    '📅 Periode aktif: <b>' + formatDateID(currentRange.startDate) + ' - ' + formatDateID(currentRange.endDate) + '</b> (' + dayCount + ' hari)';
+}
+
+function applyPreset(preset, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  const now = new Date();
+  let start, end;
+  
+  switch(preset) {
+    case 'today':
+      start = new Date(now);
+      end = new Date(now);
+      break;
+    case '7days':
+      start = new Date(now);
+      start.setDate(start.getDate() - 6);
+      end = new Date(now);
+      break;
+    case 'month':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      break;
+    case 'lastmonth':
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      end = new Date(now.getFullYear(), now.getMonth(), 0);
+      break;
+  }
+  
+  currentRange = { startDate: formatDate(start), endDate: formatDate(end) };
+  document.getElementById('filter-start-date').value = currentRange.startDate;
+  document.getElementById('filter-end-date').value = currentRange.endDate;
+  updatePeriodInfo();
+  fetchData();
+}
+
+function applyCustomDate() {
+  const start = document.getElementById('filter-start-date').value;
+  const end = document.getElementById('filter-end-date').value;
+  if (!start || !end) { alert('Pilih tanggal dulu'); return; }
+  if (new Date(start) > new Date(end)) { alert('Tanggal mulai harus sebelum tanggal akhir'); return; }
+  
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  currentRange = { startDate: start, endDate: end };
+  updatePeriodInfo();
+  fetchData();
+}
+
+function switchTab(tabName, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tabName).classList.add('active');
+  
+  if (tabName === 'penjualan') {
+    renderLeaderboard();
+    renderHeatmap();
+  }
+}
+
+// ═══ MAIN FETCH ═══
+async function fetchData() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  
+  document.getElementById('loading').style.display = 'block';
+  
+  const res = await apiCall({action: 'getAll'});
+  
+  document.getElementById('loading').style.display = 'none';
+  
+  if (!res.ok) {
+    alert('Gagal load data: ' + res.error);
+    return;
+  }
+  
+  dashboardData = res;
+  renderOverview();
+  
+  // Render penjualan kalau tab aktif
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+  if (activeTab === 'penjualan') {
+    renderLeaderboard();
+    renderHeatmap();
+  }
+}
+
+// ═══ RENDER OVERVIEW ═══
+function renderOverview() {
+  if (!dashboardData) return;
+  
+  const reports = filterReportsByDate(dashboardData.reports);
+  const outlets = dashboardData.outlets;
+  
+  // Summary stats
+  const totalRevenue = reports.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const totalRetur = reports.reduce((s, r) => s + Number(r.retur || 0), 0);
+  const netRevenue = totalRevenue - totalRetur;
+  const totalTransactions = reports.length;
+  const aov = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+  const totalFollowup = reports.reduce((s, r) => s + Number(r.followup || 0), 0);
+  const totalFeedback = reports.reduce((s, r) => s + Number(r.feedback || 0), 0);
+  const conversionRate = totalFollowup > 0 ? (totalFeedback / totalFollowup * 100) : 0;
+  
+  document.getElementById('sum-revenue').textContent = fmt(netRevenue);
+  document.getElementById('sum-revenue-sub').textContent = 'Gross: ' + fmt(totalRevenue) + (totalRetur > 0 ? ' · Retur: ' + fmt(totalRetur) : '');
+  document.getElementById('sum-transactions').textContent = fmtNum(totalTransactions);
+  document.getElementById('sum-aov').textContent = fmt(aov);
+  document.getElementById('sum-conversion').textContent = fmtPct(conversionRate);
+  document.getElementById('sum-conversion-sub').textContent = `${totalFeedback} feedback dari ${totalFollowup} follow-up`;
+  
+  // Outlet performance
+  const outletMap = {};
+  outlets.forEach(o => {
+    outletMap[o.id] = {
+      id: o.id,
+      name: o.name,
+      location: o.location || '',
+      transactions: 0,
+      revenue: 0
+    };
+  });
+  
+  reports.forEach(r => {
+    const outletId = r.outletId;
+    if (outletMap[outletId]) {
+      outletMap[outletId].transactions += 1;
+      outletMap[outletId].revenue += Number(r.amount || 0);
+    }
+  });
+  
+  const outletsList = Object.values(outletMap)
+    .filter(o => o.transactions > 0)
+    .sort((a, b) => b.revenue - a.revenue);
+  
+  document.getElementById('outlet-count').textContent = outletsList.length + ' outlet aktif';
+  
+  const outletTbody = document.getElementById('outlet-tbody');
+  if (outletsList.length === 0) {
+    outletTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem">Belum ada transaksi periode ini</td></tr>';
+  } else {
+    outletTbody.innerHTML = outletsList.map(o => {
+      const share = totalRevenue > 0 ? (o.revenue / totalRevenue * 100) : 0;
+      return `<tr>
+        <td><b>${o.name}</b><br><span style="font-size:11px;color:var(--text-muted)">${o.location}</span></td>
+        <td>${fmtNum(o.transactions)}</td>
+        <td class="amount">${fmt(o.revenue)}</td>
+        <td><div class="share-bar"><div class="bar-track"><div class="bar-fill" style="width:${share}%"></div></div><span class="pct">${fmtPct(share)}</span></div></td>
+      </tr>`;
+    }).join('');
+  }
+  
+  // Trend chart
+  renderTrendChart(reports);
+}
+
+function renderTrendChart(reports) {
+  if (trendChartInstance) trendChartInstance.destroy();
+  
+  // Group by date
+  const dateMap = {};
+  const start = new Date(currentRange.startDate);
+  const end = new Date(currentRange.endDate);
+  
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const key = formatDate(d);
+    dateMap[key] = { revenue: 0, transactions: 0 };
+  }
+  
+  reports.forEach(r => {
+    const key = String(r.date).slice(0, 10);
+    if (dateMap[key]) {
+      dateMap[key].revenue += Number(r.amount || 0);
+      dateMap[key].transactions += 1;
+    }
+  });
+  
+  const labels = Object.keys(dateMap).map(d => {
+    const [y, m, day] = d.split('-');
+    return day + '/' + m;
+  });
+  const revenueData = Object.values(dateMap).map(v => v.revenue);
+  
+  const ctx = document.getElementById('trend-chart');
+  trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Penjualan',
+        data: revenueData,
+        borderColor: '#2C5F2D',
+        backgroundColor: 'rgba(44,95,45,0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointHoverRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => 'Penjualan: ' + fmt(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => {
+              if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'jt';
+              if (v >= 1000) return 'Rp ' + (v/1000).toFixed(0) + 'rb';
+              return 'Rp ' + v;
+            },
+            font: { size: 10 }
+          }
+        },
+        x: {
+          ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ═══ RENDER LEADERBOARD ═══
+function renderLeaderboard() {
+  if (!dashboardData) return;
+  
+  const reports = filterReportsByDate(dashboardData.reports);
+  const sales = dashboardData.sales;
+  const outlets = dashboardData.outlets;
+  
+  // Filter sales aktif (role = sales)
+  const activeSales = sales.filter(s => {
+    const role = String(s.role || 'sales').toLowerCase();
+    return role === 'sales' && s.name;
+  });
+  
+  // Calculate per sales
+  const salesPerf = activeSales.map(s => {
+    const sReports = reports.filter(r => Number(r.salesId) === Number(s.id));
+    const revenue = sReports.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const outlet = outlets.find(o => Number(o.id) === Number(s.outletId));
+    return {
+      id: s.id,
+      name: s.name,
+      outletName: outlet ? outlet.name : '-',
+      revenue: revenue,
+      transactions: sReports.length
+    };
+  }).filter(s => s.revenue > 0).sort((a, b) => b.revenue - a.revenue);
+  
+  document.getElementById('leaderboard-meta').textContent = salesPerf.length + ' sales aktif';
+  
+  const container = document.getElementById('leaderboard-content');
+  if (salesPerf.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><h3>Belum Ada Data</h3><p>Belum ada penjualan untuk periode ini</p></div>';
+    return;
+  }
+  
+  container.innerHTML = salesPerf.map((s, idx) => {
+    const rank = idx + 1;
+    const rankClass = rank <= 3 ? 'rank-' + rank : '';
+    return `<div class="leaderboard-item">
+      <div class="leaderboard-rank ${rankClass}">${rank}</div>
+      <div class="leaderboard-info">
+        <div class="leaderboard-name">${s.name}</div>
+        <div class="leaderboard-outlet">${s.outletName} · ${s.transactions} transaksi</div>
+      </div>
+      <div class="leaderboard-amount">${fmt(s.revenue)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ RENDER HEATMAP ═══
+function renderHeatmap() {
+  if (!dashboardData) return;
+  
+  const reports = filterReportsByDate(dashboardData.reports);
+  const outlets = dashboardData.outlets;
+  
+  // Build date range
+  const dates = [];
+  const start = new Date(currentRange.startDate);
+  const end = new Date(currentRange.endDate);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(formatDate(d));
+  }
+  
+  // Filter outlets that have any transaction in period
+  const activeOutletIds = new Set(reports.map(r => Number(r.outletId)));
+  const activeOutlets = outlets.filter(o => activeOutletIds.has(Number(o.id)));
+  
+  if (activeOutlets.length === 0 || dates.length === 0) {
+    document.getElementById('heatmap-grid').innerHTML = '<div class="empty-state"><div class="icon">🗺️</div><h3>Belum Ada Data</h3><p>Pilih periode dengan transaksi</p></div>';
+    return;
+  }
+  
+  // Build matrix
+  const matrix = activeOutlets.map(o => 
+    dates.map(d => {
+      const sum = reports
+        .filter(r => Number(r.outletId) === Number(o.id) && String(r.date).slice(0,10) === d)
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      return sum;
+    })
+  );
+  
+  // Find max
+  let maxVal = 0;
+  matrix.forEach(row => row.forEach(v => { if (v > maxVal) maxVal = v; }));
+  
+  const grid = document.getElementById('heatmap-grid');
+  grid.className = 'heatmap-grid';
+  grid.style.gridTemplateColumns = 'auto repeat(' + dates.length + ', 28px)';
+  
+  let html = '';
+  
+  // Header row
+  html += '<div class="heat-cell heat-label" style="height:36px"></div>';
+  dates.forEach(d => {
+    const day = d.slice(8);
+    html += `<div class="heat-cell heat-date">${day}</div>`;
+  });
+  
+  // Data rows
+  activeOutlets.forEach((outlet, rowIdx) => {
+    html += `<div class="heat-cell heat-label">${outlet.name}</div>`;
+    matrix[rowIdx].forEach((val, colIdx) => {
+      let heatClass = 'heat-0';
+      if (val > 0 && maxVal > 0) {
+        const ratio = val / maxVal;
+        if (ratio < 0.1) heatClass = 'heat-1';
+        else if (ratio < 0.3) heatClass = 'heat-2';
+        else if (ratio < 0.5) heatClass = 'heat-3';
+        else if (ratio < 0.8) heatClass = 'heat-4';
+        else heatClass = 'heat-5';
+      }
+      const tooltip = val > 0 ? 
+        `${outlet.name} · ${formatDateID(dates[colIdx])} · ${fmt(val)}` :
+        `${outlet.name} · ${formatDateID(dates[colIdx])} · Tidak ada penjualan`;
+      html += `<div class="heat-cell ${heatClass}"><div class="heat-tooltip">${tooltip}</div></div>`;
+    });
+  });
+  
+  grid.innerHTML = html;
+}
+
+// ═══ HELPER ═══
+function filterReportsByDate(reports) {
+  return reports.filter(r => {
+    const d = String(r.date).slice(0, 10);
+    return d >= currentRange.startDate && d <= currentRange.endDate;
+  });
+}
+
+// ═══ INIT ═══
+(function init() {
+  const savedUrl = localStorage.getItem(LS_URL);
+  if (!savedUrl) { show('page-setup'); return; }
+  API_URL = savedUrl;
+  
+  const savedSession = localStorage.getItem(LS_SESSION);
+  if (!savedSession) { show('page-login'); return; }
+  
+  try {
+    session = JSON.parse(savedSession);
+    if (session && session.role && (session.role === 'marketing' || session.role === 'owner' || session.role === 'manager')) {
+      goToMain();
+    } else {
+      show('page-login');
+    }
+  } catch(e) {
+    show('page-login');
+  }
+})();
+</script>
+</body>
+</html>
