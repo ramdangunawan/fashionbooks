@@ -3723,7 +3723,7 @@ async function fetchTabBiaya() {
     currentRange.endDate.split('-').reverse().join('/');
   
   try {
-    const url = APPS_SCRIPT_URL + '?action=getCostBreakdown' +
+    const url = APPS_SCRIPT_URL + '?action=getCostBreakdownV2' +
                 '&startDate=' + currentRange.startDate +
                 '&endDate=' + currentRange.endDate +
                 '&outletFilter=' + encodeURIComponent(outletFilter) +
