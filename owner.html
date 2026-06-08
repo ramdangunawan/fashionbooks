@@ -1693,6 +1693,22 @@ async function openCopyTargets(){
 
 function showTgMsg(msg){const e=document.getElementById('tg-msg');e.textContent=msg;e.classList.add('show');e.style.display='block';setTimeout(()=>{e.classList.remove('show');e.style.display='none';},4000);}
 
+async function populateOutletDropdown(){
+  try{
+    const res=await apiCall({action:'getOutletsList'});
+    if(!res.ok||!res.data)return;
+    const sel=document.getElementById('j-outlet');
+    if(!sel)return;
+    sel.innerHTML='<option value="">-- Pilih Outlet --</option>';
+    res.data.forEach(function(o){
+      const opt=document.createElement('option');
+      opt.value=o.id;
+      opt.textContent=o.name;
+      sel.appendChild(opt);
+    });
+  }catch(e){}
+}
+ 
 async function init(){
   document.getElementById('setup-page').style.display='none';
   document.getElementById('main-app').style.display='block';
@@ -1703,6 +1719,7 @@ async function init(){
   ['h-date','ar-date','j-date','h-pay-date','ar-pay-date','nr-date','tr-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   ['h-due','ar-due'].forEach(id=>{const d30=new Date();d30.setDate(d30.getDate()+30);document.getElementById(id).value=d30.toISOString().slice(0,10);});
   const tgMonth=document.getElementById('tg-month');if(tgMonth)tgMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  await populateOutletDropdown();
   await reload();
 }
 
