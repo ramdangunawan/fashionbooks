@@ -232,7 +232,8 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     <div class="frow" style="margin:0;align-items:flex-end">
       <div class="fgroup"><label>Periode Dari</label><input type="date" id="pf-from" onchange="renderDashboard();renderRekap();renderPnL()"></div>
       <div class="fgroup"><label>Sampai</label><input type="date" id="pf-to" onchange="renderDashboard();renderRekap();renderPnL()"></div>
-      <span style="font-size:11px;color:var(--muted);padding-bottom:6px">Filter untuk laporan keuangan</span>
+      <div class="fgroup" style="flex:0 0 130px"><label>Margin HPP (%)</label><input type="number" id="pf-margin" value="19" min="0" max="100" step="0.1" onchange="renderDashboard()" style="text-align:right;font-weight:700"></div>
+      <span style="font-size:11px;color:var(--muted);padding-bottom:6px">Filter & estimasi laba kotor</span>
     </div>
   </div>
   <div class="grid5" id="dash-stats"></div>
@@ -943,9 +944,13 @@ function renderDashboard(){
   const pj=DATA.journals.filter(j=>sDate(j.date)>=getPF()&&sDate(j.date)<=getPT());
   const tS=tR.reduce((s,r)=>s+Number(r.amount||0),0),tRet=tR.reduce((s,r)=>s+Number(r.retur||0),0),tQ=tR.reduce((s,r)=>s+Number(r.qty||0),0),tFU=tR.reduce((s,r)=>s+Number(r.followup||0),0),tFB=tR.reduce((s,r)=>s+Number(r.feedback||0),0);
   let rev=0,exp=0,cogs=0;pj.forEach(j=>{try{const lines=JSON.parse(j.linesJson||'[]');lines.forEach(l=>{const a=getAccByCode(l.accountCode);if(!a)return;const d=Number(l.debit)||0,c=Number(l.credit)||0;if(a.type==='REVENUE')rev+=c-d;if(a.type==='EXPENSE')exp+=d-c;if(a.type==='COGS')cogs+=d-c;});}catch(e){}});
+  // HPP estimasi dinamis: ikut input Margin HPP (%) — untuk pantau cepat real-time
+  var marginPct=Number(document.getElementById('pf-margin')?.value)||19;
+  var hppEstimate=rev*(100-marginPct)/100;
+  var labaKotorEst=rev-hppEstimate;
   const tH=DATA.payables.reduce((s,p)=>s+(Number(p.amount)-Number(p.paid||0)),0);
   const tP=DATA.receivables.reduce((s,r)=>s+(Number(r.amount)-Number(r.paid||0)),0);
-  document.getElementById('dash-stats').innerHTML=[{l:'Penjualan Hari Ini',v:fmt(tS),c:'var(--accent2)'},{l:'Qty Terjual',v:fmtN(tQ)+' pcs',c:'var(--blue)'},{l:'Retur Hari Ini',v:fmt(tRet),c:'var(--red)'},{l:'F/U & Feedback',v:fmtN(tFU)+' / '+fmtN(tFB),c:'var(--accent)'},{l:'Sisa Hutang',v:fmt(tH),c:'var(--red)'},{l:'Sisa Piutang',v:fmt(tP),c:'var(--blue)'},{l:'Pendapatan Periode',v:fmt(rev),c:'var(--accent2)'},{l:'HPP Periode',v:fmt(cogs),c:'var(--accent)'},{l:'Laba Kotor',v:fmt(rev-cogs),c:rev-cogs>=0?'var(--accent2)':'var(--red)'},{l:'Laba Bersih',v:fmt(rev-cogs-exp),c:rev-cogs-exp>=0?'var(--accent2)':'var(--red)'}].map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="color:${s.c};font-size:15px">${s.v}</div></div>`).join('');
+  document.getElementById('dash-stats').innerHTML=[{l:'Penjualan Hari Ini',v:fmt(tS),c:'var(--accent2)'},{l:'Qty Terjual',v:fmtN(tQ)+' pcs',c:'var(--blue)'},{l:'Retur Hari Ini',v:fmt(tRet),c:'var(--red)'},{l:'F/U & Feedback',v:fmtN(tFU)+' / '+fmtN(tFB),c:'var(--accent)'},{l:'Sisa Hutang',v:fmt(tH),c:'var(--red)'},{l:'Sisa Piutang',v:fmt(tP),c:'var(--blue)'},{l:'Pendapatan Periode',v:fmt(rev),c:'var(--accent2)'},{l:'HPP Periode (est)',v:fmt(hppEstimate),c:'var(--accent)'},{l:'Laba Kotor (est '+marginPct+'%)',v:fmt(labaKotorEst),c:labaKotorEst>=0?'var(--accent2)':'var(--red)'},{l:'Laba Bersih (est)',v:fmt(labaKotorEst-exp),c:labaKotorEst-exp>=0?'var(--accent2)':'var(--red)'}].map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="color:${s.c};font-size:15px">${s.v}</div></div>`).join('');
   const om={};tR.forEach(r=>{const o=DATA.outlets.find(x=>Number(x.id)===Number(r.outletId));if(!o)return;if(!om[o.id])om[o.id]={name:o.name,amount:0,qty:0,fu:0,fb:0};om[o.id].amount+=Number(r.amount||0);om[o.id].qty+=Number(r.qty||0);om[o.id].fu+=Number(r.followup||0);om[o.id].fb+=Number(r.feedback||0);});
   document.getElementById('dash-outlet').innerHTML=Object.values(om).length?`<table><thead><tr><th>Outlet</th><th class="r">Qty</th><th class="r">Penjualan</th><th class="r">F/U</th><th class="r">FB</th></tr></thead><tbody>${Object.values(om).map(o=>`<tr><td>${o.name}</td><td class="r">${o.qty}</td><td class="r">${fmt(o.amount)}</td><td class="r">${o.fu}</td><td class="r">${o.fb}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--muted);font-size:13px">Belum ada laporan hari ini</p>';
   const sm={};tR.forEach(r=>{const s=DATA.sales.find(x=>Number(x.id)===Number(r.salesId));if(!s)return;if(!sm[s.id])sm[s.id]={name:s.name,amount:0,qty:0};sm[s.id].amount+=Number(r.amount||0);sm[s.id].qty+=Number(r.qty||0);});const topS=Object.values(sm).sort((a,b)=>b.amount-a.amount);
