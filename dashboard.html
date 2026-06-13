@@ -2210,15 +2210,6 @@ footer {
         <label class="tb-filter-label" for="tb-outlet-filter">🏪 Outlet</label>
         <select id="tb-outlet-filter" class="tb-select">
           <option value="all">Semua Outlet</option>
-          <option value="Busana Indah WH">Busana Indah WH (HO)</option>
-          <option value="Oleh-Oleh">Oleh-Oleh (HO)</option>
-          <option value="HO General">HO General</option>
-          <option value="Busana Indah">Busana Indah</option>
-          <option value="Market Jeans">Market Jeans</option>
-          <option value="ER Grosir">ER Grosir</option>
-          <option value="Litzee Bali">Litzee Bali</option>
-          <option value="Litzee Lombok">Litzee Lombok</option>
-          <option value="Pekalongan">Pekalongan (Produksi)</option>
         </select>
       </div>
       
@@ -3755,9 +3746,24 @@ async function fetchTabBiaya() {
 // ========================================
 // RENDER: Main dispatcher
 // ========================================
+function tbPopulateOutletFilter(byOutlet) {
+  const sel = document.getElementById('tb-outlet-filter');
+  if (!sel || !byOutlet) return;
+  const cur = sel.value;
+  // Hanya isi ulang saat filter "all" (daftar lengkap)
+  if (cur !== 'all') return;
+  // Nama outlet asli (bukan SHARED/NEEDS_SPLIT/UNKNOWN)
+  const skip = ['SHARED','NEEDS_SPLIT','UNKNOWN'];
+  const names = byOutlet.map(o => o.outlet).filter(n => n && skip.indexOf(n) === -1);
+  sel.innerHTML = '<option value="all">Semua Outlet</option>' +
+    names.map(n => `<option value="${n}">${n}</option>`).join('');
+  sel.value = cur;
+}
+
 function renderTabBiaya() {
   if (!tabBiayaData) return;
   const d = tabBiayaData;
+  tbPopulateOutletFilter(d.byOutlet);
   
   document.getElementById('tb-loading').style.display = 'none';
   document.getElementById('tb-report-body').style.display = 'block';
