@@ -288,6 +288,15 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     <div class="tbl-wrap" id="bonus-outlet"></div>
     <div id="bonus-outlet-info" style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--dim)"></div>
   </div>
+  <div class="card">
+    <div class="card-title"><span class="ct-dot" style="background:var(--accent2)"></span>Bonus Tahunan & Progres YTD (berbasis target tahunan)</div>
+    <div class="frow" style="margin:0 0 12px 0;align-items:flex-end">
+      <div class="fgroup" style="flex:0 0 120px"><label>Tahun</label><input type="number" id="bt-year" min="2024" max="2035" step="1" onchange="renderBonusTahunan()"></div>
+      <button class="btn" onclick="renderBonusTahunan()" style="padding:8px 16px">🔄 Hitung</button>
+    </div>
+    <div class="tbl-wrap" id="bonus-tahunan"></div>
+    <div id="bonus-tahunan-info" style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--dim)"></div>
+  </div>
 </div>
 
 <div class="page" id="p-targets">
@@ -1014,6 +1023,26 @@ async function renderBonusOutlet(){
   };
   el.innerHTML=`<table><thead><tr><th>Outlet</th><th class="r">Revenue</th><th class="r">Target Bln</th><th class="r">Target Maks</th><th>Tingkat</th><th class="r">Bonus%</th><th class="r">Bonus</th></tr></thead><tbody>${d.outlets.map(o=>`<tr><td><b>${o.outlet}</b></td><td class="r">${fmt(o.revenue)}</td><td class="r">${o.targetBulanan?fmt(o.targetBulanan):'-'}</td><td class="r">${o.targetMaksimal?fmt(o.targetMaksimal):'-'}</td><td>${tingkatBadge(o.tingkat)}</td><td class="r" style="font-weight:700">${o.bonusPct}%</td><td class="r" style="color:var(--accent2);font-weight:700">${fmt(o.bonus)}</td></tr>`).join('')}</tbody></table>`;
   document.getElementById('bonus-outlet-info').innerHTML=`<b>Total Bonus Outlet:</b> ${fmt(d.totalBonus)} &nbsp;·&nbsp; <b>Aturan:</b> capai target bulanan = ${d.config.bulanan}%, capai target maksimal = ${d.config.maksimal}% (dari revenue, eksklusif)${d.unparsedRevenue>0?' &nbsp;·&nbsp; ⚠️ Revenue tak terbaca outlet: '+fmt(d.unparsedRevenue):''}`;
+}
+
+async function renderBonusTahunan(){
+  const el=document.getElementById('bonus-tahunan');
+  let yInput=document.getElementById('bt-year');
+  if(!yInput.value)yInput.value=new Date().getFullYear();
+  const year=yInput.value;
+  el.innerHTML='<div style="padding:20px;text-align:center;color:var(--dim)">Menghitung...</div>';
+  const res=await apiCall({action:'getOutletBonusTahunan',year:year});
+  if(!res.ok){el.innerHTML='<div style="padding:20px;color:var(--red)">Gagal: '+(res.error||'')+'</div>';return;}
+  const d=res.data;
+  const statusBadge=(s,t)=>{
+    if(t==='tercapai')return '<span style="color:var(--accent2);font-weight:700">\ud83c\udfc6 Tercapai</span>';
+    if(t==='tidak ada target')return '<span style="color:var(--dim)">- (no target)</span>';
+    if(s==='on track')return '<span style="color:var(--accent);font-weight:700">\ud83d\udcc8 On Track</span>';
+    return '<span style="color:var(--red)">\u26a0\ufe0f Perlu Kejar</span>';
+  };
+  const bar=p=>{const w=Math.min(100,p);const c=p>=100?'var(--accent2)':(p>=50?'var(--accent)':'var(--red)');return `<div style="background:var(--surface2);border-radius:4px;height:8px;width:90px;display:inline-block;vertical-align:middle;margin-right:6px"><div style="background:${c};height:8px;border-radius:4px;width:${w}%"></div></div>${p}%`;};
+  el.innerHTML=`<table><thead><tr><th>Outlet</th><th class="r">Revenue YTD</th><th class="r">Target Tahunan</th><th>Progres</th><th class="r">Rata\u00b2/bln</th><th class="r">Proyeksi Akhir Thn</th><th>Status</th><th class="r">Bonus%</th><th class="r">Bonus (berjalan)</th></tr></thead><tbody>${d.outlets.map(o=>`<tr><td><b>${o.outlet}</b></td><td class="r">${fmt(o.revenue)}</td><td class="r">${o.target?fmt(o.target):'-'}</td><td>${o.target?bar(o.progressPct):'-'}</td><td class="r">${fmt(o.avgMonthly)}</td><td class="r" style="font-weight:700">${fmt(o.proyeksi)}</td><td>${statusBadge(o.status,o.tingkat)}</td><td class="r" style="font-weight:700">${o.bonusPct}%</td><td class="r" style="color:var(--accent2);font-weight:700">${fmt(o.bonus)}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('bonus-tahunan-info').innerHTML=`<b>Total Bonus Tahunan (berjalan):</b> ${fmt(d.totalBonus)} &nbsp;\u00b7&nbsp; <b>Aturan:</b> revenue setahun \u2265 target tahunan \u2192 ${d.config.tahunan}% \u00d7 revenue setahun &nbsp;\u00b7&nbsp; <b>Proyeksi</b> = rata-rata ${d.monthsComplete} bulan komplit \u00d7 12${d.unparsedRevenue>0?' &nbsp;\u00b7&nbsp; \u26a0\ufe0f Revenue tak terbaca outlet: '+fmt(d.unparsedRevenue):''}`;
 }
 
 // ═══ KELOLA LAPORAN ═══
