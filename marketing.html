@@ -696,6 +696,43 @@ body {
 .empty-state .icon { font-size: 48px; margin-bottom: 0.75rem; opacity: 0.5; }
 .empty-state h3 { font-size: 18px; margin-bottom: 0.5rem; color: var(--text); }
 .empty-state p { font-size: 13px; }
+
+/* ═══ Overview ala tab Penjualan (porting dari dashboard.html) ═══ */
+.sl-podium-card{background:var(--card);border-radius:12px;padding:1.5rem 1rem;text-align:center;box-shadow:var(--shadow);position:relative;border:2px solid}
+.sl-podium-card.first{background:linear-gradient(180deg,#FFFBEB 0%,white 100%);border-color:#D4AF37;transform:scale(1.05);padding:2rem 1rem}
+.sl-podium-card.second{background:linear-gradient(180deg,#F8F8FA 0%,white 100%);border-color:#C0C0C0}
+.sl-podium-card.third{background:linear-gradient(180deg,#FFF5EE 0%,white 100%);border-color:#CD7F32}
+.sl-podium-medal{position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:white;border-radius:50%;padding:0.3rem 0.7rem;font-size:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.sl-podium-card.first .sl-podium-medal{font-size:2rem}
+.sl-podium-rank-text{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:0.5rem 0 0.3rem}
+.sl-podium-name{font-weight:700;font-size:1rem;margin-bottom:0.2rem;color:var(--text)}
+.sl-podium-card.first .sl-podium-name{font-size:1.15rem}
+.sl-podium-outlet{color:var(--text-muted);font-size:0.75rem;margin-bottom:0.7rem}
+.sl-podium-amount{font-size:1.2rem;font-weight:800;color:var(--green);margin-bottom:0.2rem}
+.sl-podium-card.first .sl-podium-amount{font-size:1.5rem}
+.sl-podium-stats{font-size:0.75rem;color:var(--text-muted)}
+.sl-rank-badge{display:inline-block;width:32px;height:32px;border-radius:50%;text-align:center;line-height:32px;font-weight:700;background:var(--green);color:white;font-size:0.85rem}
+.sl-table-row{border-bottom:1px solid var(--border);transition:background 0.15s}
+.sl-table-row:hover{background:rgba(0,0,0,0.02)}
+.sl-growth-up{color:#16A34A;font-size:0.85rem}
+.sl-growth-down{color:#DC2626;font-size:0.85rem}
+.sl-growth-flat{color:var(--text-muted);font-size:0.85rem}
+.hm-day-header{padding:0.5rem;text-align:center;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg);border-radius:4px}
+.hm-week-label{padding:0.5rem;font-size:0.85rem;color:var(--text);font-weight:600;background:var(--bg);border-radius:4px;text-align:center}
+.hm-cell{padding:0.8rem 0.4rem;text-align:center;border-radius:6px;font-size:0.75rem;font-weight:600;color:var(--text);min-width:60px;transition:transform 0.15s,box-shadow 0.15s;cursor:default}
+.hm-cell:hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:1}
+.hm-cell.out-of-range{background:transparent;color:var(--text-muted);opacity:0.3}
+.hm-cell.no-data{background:#F3F4F6;color:var(--text-muted)}
+.hm-cell .hm-cell-amount{font-size:0.8rem;display:block}
+.hm-cell .hm-cell-trans{font-size:0.65rem;opacity:0.85;display:block;margin-top:0.2rem}
+.hm-cell .hm-cell-basket{font-size:0.65rem;opacity:0.85;display:block;margin-top:0.1rem;font-weight:500}
+.hm-legend-box{display:inline-block;width:16px;height:16px;border-radius:3px}
+.hm-day-rank-card{padding:0.7rem;background:var(--card);border:1px solid var(--border);border-radius:6px;text-align:center}
+.hm-day-rank-card .hm-rank-day{font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:0.3rem}
+.hm-day-rank-card .hm-rank-amount{font-size:0.9rem;font-weight:700;color:var(--green)}
+.hm-day-rank-card .hm-rank-detail{font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem}
+.hm-insight-item{margin:0.3rem 0;padding-left:0.5rem}
+.mkt-filter-select{padding:0.5rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;color:var(--text);background:white;cursor:pointer}
 </style>
 </head>
 <body>
@@ -786,6 +823,7 @@ body {
     <button class="tab active" data-tab="overview" onclick="switchTab('overview', this)">📈 Overview</button>
     <button class="tab" data-tab="penjualan" onclick="switchTab('penjualan', this)">💰 Penjualan</button>
     <button class="tab" data-tab="analytics" onclick="switchTab('analytics', this)">📊 Outlet Analytics</button>
+    <button class="tab" data-tab="target" onclick="switchTab('target', this)">🎯 Target</button>
   </div>
   
   <!-- LOADING -->
@@ -796,63 +834,142 @@ body {
   
   <!-- ─── TAB: OVERVIEW ─── -->
   <div id="tab-overview" class="tab-content active">
-    
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-      <div class="summary-card card-revenue">
-        <div class="card-label">💰 Total Penjualan</div>
-        <div class="card-value" id="sum-revenue">Rp 0</div>
-        <div class="card-sub" id="sum-revenue-sub">Net sales periode</div>
-      </div>
-      <div class="summary-card card-transactions">
-        <div class="card-label">📦 Total Transaksi</div>
-        <div class="card-value" id="sum-transactions">0</div>
-        <div class="card-sub" id="sum-transactions-sub">Laporan masuk</div>
-      </div>
-      <div class="summary-card card-aov">
-        <div class="card-label">📊 Avg Order Value</div>
-        <div class="card-value card-value-sm" id="sum-aov">Rp 0</div>
-        <div class="card-sub">Per transaksi</div>
-      </div>
-      <div class="summary-card card-conversion">
-        <div class="card-label">🎯 Conversion Rate</div>
-        <div class="card-value card-value-sm" id="sum-conversion">0%</div>
-        <div class="card-sub" id="sum-conversion-sub">Feedback / Follow-up</div>
-      </div>
-    </div>
-    
-    <!-- Performa Outlet -->
+
+    <!-- Ringkasan per Sales Person -->
     <div class="section">
       <div class="section-header">
-        <div class="section-title">🏪 Performa Outlet</div>
-        <div class="section-meta" id="outlet-count">0 outlet</div>
+        <div class="section-title">📊 Ringkasan Penjualan Per Sales Person</div>
+        <div class="section-meta" id="mkt-sl-period">Memuat...</div>
       </div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Outlet</th>
-            <th>Transaksi</th>
-            <th>Total Penjualan</th>
-            <th>Share</th>
-          </tr>
-        </thead>
-        <tbody id="outlet-tbody"></tbody>
-      </table>
+      <div id="mkt-sl-summary" style="display:flex;gap:2rem;flex-wrap:wrap;font-size:0.9rem;color:var(--text);padding-top:0.5rem">
+        <div><strong id="mkt-sl-total-person">-</strong> sales aktif</div>
+        <div><strong id="mkt-sl-total-sales">-</strong> total penjualan</div>
+        <div><strong id="mkt-sl-total-trans">-</strong> total transaksi</div>
+        <div><strong id="mkt-sl-comparison">-</strong></div>
+      </div>
     </div>
-    
-    <!-- Tren Penjualan -->
+
+    <!-- Filter -->
+    <div class="section" style="padding:1rem">
+      <div style="display:flex;gap:0.8rem;flex-wrap:wrap;align-items:center">
+        <span style="font-size:0.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">FILTER:</span>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <label style="font-size:0.85rem">Outlet:</label>
+          <select id="mkt-sl-outlet-filter" class="mkt-filter-select" onchange="fetchSalesLeaderboardMkt();fetchDailyHeatmapMkt()">
+            <option value="0">Semua Outlet</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <label style="font-size:0.85rem">Sort:</label>
+          <select id="mkt-sl-sort-filter" class="mkt-filter-select" onchange="renderSalesLeaderboardMkt()">
+            <option value="netSales">Total Sales</option>
+            <option value="transactions">Jumlah Transaksi</option>
+            <option value="atv">ATV (Avg Transaction)</option>
+            <option value="qty">Total Qty</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 3 Podium -->
+    <div class="section">
+      <div class="section-header"><div class="section-title">🏆 Top 3 Sales Person</div></div>
+      <div id="mkt-sl-podium" style="display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;align-items:end;margin-top:1rem"></div>
+    </div>
+
+    <!-- Ranking Lengkap -->
+    <div class="section">
+      <div class="section-header"><div class="section-title">📋 Ranking Lengkap</div></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;margin-top:1rem">
+          <thead>
+            <tr style="background:var(--bg);border-bottom:2px solid var(--border)">
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Rank</th>
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Sales Person</th>
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Outlet</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Total Sales</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Trans</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">ATV</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">ABS</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">vs Periode Lalu</th>
+            </tr>
+          </thead>
+          <tbody id="mkt-sl-tbody">
+            <tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Heatmap Penjualan Harian -->
     <div class="section">
       <div class="section-header">
-        <div class="section-title">📈 Tren Penjualan Harian</div>
-        <div class="section-meta">Periode terpilih</div>
+        <div class="section-title">📅 Heatmap Penjualan Harian</div>
+        <div class="section-meta" id="mkt-hm-period">Memuat...</div>
       </div>
-      <div class="chart-container-tall">
-        <canvas id="trend-chart"></canvas>
+      <div style="display:flex;gap:1rem;align-items:center;padding:0.5rem 0;font-size:0.8rem;color:var(--text-muted)">
+        <span>Color Scale:</span>
+        <div style="display:flex;align-items:center;gap:0.4rem"><span class="hm-legend-box" style="background:#86EFAC"></span> Rendah</div>
+        <div style="display:flex;align-items:center;gap:0.4rem"><span class="hm-legend-box" style="background:#FCD34D"></span> Sedang</div>
+        <div style="display:flex;align-items:center;gap:0.4rem"><span class="hm-legend-box" style="background:#FB923C"></span> Tinggi</div>
+        <div style="display:flex;align-items:center;gap:0.4rem"><span class="hm-legend-box" style="background:#EF4444"></span> Sangat Tinggi</div>
+      </div>
+      <div style="overflow-x:auto;margin-top:1rem">
+        <table style="width:100%;border-collapse:separate;border-spacing:4px;min-width:600px">
+          <thead>
+            <tr>
+              <th style="padding:0.5rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;min-width:60px">Week</th>
+              <th class="hm-day-header">Sen</th><th class="hm-day-header">Sel</th><th class="hm-day-header">Rab</th>
+              <th class="hm-day-header">Kam</th><th class="hm-day-header">Jum</th><th class="hm-day-header">Sab</th><th class="hm-day-header">Min</th>
+            </tr>
+          </thead>
+          <tbody id="mkt-hm-tbody">
+            <tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:1.5rem">
+        <h4 style="font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.8rem">📊 Rata-rata per Hari (Sorted)</h4>
+        <div id="mkt-hm-day-ranking" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.5rem"></div>
+      </div>
+      <div style="margin-top:1.5rem;padding:1rem;background:var(--bg);border-radius:8px;border-left:4px solid var(--green)">
+        <h4 style="font-size:0.9rem;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 0.6rem 0">🎯 Insight Otomatis</h4>
+        <div id="mkt-hm-insights" style="font-size:0.9rem;line-height:1.6"></div>
       </div>
     </div>
-    
+
   </div>
-  
+
+  <!-- ─── TAB: TARGET ─── -->
+  <div id="tab-target" class="tab-content">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">🎯 Target vs Realisasi per Outlet</div>
+        <div class="section-meta">
+          <input type="month" id="mkt-target-month" class="mkt-filter-select" onchange="renderTargetTab()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;margin-top:1rem">
+          <thead>
+            <tr style="background:var(--bg);border-bottom:2px solid var(--border)">
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Outlet</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Realisasi (Net)</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Target Bulanan</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Target Maksimal</th>
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;min-width:160px">Progres</th>
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mkt-target-tbody">
+            <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="mkt-target-info" style="margin-top:12px;padding:12px;background:var(--bg);border-radius:6px;font-size:12px;color:var(--text-muted)"></div>
+    </div>
+  </div>
+
   <!-- ─── TAB: PENJUALAN ─── -->
   <div id="tab-penjualan" class="tab-content">
     
@@ -1181,6 +1298,10 @@ function switchTab(tabName, btn) {
     populateOutletFilter();
     renderAnalytics();
   }
+
+  if (tabName === 'target') {
+    renderTargetTab();
+  }
 }
 
 // ═══ MAIN FETCH ═══
@@ -1209,73 +1330,242 @@ async function fetchData() {
   }
 }
 
-// ═══ RENDER OVERVIEW ═══
+// ═══ RENDER OVERVIEW (ala tab Penjualan dashboard.html) ═══
 function renderOverview() {
   if (!dashboardData) return;
-  
-  const reports = filterReportsByDate(dashboardData.reports);
-  const outlets = dashboardData.outlets;
-  
-  // Summary stats
-  const totalRevenue = reports.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const totalRetur = reports.reduce((s, r) => s + Number(r.retur || 0), 0);
-  const netRevenue = totalRevenue - totalRetur;
-  const totalTransactions = reports.length;
-  const aov = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-  const totalFollowup = reports.reduce((s, r) => s + Number(r.followup || 0), 0);
-  const totalFeedback = reports.reduce((s, r) => s + Number(r.feedback || 0), 0);
-  const conversionRate = totalFollowup > 0 ? (totalFeedback / totalFollowup * 100) : 0;
-  
-  document.getElementById('sum-revenue').textContent = fmt(netRevenue);
-  document.getElementById('sum-revenue-sub').textContent = 'Gross: ' + fmt(totalRevenue) + (totalRetur > 0 ? ' · Retur: ' + fmt(totalRetur) : '');
-  document.getElementById('sum-transactions').textContent = fmtNum(totalTransactions);
-  document.getElementById('sum-aov').textContent = fmt(aov);
-  document.getElementById('sum-conversion').textContent = fmtPct(conversionRate);
-  document.getElementById('sum-conversion-sub').textContent = `${totalFeedback} feedback dari ${totalFollowup} follow-up`;
-  
-  // Outlet performance
-  const outletMap = {};
-  outlets.forEach(o => {
-    outletMap[o.id] = {
-      id: o.id,
-      name: o.name,
-      location: o.location || '',
-      transactions: 0,
-      revenue: 0
-    };
+  populateSlOutletFilterMkt();
+  fetchSalesLeaderboardMkt();
+  fetchDailyHeatmapMkt();
+}
+
+function populateSlOutletFilterMkt() {
+  const sel = document.getElementById('mkt-sl-outlet-filter');
+  if (!sel || sel.options.length > 1 || !dashboardData) return;
+  (dashboardData.outlets || []).forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = o.name;
+    sel.appendChild(opt);
   });
-  
-  reports.forEach(r => {
-    const outletId = r.outletId;
-    if (outletMap[outletId]) {
-      outletMap[outletId].transactions += 1;
-      outletMap[outletId].revenue += Number(r.amount || 0);
-    }
-  });
-  
-  const outletsList = Object.values(outletMap)
-    .filter(o => o.transactions > 0)
-    .sort((a, b) => b.revenue - a.revenue);
-  
-  document.getElementById('outlet-count').textContent = outletsList.length + ' outlet aktif';
-  
-  const outletTbody = document.getElementById('outlet-tbody');
-  if (outletsList.length === 0) {
-    outletTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem">Belum ada transaksi periode ini</td></tr>';
+}
+
+const fmtShort = n => {
+  n = Number(n) || 0;
+  if (n >= 1000000000) return (n/1000000000).toFixed(1) + 'M';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'jt';
+  if (n >= 1000) return Math.round(n/1000) + 'rb';
+  return String(n);
+};
+
+function getHeatmapColor(amount, minAmount, maxAmount) {
+  if (amount <= 0) return '#F3F4F6';
+  const range = maxAmount - minAmount;
+  let t0 = range > 0 ? (amount - minAmount) / range : 0.5;
+  t0 = Math.max(0, Math.min(1, t0));
+  let r, g, b;
+  if (t0 < 0.33) { const t = t0/0.33; r = Math.round(134+(252-134)*t); g = Math.round(239+(211-239)*t); b = Math.round(172+(77-172)*t); }
+  else if (t0 < 0.66) { const t = (t0-0.33)/0.33; r = Math.round(252+(251-252)*t); g = Math.round(211+(146-211)*t); b = Math.round(77+(60-77)*t); }
+  else { const t = (t0-0.66)/0.34; r = Math.round(251+(239-251)*t); g = Math.round(146+(68-146)*t); b = Math.round(60+(68-60)*t); }
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+let mktSlData = null;
+async function fetchSalesLeaderboardMkt() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  const outletId = document.getElementById('mkt-sl-outlet-filter')?.value || 0;
+  const res = await apiCall({action:'getSalesLeaderboard', startDate: currentRange.startDate, endDate: currentRange.endDate, outletId: outletId});
+  if (!res.ok) {
+    document.getElementById('mkt-sl-tbody').innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
+    return;
+  }
+  mktSlData = res.data;
+  renderSalesLeaderboardMkt();
+}
+
+function renderSalesLeaderboardMkt() {
+  if (!mktSlData) return;
+  const data = mktSlData;
+  const sortBy = document.getElementById('mkt-sl-sort-filter')?.value || 'netSales';
+  const leaderboard = data.leaderboard.slice().sort((a,b) => (b[sortBy]||0) - (a[sortBy]||0));
+  leaderboard.forEach((s, idx) => { s.rank = idx + 1; });
+
+  document.getElementById('mkt-sl-period').textContent = 'Periode: ' + formatDateID(data.startDate) + ' - ' + formatDateID(data.endDate);
+  document.getElementById('mkt-sl-total-person').textContent = data.summary.totalSalesPerson;
+  document.getElementById('mkt-sl-total-sales').textContent = fmt(data.summary.totalNetSales);
+  document.getElementById('mkt-sl-total-trans').textContent = fmtNum(data.summary.totalTransactions);
+  document.getElementById('mkt-sl-comparison').textContent = 'vs ' + data.comparison.label + ' (' + formatDateID(data.comparison.startDate) + ' - ' + formatDateID(data.comparison.endDate) + ')';
+
+  const podiumEl = document.getElementById('mkt-sl-podium');
+  if (leaderboard.length === 0) {
+    podiumEl.innerHTML = '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--text-muted)">Belum ada data sales untuk periode ini</div>';
   } else {
-    outletTbody.innerHTML = outletsList.map(o => {
-      const share = totalRevenue > 0 ? (o.revenue / totalRevenue * 100) : 0;
-      return `<tr>
-        <td><b>${o.name}</b><br><span style="font-size:11px;color:var(--text-muted)">${o.location}</span></td>
-        <td>${fmtNum(o.transactions)}</td>
-        <td class="amount">${fmt(o.revenue)}</td>
-        <td><div class="share-bar"><div class="bar-track"><div class="bar-fill" style="width:${share}%"></div></div><span class="pct">${fmtPct(share)}</span></div></td>
-      </tr>`;
+    const top3 = leaderboard.slice(0, 3);
+    const order = [];
+    if (top3[1]) order.push({data: top3[1], medal: '🥈', cls: 'second', label: 'Rank 2'});
+    if (top3[0]) order.push({data: top3[0], medal: '🥇', cls: 'first', label: 'Champion'});
+    if (top3[2]) order.push({data: top3[2], medal: '🥉', cls: 'third', label: 'Rank 3'});
+    let html = '';
+    order.forEach(item => {
+      const s = item.data;
+      html += '<div class="sl-podium-card ' + item.cls + '">' +
+        '<div class="sl-podium-medal">' + item.medal + '</div>' +
+        '<div class="sl-podium-rank-text">' + item.label + '</div>' +
+        '<div class="sl-podium-name">' + s.salesName + '</div>' +
+        '<div class="sl-podium-outlet">' + s.outletName + '</div>' +
+        '<div class="sl-podium-amount">' + fmt(s.netSales) + '</div>' +
+        '<div class="sl-podium-stats">' + s.transactions + ' trans · ATV ' + fmt(s.atv) + '</div>' +
+      '</div>';
+    });
+    while (order.length < 3) { html += '<div style="background:var(--bg);border-radius:12px;padding:1.5rem;text-align:center;color:var(--text-muted);border:2px dashed var(--border)">-</div>'; order.push(null); }
+    podiumEl.innerHTML = html;
+  }
+
+  const tbody = document.getElementById('mkt-sl-tbody');
+  if (leaderboard.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada data</td></tr>';
+    return;
+  }
+  tbody.innerHTML = leaderboard.map(s => {
+    let growth;
+    if (s.compNetSales > 0 || s.compTransactions > 0) {
+      const up = s.growthPercent >= 0;
+      growth = '<span class="' + (up ? 'sl-growth-up' : 'sl-growth-down') + '">' + (up ? '↑' : '↓') + ' ' + Math.abs(s.growthPercent).toFixed(1) + '%</span>';
+    } else growth = '<span class="sl-growth-flat">— (baru)</span>';
+    let badge;
+    if (s.rank === 1) badge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg,#FFD700,#D4AF37)">🥇</span>';
+    else if (s.rank === 2) badge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg,#E5E7EB,#C0C0C0)">🥈</span>';
+    else if (s.rank === 3) badge = '<span class="sl-rank-badge" style="background:linear-gradient(135deg,#DAA06D,#CD7F32)">🥉</span>';
+    else badge = '<span class="sl-rank-badge">' + s.rank + '</span>';
+    const abs = s.transactions > 0 ? (s.qty / s.transactions) : 0;
+    return '<tr class="sl-table-row">' +
+      '<td style="padding:0.8rem">' + badge + '</td>' +
+      '<td style="padding:0.8rem;font-weight:600;color:var(--green)">' + s.salesName + '</td>' +
+      '<td style="padding:0.8rem;color:var(--text-muted);font-size:0.85rem">' + s.outletName + '</td>' +
+      '<td style="padding:0.8rem;text-align:right;font-weight:700;color:var(--green)">' + fmt(s.netSales) + '</td>' +
+      '<td style="padding:0.8rem;text-align:right">' + fmtNum(s.transactions) + '</td>' +
+      '<td style="padding:0.8rem;text-align:right">' + fmt(s.atv) + '</td>' +
+      '<td style="padding:0.8rem;text-align:right">' + abs.toFixed(1) + ' pcs</td>' +
+      '<td style="padding:0.8rem;text-align:right">' + growth + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+let mktHmData = null;
+async function fetchDailyHeatmapMkt() {
+  if (!currentRange.startDate || !currentRange.endDate) return;
+  const outletId = document.getElementById('mkt-sl-outlet-filter')?.value || 0;
+  const res = await apiCall({action:'getDailyHeatmap', startDate: currentRange.startDate, endDate: currentRange.endDate, outletId: outletId});
+  if (!res.ok) {
+    document.getElementById('mkt-hm-tbody').innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
+    return;
+  }
+  mktHmData = res.data;
+  renderDailyHeatmapMkt();
+}
+
+function renderDailyHeatmapMkt() {
+  if (!mktHmData) return;
+  const data = mktHmData;
+  document.getElementById('mkt-hm-period').textContent = 'Periode: ' + formatDateID(data.startDate) + ' - ' + formatDateID(data.endDate);
+
+  document.getElementById('mkt-hm-tbody').innerHTML = data.weeks.map(week =>
+    '<tr><td class="hm-week-label">' + week.weekLabel + '</td>' +
+    week.days.map(day => {
+      if (!day.inRange) return '<td class="hm-cell out-of-range">-</td>';
+      if (day.amount <= 0) return '<td class="hm-cell no-data" title="' + day.date + ': No data"><span class="hm-cell-amount">-</span></td>';
+      const color = getHeatmapColor(day.amount, data.colorScale.min, data.colorScale.max);
+      return '<td class="hm-cell" style="background:' + color + '" title="' + day.date + ': ' + fmt(day.amount) + ' (' + day.transactions + ' trans, ' + day.qty + ' pcs, basket ' + day.basketSize.toFixed(1) + ')">' +
+        '<span class="hm-cell-amount">' + fmtShort(day.amount) + '</span>' +
+        '<span class="hm-cell-trans">' + day.transactions + ' trans</span>' +
+        '<span class="hm-cell-basket">' + day.basketSize.toFixed(1) + ' pcs</span></td>';
+    }).join('') + '</tr>'
+  ).join('');
+
+  const sorted = data.dayOfWeekAggregates.slice().sort((a,b) => b.averageAmount - a.averageAmount);
+  document.getElementById('mkt-hm-day-ranking').innerHTML = sorted.map((d, idx) => {
+    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx+1) + '.'));
+    return '<div class="hm-day-rank-card">' +
+      '<div class="hm-rank-day">' + medal + ' ' + d.dayLabel + '</div>' +
+      '<div class="hm-rank-amount">' + fmtShort(d.averageAmount) + '</div>' +
+      '<div class="hm-rank-detail">' + d.totalTransactions + ' trans · ' + d.averageBasketSize.toFixed(1) + ' pcs/trans</div></div>';
+  }).join('');
+
+  const icons = {highest:'🟢', lowest:'🔵', peak:'🏆', basket_highest:'🛒', basket_lowest:'🛍️'};
+  document.getElementById('mkt-hm-insights').innerHTML = (data.insights && data.insights.length)
+    ? data.insights.map(ins => '<div class="hm-insight-item">' + (icons[ins.type]||'📊') + ' ' + ins.text + '</div>').join('')
+    : '<div style="color:var(--text-muted)">Belum ada insight</div>';
+}
+
+// ═══ TAB TARGET: target vs realisasi per outlet (sumber realisasi: Reports) ═══
+let outletTargetsCache = null;
+async function renderTargetTab() {
+  const tbody = document.getElementById('mkt-target-tbody');
+  const mInput = document.getElementById('mkt-target-month');
+  if (!mInput.value) {
+    const d = new Date();
+    mInput.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0');
+  }
+  const month = mInput.value;
+  if (!dashboardData) { tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Data belum dimuat — coba refresh</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Menghitung...</td></tr>';
+
+  if (!outletTargetsCache) {
+    const res = await apiCall({action:'getOutletTargets'});
+    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat target') + '</td></tr>'; return; }
+    outletTargetsCache = res;
+  }
+
+  const targetByOutlet = {};
+  (outletTargetsCache.targets || []).forEach(t => {
+    if (String(t.periode || '').trim() !== month) return;
+    targetByOutlet[String(t.outletId)] = {bulanan: Number(t.target_bulanan)||0, maksimal: Number(t.target_maksimal)||0};
+  });
+
+  const realByOutlet = {};
+  (dashboardData.reports || []).forEach(r => {
+    if (String(r.date).slice(0,7) !== month) return;
+    const oid = String(r.outletId);
+    realByOutlet[oid] = (realByOutlet[oid]||0) + (Number(r.amount)||0) - (Number(r.retur)||0);
+  });
+
+  const rows = [];
+  (dashboardData.outlets || []).forEach(o => {
+    const oid = String(o.id);
+    const tgt = targetByOutlet[oid];
+    const real = realByOutlet[oid] || 0;
+    if (!tgt && real === 0) return;
+    const bulanan = tgt ? tgt.bulanan : 0;
+    const maksimal = tgt ? tgt.maksimal : 0;
+    const pct = bulanan > 0 ? real/bulanan*100 : 0;
+    let status;
+    if (!tgt || bulanan <= 0) status = '<span style="color:var(--text-muted)">- (no target)</span>';
+    else if (maksimal > 0 && real >= maksimal) status = '<span style="color:var(--gold);font-weight:700">🏆 Maksimal</span>';
+    else if (real >= bulanan) status = '<span style="color:var(--green);font-weight:700">✅ Tercapai</span>';
+    else status = '<span style="color:var(--danger)">⏳ ' + fmt(bulanan - real) + ' lagi</span>';
+    rows.push({name: o.name, real, bulanan, maksimal, pct, status});
+  });
+  rows.sort((a,b) => b.real - a.real);
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada target/realisasi untuk ' + month + '</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r => {
+      const w = Math.min(100, r.pct);
+      const barColor = r.pct >= 100 ? 'var(--green)' : (r.pct >= 50 ? 'var(--gold)' : 'var(--danger)');
+      const bar = r.bulanan > 0
+        ? '<div style="display:flex;align-items:center;gap:6px"><div style="background:var(--bg);border:1px solid var(--border);border-radius:4px;height:10px;flex:1;min-width:80px"><div style="background:' + barColor + ';height:100%;border-radius:4px;width:' + w + '%"></div></div><span style="font-size:0.8rem;white-space:nowrap">' + r.pct.toFixed(1) + '%</span></div>'
+        : '-';
+      return '<tr class="sl-table-row">' +
+        '<td style="padding:0.8rem;font-weight:600">' + r.name + '</td>' +
+        '<td style="padding:0.8rem;text-align:right;font-weight:700;color:var(--green)">' + fmt(r.real) + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + (r.bulanan ? fmt(r.bulanan) : '-') + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + (r.maksimal ? fmt(r.maksimal) : '-') + '</td>' +
+        '<td style="padding:0.8rem">' + bar + '</td>' +
+        '<td style="padding:0.8rem">' + r.status + '</td>' +
+      '</tr>';
     }).join('');
   }
-  
-  // Trend chart
-  renderTrendChart(reports);
+  document.getElementById('mkt-target-info').innerHTML = 'ℹ️ <b>Realisasi = laporan sales (Reports)</b>: penjualan − retur per outlet. Angka ini bisa sedikit berbeda dari jurnal akuntansi (4-1000) yang dipakai perhitungan Bonus Outlet.';
 }
 
 function renderTrendChart(reports) {
