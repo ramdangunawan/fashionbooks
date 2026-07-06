@@ -314,6 +314,18 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
   </div>
   
   <div class="card">
+    <div class="card-title"><span class="ct-dot" style="background:var(--accent)"></span>🏪 Target Outlet (Bulanan) — dipakai Bonus Outlet & tab Target marketing</div>
+    <div class="alert alert-ok" id="ot-msg" style="display:none"></div>
+    <div class="frow">
+      <div class="fgroup" style="flex:0 0 180px"><label>Periode (Bulan)</label><input type="month" id="ot-month" onchange="renderOutletTargets()"></div>
+      <div class="fgroup" style="flex:0 0 220px;justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-primary" onclick="copyPrevOutletTargets()">📋 Copy Target Bulan Lalu</button></div>
+      <div class="fgroup" style="flex:0 0 180px;justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-green" onclick="saveAllOutletTargets()">💾 Simpan Semua</button></div>
+    </div>
+    <div class="tbl-wrap" id="ot-table"><div style="padding:20px;text-align:center;color:var(--dim)">Memuat...</div></div>
+    <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--dim)">💡 Kosongkan baris outlet yang tidak diberi target. Target maksimal harus ≥ target bulanan (dipakai untuk bonus 0,5%). Perubahan langsung terbaca dashboard tanpa deploy.</div>
+  </div>
+
+  <div class="card">
     <div class="card-title"><span class="ct-dot" style="background:var(--accent2)"></span>🏆 Leaderboard Pencapaian</div>
     <div id="tg-leaderboard"></div>
   </div>
@@ -954,7 +966,7 @@ async function loadLostSaleAnalytics(days,outletId){
 function renderAll(){renderDashboard();renderOutletSales();renderRekap();renderReports();renderHutang();renderPiutang();renderCOA();renderJournal();renderLedgerSel();renderTrial();renderPnL();renderNeraca();renderCashflow();renderTransfer();renderExpenses();renderTargets();}
 
 // NAV
-document.querySelectorAll('.sb-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.sb-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+b.dataset.p).classList.add('active');document.querySelector('.sidebar').classList.remove('open');const titles={dashboard:'Dashboard',outlets:'Kelola Outlet & Sales',rekap:'Rekap Performa & Bonus',targets:'Target & Pencapaian',reports:'Kelola Laporan Harian',analytics:'Analytics Outlet',expenses:'Review Pengeluaran',hutang:'Laporan Hutang',piutang:'Laporan Piutang',coa:'Chart of Accounts',journal:'Jurnal Umum',ledger:'Buku Besar',trial:'Neraca Saldo',pnl:'Laba Rugi & HPP',neraca:'Neraca (Balance Sheet)',cashflow:'Laporan Arus Kas',transfer:'Transfer Kas / Bank'};document.getElementById('page-title').textContent=titles[b.dataset.p]||'';if(b.dataset.p==='analytics')loadAnalytics();})});
+document.querySelectorAll('.sb-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.sb-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+b.dataset.p).classList.add('active');document.querySelector('.sidebar').classList.remove('open');const titles={dashboard:'Dashboard',outlets:'Kelola Outlet & Sales',rekap:'Rekap Performa & Bonus',targets:'Target & Pencapaian',reports:'Kelola Laporan Harian',analytics:'Analytics Outlet',expenses:'Review Pengeluaran',hutang:'Laporan Hutang',piutang:'Laporan Piutang',coa:'Chart of Accounts',journal:'Jurnal Umum',ledger:'Buku Besar',trial:'Neraca Saldo',pnl:'Laba Rugi & HPP',neraca:'Neraca (Balance Sheet)',cashflow:'Laporan Arus Kas',transfer:'Transfer Kas / Bank'};document.getElementById('page-title').textContent=titles[b.dataset.p]||'';if(b.dataset.p==='analytics')loadAnalytics();if(b.dataset.p==='targets')renderOutletTargets();})});
 
 // ═══ DASHBOARD ═══
 function renderDashboard(){
@@ -1613,6 +1625,76 @@ function changeTgMonth(delta){
   const d=new Date(y,m-1+delta,1);
   input.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   renderTargets();
+}
+
+// ═══ TARGET OUTLET (BULANAN) ═══
+let OT_CACHE=null;
+async function renderOutletTargets(){
+  const el=document.getElementById('ot-table');
+  let mInput=document.getElementById('ot-month');
+  if(!mInput.value){const d=new Date();mInput.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+  const month=mInput.value;
+  el.innerHTML='<div style="padding:20px;text-align:center;color:var(--dim)">Memuat...</div>';
+  const res=await apiCall({action:'getOutletTargets'});
+  if(!res.ok){el.innerHTML='<div style="padding:20px;color:var(--red)">Gagal: '+(res.error||'')+'</div>';return;}
+  OT_CACHE=res;
+  const byOutlet={};
+  (res.targets||[]).forEach(t=>{if(String(t.periode).trim()===month)byOutlet[String(t.outletId)]=t;});
+  const outlets=(DATA.outlets||[]).slice().sort((a,b)=>Number(a.id)-Number(b.id));
+  el.innerHTML=`<table><thead><tr><th>ID</th><th>Outlet</th><th class="r">Target Bulanan (Rp)</th><th class="r">Target Maksimal (Rp)</th><th></th></tr></thead><tbody>${outlets.map(o=>{
+    const t=byOutlet[String(o.id)];
+    const bln=t?Number(t.target_bulanan)||'':'';
+    const maks=t?Number(t.target_maksimal)||'':'';
+    return `<tr><td class="mono">${o.id}</td><td><b>${o.name}</b></td>
+      <td class="r"><input type="number" min="0" id="ot-bln-${o.id}" value="${bln}" placeholder="-" style="width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;text-align:right"></td>
+      <td class="r"><input type="number" min="0" id="ot-maks-${o.id}" value="${maks}" placeholder="-" style="width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;text-align:right"></td>
+      <td><button class="btn btn-sm" onclick="saveOutletTarget(${o.id})">💾</button> <span id="ot-st-${o.id}" style="font-size:12px"></span></td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function otMsg(text,isErr){
+  const m=document.getElementById('ot-msg');
+  m.textContent=text;m.style.display='block';
+  m.style.background=isErr?'#fdecea':'';m.style.color=isErr?'var(--red)':'';
+  setTimeout(()=>{m.style.display='none';},4000);
+}
+async function saveOutletTarget(oid){
+  const month=document.getElementById('ot-month').value;
+  const blnEl=document.getElementById('ot-bln-'+oid),maksEl=document.getElementById('ot-maks-'+oid);
+  const bln=blnEl.value.trim(),maks=maksEl.value.trim();
+  const st=document.getElementById('ot-st-'+oid);
+  if(bln===''){st.textContent='(kosong — dilewati)';st.style.color='var(--muted)';return false;}
+  if(maks!==''&&Number(maks)<Number(bln)){st.textContent='❌ maks < bulanan';st.style.color='var(--red)';return false;}
+  st.textContent='⏳';
+  const res=await apiCall({action:'setOutletTarget',outletId:oid,periode:month,target_bulanan:bln,target_maksimal:maks===''?0:maks});
+  if(!res.ok){st.textContent='❌ '+res.error;st.style.color='var(--red)';return false;}
+  st.textContent=res.created?'✅ dibuat':'✅ diupdate';st.style.color='var(--accent2)';
+  return true;
+}
+async function saveAllOutletTargets(){
+  const outlets=(DATA.outlets||[]);
+  let ok=0,skip=0,fail=0;
+  showLoad(true);
+  for(const o of outlets){
+    const blnEl=document.getElementById('ot-bln-'+o.id);
+    if(!blnEl||blnEl.value.trim()===''){skip++;continue;}
+    const r=await saveOutletTarget(Number(o.id));
+    r?ok++:fail++;
+  }
+  showLoad(false);
+  otMsg(`Simpan semua: ${ok} tersimpan, ${skip} dilewati (kosong)`+(fail?`, ${fail} GAGAL`:''),fail>0);
+}
+async function copyPrevOutletTargets(){
+  const month=document.getElementById('ot-month').value;
+  const [y,m]=month.split('-').map(Number);
+  const prev=new Date(y,m-2,1);
+  const prevMonth=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
+  if(!confirm('Copy target outlet dari '+prevMonth+' ke '+month+'?\n\nBaris yang sudah ada di '+month+' akan DITIMPA dengan nilai '+prevMonth+'.'))return;
+  showLoad(true);
+  const res=await apiCall({action:'copyPrevMonthOutletTargets',fromMonth:prevMonth,toMonth:month});
+  showLoad(false);
+  if(!res.ok){otMsg('Gagal copy: '+res.error,true);return;}
+  otMsg(`📋 Copy selesai: ${res.copied} baru, ${res.updated} diupdate (dari ${res.total} target ${prevMonth})`);
+  renderOutletTargets();
 }
 
 async function renderTargets(){
