@@ -956,13 +956,16 @@ body {
               <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Outlet</th>
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Realisasi (Net)</th>
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Target Bulanan</th>
+              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;min-width:150px">Progres</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Rata²/Hari</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Butuh/Hari</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Proyeksi Akhir Bln</th>
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Target Maksimal</th>
-              <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;min-width:160px">Progres</th>
               <th style="padding:0.8rem;text-align:left;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Status</th>
             </tr>
           </thead>
           <tbody id="mkt-target-tbody">
-            <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</td></tr>
+            <tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1506,14 +1509,25 @@ async function renderTargetTab() {
     mInput.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0');
   }
   const month = mInput.value;
-  if (!dashboardData) { tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Data belum dimuat — coba refresh</td></tr>'; return; }
-  tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Menghitung...</td></tr>';
+  if (!dashboardData) { tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">Data belum dimuat — coba refresh</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">Menghitung...</td></tr>';
 
   if (!outletTargetsCache) {
     const res = await apiCall({action:'getOutletTargets'});
-    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat target') + '</td></tr>'; return; }
+    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat target') + '</td></tr>'; return; }
     outletTargetsCache = res;
   }
+
+  // ── Dimensi waktu untuk pacing ──
+  const y = Number(month.split('-')[0]), mo = Number(month.split('-')[1]);
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const now = new Date();
+  const nowMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2, '0');
+  let daysElapsed; // hari lengkap yang sudah lewat
+  if (month < nowMonth) daysElapsed = daysInMonth;          // bulan lampau: penuh
+  else if (month > nowMonth) daysElapsed = 0;               // bulan depan: belum jalan
+  else daysElapsed = Math.max(1, now.getDate() - 1);        // bulan berjalan: sampai kemarin
+  const daysRemaining = daysInMonth - daysElapsed;
 
   const targetByOutlet = {};
   (outletTargetsCache.targets || []).forEach(t => {
@@ -1537,35 +1551,64 @@ async function renderTargetTab() {
     const bulanan = tgt ? tgt.bulanan : 0;
     const maksimal = tgt ? tgt.maksimal : 0;
     const pct = bulanan > 0 ? real/bulanan*100 : 0;
+
+    // ── Pacing ──
+    const avgDaily = daysElapsed > 0 ? real / daysElapsed : 0;
+    const proyeksi = daysElapsed > 0 ? Math.round(avgDaily * daysInMonth) : 0;
+    const sisa = Math.max(0, bulanan - real);
+    const butuhDaily = (bulanan > 0 && daysRemaining > 0) ? sisa / daysRemaining : 0;
+
     let status;
     if (!tgt || bulanan <= 0) status = '<span style="color:var(--text-muted)">- (no target)</span>';
     else if (maksimal > 0 && real >= maksimal) status = '<span style="color:var(--gold);font-weight:700">🏆 Maksimal</span>';
     else if (real >= bulanan) status = '<span style="color:var(--green);font-weight:700">✅ Tercapai</span>';
-    else status = '<span style="color:var(--danger)">⏳ ' + fmt(bulanan - real) + ' lagi</span>';
-    rows.push({name: o.name, real, bulanan, maksimal, pct, status});
+    else if (daysRemaining <= 0) status = '<span style="color:var(--danger)">❌ Tidak tercapai</span>';
+    else if (proyeksi >= bulanan) status = '<span style="color:var(--green);font-weight:700">📈 On Track</span>';
+    else status = '<span style="color:var(--danger)">⚠️ Perlu Kejar</span>';
+
+    rows.push({name: o.name, real, bulanan, maksimal, pct, avgDaily, butuhDaily, proyeksi, status,
+               hasTarget: !!(tgt && bulanan > 0), done: bulanan > 0 && real >= bulanan});
   });
   rows.sort((a,b) => b.real - a.real);
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada target/realisasi untuk ' + month + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada target/realisasi untuk ' + month + '</td></tr>';
   } else {
     tbody.innerHTML = rows.map(r => {
       const w = Math.min(100, r.pct);
       const barColor = r.pct >= 100 ? 'var(--green)' : (r.pct >= 50 ? 'var(--gold)' : 'var(--danger)');
-      const bar = r.bulanan > 0
-        ? '<div style="display:flex;align-items:center;gap:6px"><div style="background:var(--bg);border:1px solid var(--border);border-radius:4px;height:10px;flex:1;min-width:80px"><div style="background:' + barColor + ';height:100%;border-radius:4px;width:' + w + '%"></div></div><span style="font-size:0.8rem;white-space:nowrap">' + r.pct.toFixed(1) + '%</span></div>'
+      const bar = r.hasTarget
+        ? '<div style="display:flex;align-items:center;gap:6px"><div style="background:var(--bg);border:1px solid var(--border);border-radius:4px;height:10px;flex:1;min-width:70px"><div style="background:' + barColor + ';height:100%;border-radius:4px;width:' + w + '%"></div></div><span style="font-size:0.8rem;white-space:nowrap">' + r.pct.toFixed(1) + '%</span></div>'
+        : '-';
+      let butuhCell;
+      if (!r.hasTarget) butuhCell = '-';
+      else if (r.done) butuhCell = '<span style="color:var(--green)">✔ selesai</span>';
+      else if (daysRemaining <= 0) butuhCell = '-';
+      else butuhCell = '<b>' + fmt(Math.round(r.butuhDaily)) + '</b>';
+      const proyeksiCell = daysElapsed > 0
+        ? '<span style="font-weight:600;color:' + (r.hasTarget ? (r.proyeksi >= r.bulanan ? 'var(--green)' : 'var(--danger)') : 'var(--text)') + '">' + fmt(r.proyeksi) + '</span>'
         : '-';
       return '<tr class="sl-table-row">' +
         '<td style="padding:0.8rem;font-weight:600">' + r.name + '</td>' +
         '<td style="padding:0.8rem;text-align:right;font-weight:700;color:var(--green)">' + fmt(r.real) + '</td>' +
         '<td style="padding:0.8rem;text-align:right">' + (r.bulanan ? fmt(r.bulanan) : '-') + '</td>' +
-        '<td style="padding:0.8rem;text-align:right">' + (r.maksimal ? fmt(r.maksimal) : '-') + '</td>' +
         '<td style="padding:0.8rem">' + bar + '</td>' +
-        '<td style="padding:0.8rem">' + r.status + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + (daysElapsed > 0 ? fmt(Math.round(r.avgDaily)) : '-') + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + butuhCell + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + proyeksiCell + '</td>' +
+        '<td style="padding:0.8rem;text-align:right">' + (r.maksimal ? fmt(r.maksimal) : '-') + '</td>' +
+        '<td style="padding:0.8rem;white-space:nowrap">' + r.status + '</td>' +
       '</tr>';
     }).join('');
   }
-  document.getElementById('mkt-target-info').innerHTML = 'ℹ️ <b>Realisasi = laporan sales (Reports)</b>: penjualan − retur per outlet. Angka ini bisa sedikit berbeda dari jurnal akuntansi (4-1000) yang dipakai perhitungan Bonus Outlet.';
+
+  let pacingInfo;
+  if (month < nowMonth) pacingInfo = 'Bulan sudah tutup (' + daysInMonth + ' hari penuh).';
+  else if (month > nowMonth) pacingInfo = 'Bulan belum berjalan.';
+  else pacingInfo = '<b>Hari berjalan: ' + daysElapsed + ' dari ' + daysInMonth + '</b> (sisa ' + daysRemaining + ' hari; rata-rata dihitung sampai kemarin karena hari ini belum tutup).';
+  document.getElementById('mkt-target-info').innerHTML =
+    '📅 ' + pacingInfo + '<br>' +
+    'ℹ️ <b>Realisasi = laporan sales (Reports)</b>: penjualan − retur per outlet. <b>Butuh/Hari</b> = sisa target ÷ sisa hari — angka minimum penjualan harian agar target bulan ini tercapai. <b>Proyeksi</b> = rata-rata harian × ' + daysInMonth + ' hari. Angka bisa sedikit berbeda dari jurnal akuntansi (4-1000) yang dipakai perhitungan Bonus Outlet.';
 }
 
 function renderTrendChart(reports) {
