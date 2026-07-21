@@ -1810,7 +1810,7 @@ footer {
     <button class="tab" data-tab="penjualan">💰 Penjualan</button>
     <button class="tab" data-tab="laba-rugi">📊 Laba Rugi</button>
     <button class="tab" data-tab="biaya">💸 Biaya</button>
-    <button class="tab" data-tab="target">🎯 Target <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="target">🎯 Pencapaian</button>
     <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
   </div>
   
@@ -2355,10 +2355,29 @@ footer {
 </div>
   
   <div class="tab-content" id="tab-target">
-    <div class="empty-state">
-      <div class="icon">🎯</div>
-      <h3>Tab Target</h3>
-      <p>Akan dikembangkan di tahap berikutnya.</p>
+    <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <span style="font-weight:700;font-size:1.05rem">🎯 Pencapaian per Fanel & Perusahaan</span>
+        <label style="font-size:0.85rem;color:var(--text-muted)">Tahun:</label>
+        <select id="pf-year" style="padding:0.45rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;cursor:pointer" onchange="fetchPencapaianFanel()"></select>
+        <span id="pf-loading" style="display:none;color:var(--text-muted);font-size:0.85rem">Memuat...</span>
+      </div>
+      <div id="pf-note" style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted)">Angka = penjualan bersih (Reports: penjualan − retur) per bulan, dipetakan via sheet FanelMapping. Target = jumlah target bulanan semua outlet (OutletTarget).</div>
+    </div>
+
+    <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-bottom:1rem">
+      <div style="font-weight:700;margin-bottom:0.6rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">📊 Pencapaian Perusahaan vs Target (per bulan)</div>
+      <div style="position:relative;height:300px"><canvas id="pf-chart-company"></canvas></div>
+    </div>
+
+    <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-bottom:1rem">
+      <div style="font-weight:700;margin-bottom:0.6rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">📈 Tren Bulanan per Fanel <span style="font-weight:400;text-transform:none;letter-spacing:0">(klik nama fanel di legenda untuk sembunyikan/tampilkan)</span></div>
+      <div style="position:relative;height:320px"><canvas id="pf-chart-fanel"></canvas></div>
+    </div>
+
+    <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow)">
+      <div style="font-weight:700;margin-bottom:0.6rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">📋 Tabel Bulanan per Fanel</div>
+      <div style="overflow-x:auto"><div id="pf-table"><div style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat data...</div></div></div>
     </div>
   </div>
   
@@ -3440,6 +3459,132 @@ document.addEventListener('click', function(e) {
 document.addEventListener('click', function(e) {
   if (e.target && e.target.matches('.tab[data-tab="laba-rugi"]')) {
     fetchLabaRugi();
+  }
+});
+// ═══ TAB PENCAPAIAN FANEL ═══
+let pfChartCompany = null, pfChartFanel = null, pfLoaded = false;
+const PF_COLORS = ['#2F6B4F','#C0392B','#2980B9','#8E44AD','#D68910','#16A085','#7F8C8D','#C2185B','#5D4037'];
+const PF_BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function pfInitYear() {
+  const sel = document.getElementById('pf-year');
+  if (sel.options.length > 0) return;
+  const now = new Date().getFullYear();
+  for (let y = now; y >= now - 2; y--) {
+    const o = document.createElement('option'); o.value = y; o.textContent = y; sel.appendChild(o);
+  }
+}
+
+async function fetchPencapaianFanel() {
+  pfInitYear();
+  const year = document.getElementById('pf-year').value;
+  document.getElementById('pf-loading').style.display = 'inline';
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
+    const res = await resp.json();
+    document.getElementById('pf-loading').style.display = 'none';
+    if (!res.ok) {
+      document.getElementById('pf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + (res.error || 'Gagal memuat') + '</div>';
+      return;
+    }
+    renderPencapaianFanel(res.data);
+  } catch (err) {
+    document.getElementById('pf-loading').style.display = 'none';
+    document.getElementById('pf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + err.message + '</div>';
+  }
+}
+
+function renderPencapaianFanel(d) {
+  const fmtR = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+  const fmtS = n => { n = Number(n)||0; if (Math.abs(n)>=1e9) return (n/1e9).toFixed(2)+' M'; if (Math.abs(n)>=1e6) return (n/1e6).toFixed(0)+' jt'; return n.toLocaleString('id-ID'); };
+  const pctBadge = (pct, target) => {
+    if (!target) return '<span style="color:var(--text-muted)">-</span>';
+    const c = pct >= 100 ? '#16A34A' : (pct >= 80 ? '#D68910' : '#DC2626');
+    return '<span style="color:' + c + ';font-weight:700">' + pct.toFixed(2).replace('.', ',') + '%</span>';
+  };
+
+  // ── Tabel ──
+  let th = '<tr style="background:var(--bg);border-bottom:2px solid var(--border)">' +
+    '<th style="padding:0.6rem;text-align:left;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Bulan</th>' +
+    d.fanels.map(f => '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">' + f + '</th>').join('') +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Retur</th>' +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;border-left:2px solid var(--border)">Jumlah</th>' +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Target</th>' +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Pencapaian</th></tr>';
+  let rows = '';
+  d.months.forEach((m, i) => {
+    if (m.jumlah === 0 && m.target === 0) return;
+    rows += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:0.55rem;font-weight:700">' + PF_BLN[i].toUpperCase() + '</td>' +
+      d.fanels.map(f => '<td style="padding:0.55rem;text-align:right;font-size:0.85rem">' + (m.fanel[f] ? Math.round(m.fanel[f]).toLocaleString('id-ID') : '-') + '</td>').join('') +
+      '<td style="padding:0.55rem;text-align:right;font-size:0.85rem;color:#DC2626">' + (m.retur ? Math.round(m.retur).toLocaleString('id-ID') : '-') + '</td>' +
+      '<td style="padding:0.55rem;text-align:right;font-weight:700;border-left:2px solid var(--border)">' + Math.round(m.jumlah).toLocaleString('id-ID') + '</td>' +
+      '<td style="padding:0.55rem;text-align:right;font-size:0.85rem">' + (m.target ? Math.round(m.target).toLocaleString('id-ID') : '-') + '</td>' +
+      '<td style="padding:0.55rem;text-align:right">' + pctBadge(m.pct, m.target) + '</td></tr>';
+  });
+  let tot = '<tr style="background:var(--bg);border-top:2px solid var(--border);font-weight:800">' +
+    '<td style="padding:0.6rem">TOTAL</td>' +
+    d.fanels.map(f => '<td style="padding:0.6rem;text-align:right">' + Math.round(d.totalFanel[f]).toLocaleString('id-ID') + '</td>').join('') +
+    '<td style="padding:0.6rem;text-align:right;color:#DC2626">' + Math.round(d.totalRetur).toLocaleString('id-ID') + '</td>' +
+    '<td style="padding:0.6rem;text-align:right;border-left:2px solid var(--border)">' + Math.round(d.grandTotal).toLocaleString('id-ID') + '</td>' +
+    '<td style="padding:0.6rem;text-align:right">' + Math.round(d.totalTarget).toLocaleString('id-ID') + '</td>' +
+    '<td style="padding:0.6rem;text-align:right">' + pctBadge(d.pctTahun, d.totalTarget) + '</td></tr>' +
+    '<tr style="font-size:0.78rem;color:var(--text-muted)"><td style="padding:0.4rem">Kontribusi</td>' +
+    d.fanels.map(f => '<td style="padding:0.4rem;text-align:right">' + String(d.kontribusi[f]).replace('.', ',') + '%</td>').join('') +
+    '<td></td><td colspan="3"></td></tr>';
+  document.getElementById('pf-table').innerHTML =
+    '<table style="width:100%;border-collapse:collapse;min-width:900px">' + th + rows + tot + '</table>' +
+    (d.totalLain > 0 ? '<div style="margin-top:0.6rem;font-size:0.78rem;color:#D68910">⚠️ Ada penjualan Rp ' + Math.round(d.totalLain).toLocaleString('id-ID') + ' dari outlet yang belum terpetakan di sheet FanelMapping.</div>' : '');
+
+  // ── Grafik 1: perusahaan vs target ──
+  const labels = PF_BLN;
+  const jumlahArr = d.months.map(m => m.jumlah);
+  const targetArr = d.months.map(m => m.target || null);
+  if (pfChartCompany) pfChartCompany.destroy();
+  pfChartCompany = new Chart(document.getElementById('pf-chart-company'), {
+    data: {
+      labels: labels,
+      datasets: [
+        { type: 'bar', label: 'Penjualan (Jumlah)', data: jumlahArr,
+          backgroundColor: jumlahArr.map((v, i) => (targetArr[i] && v >= targetArr[i]) ? 'rgba(22,163,74,0.75)' : 'rgba(47,107,79,0.45)'),
+          borderRadius: 4 },
+        { type: 'line', label: 'Target', data: targetArr, borderColor: '#C0392B',
+          backgroundColor: '#C0392B', borderWidth: 2.5, pointRadius: 4, tension: 0.15, spanGaps: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => {
+          let s = ctx.dataset.label + ': ' + fmtR(ctx.parsed.y);
+          if (ctx.dataset.type === 'bar' && targetArr[ctx.dataIndex]) s += ' (' + (ctx.parsed.y / targetArr[ctx.dataIndex] * 100).toFixed(1) + '% dari target)';
+          return s;
+        } } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => fmtS(v) } } }
+    }
+  });
+
+  // ── Grafik 2: tren per fanel ──
+  if (pfChartFanel) pfChartFanel.destroy();
+  pfChartFanel = new Chart(document.getElementById('pf-chart-fanel'), {
+    type: 'line',
+    data: { labels: labels,
+      datasets: d.fanels.map((f, i) => ({
+        label: f, data: d.months.map(m => m.fanel[f]),
+        borderColor: PF_COLORS[i % PF_COLORS.length], backgroundColor: PF_COLORS[i % PF_COLORS.length],
+        borderWidth: 2, pointRadius: 3, tension: 0.15
+      })) },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtR(ctx.parsed.y) } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => fmtS(v) } } } }
+  });
+}
+
+// Hook: Tab click - fetch when "Pencapaian" tab clicked
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.matches('.tab[data-tab="target"]')) {
+    if (!pfLoaded) { pfLoaded = true; fetchPencapaianFanel(); }
   }
 });
 // Hook: Tab click - fetch when "Biaya" tab clicked
