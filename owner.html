@@ -297,6 +297,17 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
     <div class="tbl-wrap" id="bonus-tahunan"></div>
     <div id="bonus-tahunan-info" style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--dim)"></div>
   </div>
+  <div class="card">
+    <div class="card-title"><span class="ct-dot" style="background:var(--accent)"></span>🏢 Penyusutan Aset Tetap (otomatis dari sheet AsetTetap)</div>
+    <div class="alert alert-ok" id="pa-msg" style="display:none"></div>
+    <div class="frow" style="margin:0 0 12px 0;align-items:flex-end">
+      <div class="fgroup" style="flex:0 0 160px"><label>Bulan</label><input type="month" id="pa-month" onchange="renderPenyusutanAset()"></div>
+      <button class="btn" onclick="renderPenyusutanAset()" style="padding:8px 16px">🔄 Hitung</button>
+      <button class="btn btn-green" onclick="buatJurnalPenyusutan()" style="padding:8px 16px">🧾 Buat Jurnal Otomatis</button>
+    </div>
+    <div class="tbl-wrap" id="pa-table"></div>
+    <div id="pa-info" style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--dim)"></div>
+  </div>
 </div>
 
 <div class="page" id="p-targets">
@@ -1055,6 +1066,40 @@ async function renderBonusTahunan(){
   const bar=p=>{const w=Math.min(100,p);const c=p>=100?'var(--accent2)':(p>=50?'var(--accent)':'var(--red)');return `<div style="background:var(--surface2);border-radius:4px;height:8px;width:90px;display:inline-block;vertical-align:middle;margin-right:6px"><div style="background:${c};height:8px;border-radius:4px;width:${w}%"></div></div>${p}%`;};
   el.innerHTML=`<table><thead><tr><th>Outlet</th><th class="r">Revenue YTD</th><th class="r">Target Tahunan</th><th>Progres</th><th class="r">Rata\u00b2/bln</th><th class="r">Proyeksi Akhir Thn</th><th>Status</th><th class="r">Bonus%</th><th class="r">Bonus (berjalan)</th></tr></thead><tbody>${d.outlets.map(o=>`<tr><td><b>${o.outlet}</b></td><td class="r">${fmt(o.revenue)}</td><td class="r">${o.target?fmt(o.target):'-'}</td><td>${o.target?bar(o.progressPct):'-'}</td><td class="r">${fmt(o.avgMonthly)}</td><td class="r" style="font-weight:700">${fmt(o.proyeksi)}</td><td>${statusBadge(o.status,o.tingkat)}</td><td class="r" style="font-weight:700">${o.bonusPct}%</td><td class="r" style="color:var(--accent2);font-weight:700">${fmt(o.bonus)}</td></tr>`).join('')}</tbody></table>`;
   document.getElementById('bonus-tahunan-info').innerHTML=`<b>Total Bonus Tahunan (berjalan):</b> ${fmt(d.totalBonus)} &nbsp;\u00b7&nbsp; <b>Aturan:</b> revenue setahun \u2265 target tahunan \u2192 ${d.config.tahunan}% \u00d7 revenue setahun &nbsp;\u00b7&nbsp; <b>Proyeksi</b> = rata-rata ${d.monthsComplete} bulan komplit \u00d7 12${d.unparsedRevenue>0?' &nbsp;\u00b7&nbsp; \u26a0\ufe0f Revenue tak terbaca outlet: '+fmt(d.unparsedRevenue):''}`;
+}
+
+let PA_CACHE=null;
+async function renderPenyusutanAset(){
+  const el=document.getElementById('pa-table');
+  let mInput=document.getElementById('pa-month');
+  if(!mInput.value){const d=new Date();mInput.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+  const month=mInput.value;
+  el.innerHTML='<div style="padding:20px;text-align:center;color:var(--dim)">Menghitung...</div>';
+  const res=await apiCall({action:'getPenyusutanAset',month:month});
+  if(!res.ok){el.innerHTML='<div style="padding:20px;color:var(--red)">Gagal: '+(res.error||'')+'</div>';PA_CACHE=null;return;}
+  PA_CACHE=res.data;
+  const d=res.data;
+  el.innerHTML=`<table><thead><tr><th>Kategori</th><th class="r">Penyusutan/Bln</th><th>Akun Beban (D)</th><th>Akun Akumulasi (K)</th></tr></thead><tbody>${d.rows.map(r=>`<tr><td><b>${r.kategori}</b></td><td class="r" style="font-weight:700">${fmt(r.penyusutan)}</td><td class="mono">${r.beban}</td><td class="mono">${r.akum}</td></tr>`).join('')}<tr style="border-top:2px solid var(--border)"><td><b>TOTAL</b></td><td class="r" style="font-weight:800;color:var(--accent2)">${fmt(d.total)}</td><td colspan="2"></td></tr></tbody></table>`;
+  let info=`📦 <b>${d.asetAktif} aset aktif</b> menyusut bulan ${d.month}.`;
+  if(d.baruBulanIni.length)info+=`<br>🆕 <b>Mulai menyusut bulan ini:</b> ${d.baruBulanIni.map(a=>a.nama+' ('+fmt(a.penyBln)+'/bln)').join(', ')}`;
+  if(d.habisBulanIni.length)info+=`<br>⏰ <b>Bulan TERAKHIR menyusut:</b> ${d.habisBulanIni.map(a=>a.nama).join(', ')} — mulai bulan depan berhenti otomatis`;
+  if(d.warnings.length)info+=`<br>⚠️ ${d.warnings.join(' · ')}`;
+  info+=`<br>💡 Aset baru: tambah baris di sheet AsetTetap (isi tanggal_perolehan, kosongkan terpakai_baseline) — mulai menyusut bulan berikutnya otomatis. Pembelian < Rp 2 juta jangan dijadikan aset (langsung beban).`;
+  document.getElementById('pa-info').innerHTML=info;
+}
+async function buatJurnalPenyusutan(){
+  const month=document.getElementById('pa-month').value;
+  if(!month){alert('Pilih bulan dulu');return;}
+  if(!PA_CACHE||PA_CACHE.month!==month){await renderPenyusutanAset();if(!PA_CACHE)return;}
+  if(!confirm('Buat jurnal penyusutan '+month+' senilai total '+fmt(PA_CACHE.total)+'?\n\nJurnal akan langsung diposting (ada pengaman anti-dobel).'))return;
+  showLoad(true);
+  const res=await apiCall({action:'generateJurnalPenyusutan',month:month});
+  showLoad(false);
+  const m=document.getElementById('pa-msg');
+  m.style.display='block';
+  if(!res.ok){m.textContent='❌ '+res.error;m.style.background='#fdecea';m.style.color='var(--red)';}
+  else{m.textContent='✅ Jurnal penyusutan '+month+' dibuat (id:'+res.id+', total '+fmt(res.total)+')';m.style.background='';m.style.color='';}
+  setTimeout(()=>{m.style.display='none';},8000);
 }
 
 // ═══ KELOLA LAPORAN ═══
