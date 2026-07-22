@@ -2352,7 +2352,19 @@ footer {
     </div>
     
   </div>
-</div>
+
+    <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-top:1.2rem">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0.4rem">
+        <span style="font-weight:700;font-size:1rem">📋 Biaya Bulanan per Fanel</span>
+        <label style="font-size:0.85rem;color:var(--text-muted)">Tahun:</label>
+        <select id="bf-year" style="padding:0.45rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;cursor:pointer" onchange="fetchBiayaFanel()"></select>
+        <span id="bf-loading" style="display:none;color:var(--text-muted);font-size:0.85rem">Memuat...</span>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.8rem">Biaya operasional dari jurnal akun 6-xxxx (tanpa penyusutan 6-52xx & amortisasi sewa 6-5100), per fanel via FanelMapping. PUSAT/HO = biaya kantor pusat & yang tidak ter-tag outlet. Kolom <b style="color:#8E44AD">PRODUKSI</b> = seluruh akun 5-xxxx dari entitas mana pun (HO/Zizu/Pekalongan) — informasi bagian HPP, TIDAK dijumlahkan ke Jumlah & Rasio. Rasio = jumlah biaya operasional ÷ penjualan bersih.</div>
+      <div style="position:relative;height:280px;margin-bottom:1rem"><canvas id="bf-chart"></canvas></div>
+      <div style="overflow-x:auto"><div id="bf-table"><div style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat...</div></div></div>
+    </div>
+  </div>
   
   <div class="tab-content" id="tab-target">
     <div class="section" style="padding:1rem;background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-bottom:1rem">
@@ -3461,6 +3473,80 @@ document.addEventListener('click', function(e) {
     fetchLabaRugi();
   }
 });
+// ═══ BIAYA BULANAN PER FANEL (Tab Biaya) ═══
+let bfChart = null, bfLoaded = false;
+function bfInitYear() {
+  const sel = document.getElementById('bf-year');
+  if (sel.options.length > 0) return;
+  const now = new Date().getFullYear();
+  for (let y = now; y >= now - 2; y--) { const o = document.createElement('option'); o.value = y; o.textContent = y; sel.appendChild(o); }
+}
+async function fetchBiayaFanel() {
+  bfInitYear();
+  const year = document.getElementById('bf-year').value;
+  document.getElementById('bf-loading').style.display = 'inline';
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=getBiayaFanel&year=' + year);
+    const res = await resp.json();
+    document.getElementById('bf-loading').style.display = 'none';
+    if (!res.ok) { document.getElementById('bf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + (res.error||'Gagal') + '</div>'; return; }
+    renderBiayaFanel(res.data);
+  } catch (err) {
+    document.getElementById('bf-loading').style.display = 'none';
+    document.getElementById('bf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + err.message + '</div>';
+  }
+}
+function renderBiayaFanel(d) {
+  const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const fmtS = n => { n = Number(n)||0; if (Math.abs(n)>=1e9) return (n/1e9).toFixed(2)+' M'; if (Math.abs(n)>=1e6) return (n/1e6).toFixed(0)+' jt'; return n.toLocaleString('id-ID'); };
+  const cols = [...d.fanels, 'PUSAT/HO', 'PRODUKSI'];
+  const val = (m, c) => c === 'PUSAT/HO' ? m.pusat : (c === 'PRODUKSI' ? (m.produksi || 0) : (m.fanel[c] || 0));
+  const totVal = c => c === 'PUSAT/HO' ? d.totalPusat : (c === 'PRODUKSI' ? (d.totalProduksi || 0) : d.totalFanel[c]);
+  const konVal = c => c === 'PUSAT/HO' ? d.kontribusiPusat : (c === 'PRODUKSI' ? null : d.kontribusi[c]);
+
+  let th = '<tr style="background:var(--bg);border-bottom:2px solid var(--border)">' +
+    '<th style="padding:0.6rem;text-align:left;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Bulan</th>' +
+    cols.map(c => '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase' + (c === 'PRODUKSI' ? ';border-left:2px dashed var(--border);color:#8E44AD' : '') + '">' + c + '</th>').join('') +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;border-left:2px solid var(--border)">Jumlah</th>' +
+    '<th style="padding:0.6rem;text-align:right;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Biaya/Penjualan</th></tr>';
+  let rows = '';
+  d.months.forEach((m, i) => {
+    if (m.jumlah === 0) return;
+    const rc = m.rasio > 10 ? '#DC2626' : (m.rasio > 7 ? '#D68910' : '#16A34A');
+    rows += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:0.55rem;font-weight:700">' + BLN[i].toUpperCase() + '</td>' +
+      cols.map(c => '<td style="padding:0.55rem;text-align:right;font-size:0.85rem' + (c === 'PRODUKSI' ? ';border-left:2px dashed var(--border);color:#8E44AD' : '') + '">' + (val(m,c) ? Math.round(val(m,c)).toLocaleString('id-ID') : '-') + '</td>').join('') +
+      '<td style="padding:0.55rem;text-align:right;font-weight:700;border-left:2px solid var(--border)">' + Math.round(m.jumlah).toLocaleString('id-ID') + '</td>' +
+      '<td style="padding:0.55rem;text-align:right;font-weight:700;color:' + rc + '">' + (m.penjualan ? String(m.rasio).replace('.', ',') + '%' : '-') + '</td></tr>';
+  });
+  let tot = '<tr style="background:var(--bg);border-top:2px solid var(--border);font-weight:800">' +
+    '<td style="padding:0.6rem">TOTAL</td>' +
+    cols.map(c => '<td style="padding:0.6rem;text-align:right">' + Math.round(totVal(c)).toLocaleString('id-ID') + '</td>').join('') +
+    '<td style="padding:0.6rem;text-align:right;border-left:2px solid var(--border)">' + Math.round(d.grandBiaya).toLocaleString('id-ID') + '</td>' +
+    '<td style="padding:0.6rem;text-align:right">' + String(d.rasioTahun).replace('.', ',') + '%</td></tr>' +
+    '<tr style="font-size:0.78rem;color:var(--text-muted)"><td style="padding:0.4rem">Kontribusi</td>' +
+    cols.map(c => '<td style="padding:0.4rem;text-align:right">' + (konVal(c) === null ? '·' : String(konVal(c)).replace('.', ',') + '%') + '</td>').join('') +
+    '<td colspan="2"></td></tr>';
+  document.getElementById('bf-table').innerHTML = '<table style="width:100%;border-collapse:collapse;min-width:900px">' + th + rows + tot + '</table>';
+
+  const biayaArr = d.months.map(m => m.jumlah);
+  const rasioArr = d.months.map(m => m.penjualan > 0 ? m.rasio : null);
+  if (bfChart) bfChart.destroy();
+  bfChart = new Chart(document.getElementById('bf-chart'), {
+    data: { labels: BLN, datasets: [
+      { type: 'bar', label: 'Total Biaya', data: biayaArr, backgroundColor: 'rgba(214,137,16,0.55)', borderRadius: 4, yAxisID: 'y' },
+      { type: 'line', label: 'Rasio Biaya/Penjualan (%)', data: rasioArr, borderColor: '#C0392B', backgroundColor: '#C0392B', borderWidth: 2.5, pointRadius: 4, tension: 0.15, spanGaps: true, yAxisID: 'y1' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.type === 'bar'
+          ? ctx.dataset.label + ': Rp ' + Math.round(ctx.parsed.y).toLocaleString('id-ID')
+          : ctx.dataset.label + ': ' + ctx.parsed.y + '%' } } },
+      scales: { y: { beginAtZero: true, position: 'left', ticks: { callback: v => fmtS(v) } },
+                y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => v + '%' } } } }
+  });
+}
+
 // ═══ TAB PENCAPAIAN FANEL ═══
 let pfChartCompany = null, pfChartFanel = null, pfLoaded = false;
 const PF_COLORS = ['#2F6B4F','#C0392B','#2980B9','#8E44AD','#D68910','#16A085','#7F8C8D','#C2185B','#5D4037'];
@@ -3591,6 +3677,7 @@ document.addEventListener('click', function(e) {
 document.addEventListener('click', function(e) {
   if (e.target && e.target.matches('.tab[data-tab="biaya"]')) {
     fetchTabBiaya();
+    if (!bfLoaded) { bfLoaded = true; fetchBiayaFanel(); }
   }
 });  
 // Initial load: default ke "Bulan Ini"
