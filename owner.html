@@ -598,7 +598,15 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
         </div>
       </div>
       <div class="frow">
-        <div class="fgroup" style="flex:1"><label>Jumlah Diterima</label><input type="number" id="ar-pay-amt" value="0"></div>
+        <div class="fgroup" style="flex:1"><label>Diterima Kas/Bank (Rp)</label><input type="number" id="ar-pay-amt" value="0"></div>
+      </div>
+      <div class="frow" style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-top:2px">
+        <div class="fgroup" style="flex:1"><label>✂️ Akun Potongan (opsional)</label><input id="ar-pay-pot-acc" placeholder="cth: 6-1420 (potong gaji) / akun retur" autocomplete="off"></div>
+        <div class="fgroup" style="flex:1"><label>Jumlah Potongan (Rp)</label><input type="number" id="ar-pay-pot-amt" value="0"></div>
+        <div class="fgroup" style="flex:1"><label>Outlet (opsional)</label><select id="ar-pay-outlet"><option value="">— tanpa outlet —</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fgroup" style="flex:1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:12px"><input type="checkbox" id="ar-pay-nojurnal" style="width:auto;margin:0"> Tanpa jurnal — hanya tandai lunas (jurnalnya SUDAH dibuat manual, mis. di jurnal gaji)</label></div>
         <div class="fgroup" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-green" onclick="terimaPiutang()">Terima</button></div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
@@ -1010,6 +1018,7 @@ function renderOutletSales(){
   document.getElementById('ol-list').innerHTML=DATA.outlets.map(o=>`<tr><td class="mono">${o.id}</td><td><b>${o.name}</b></td><td>${o.location||'-'}</td></tr>`).join('');
   document.getElementById('sl-outlet').innerHTML=DATA.outlets.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
   document.getElementById('rep-outlet').innerHTML='<option value="0">Semua Outlet</option>'+DATA.outlets.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+  document.getElementById('ar-pay-outlet').innerHTML='<option value="">— tanpa outlet —</option>'+DATA.outlets.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
   document.getElementById('sl-list').innerHTML=DATA.sales.map(s=>{const o=DATA.outlets.find(x=>Number(x.id)===Number(s.outletId));return`<tr><td class="mono">${s.id}</td><td><b>${s.name}</b></td><td>${o?o.name:'-'}</td><td class="mono" style="letter-spacing:2px">${s.pin}</td><td><button class="btn btn-sec btn-sm" onclick="resetPin(${s.id},'${s.name}')">Reset PIN</button></td></tr>`;}).join('');
 }
 async function addOutlet(){const name=document.getElementById('ol-name').value.trim(),location=document.getElementById('ol-loc').value.trim();if(!name){showA('ol-err','Nama outlet wajib');return;}showLoad(true);const r=await apiCall({action:'addOutlet',name,location});showLoad(false);if(!r.ok){showA('ol-err',r.error);return;}document.getElementById('ol-name').value='';document.getElementById('ol-loc').value='';showA('ol-ok','Outlet ditambahkan');await reload();}
@@ -1284,16 +1293,33 @@ async function terimaPiutang(){
         amount=Number(document.getElementById('ar-pay-amt').value)||0,
         date=document.getElementById('ar-pay-date').value,
         paymentAccount=document.getElementById('ar-pay-account').value,
-        receivableAccount=document.getElementById('ar-pay-receivable-acc').value;
+        receivableAccount=document.getElementById('ar-pay-receivable-acc').value,
+        potonganAccount=document.getElementById('ar-pay-pot-acc').value.trim(),
+        potonganAmount=Number(document.getElementById('ar-pay-pot-amt').value)||0,
+        outletId=document.getElementById('ar-pay-outlet').value,
+        noJournal=document.getElementById('ar-pay-nojurnal').checked?'1':'';
+  const total=amount+potonganAmount;
   if(!id){alert('Pilih piutang');return;}
-  if(amount<=0){alert('Jumlah harus > 0');return;}
-  if(!paymentAccount){alert('Pilih metode pembayaran');return;}
+  if(total<=0){alert('Total pelunasan (kas + potongan) harus > 0');return;}
+  if(amount>0&&!paymentAccount){alert('Pilih metode pembayaran untuk bagian kas');return;}
+  if(potonganAmount>0&&!potonganAccount){alert('Isi Akun Potongan (mis. 6-1420 untuk potong gaji, akun retur untuk retur)');return;}
   if(!receivableAccount){alert('Pilih Jenis Piutang yang Dibayar');return;}
+  let ringkas='Pelunasan Rp '+total.toLocaleString('id-ID');
+  const parts=[];
+  if(amount>0)parts.push('kas/bank Rp '+amount.toLocaleString('id-ID'));
+  if(potonganAmount>0)parts.push('potongan '+potonganAccount+' Rp '+potonganAmount.toLocaleString('id-ID'));
+  ringkas+=' ('+parts.join(' + ')+')'+(noJournal?'\n\n⚠️ TANPA JURNAL — pastikan jurnalnya sudah ada!':'');
+  if(!confirm(ringkas))return;
   showLoad(true);
-  const r=await apiCall({action:'payReceivable',id,amount,date,paymentAccount,receivableAccount});
+  const r=await apiCall({action:'payReceivable',id,amount,date,paymentAccount,receivableAccount,potonganAccount,potonganAmount,outletId,noJournal});
   showLoad(false);
   if(!r.ok){alert(r.error);return;}
+  if(r.info)alert(r.info);
   document.getElementById('ar-pay-amt').value='0';
+  document.getElementById('ar-pay-pot-acc').value='';
+  document.getElementById('ar-pay-pot-amt').value='0';
+  document.getElementById('ar-pay-outlet').value='';
+  document.getElementById('ar-pay-nojurnal').checked=false;
   document.getElementById('ar-pay-receivable-acc').value='';
   await reload();
 }
