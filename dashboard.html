@@ -2360,7 +2360,7 @@ footer {
         <select id="bf-year" style="padding:0.45rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;cursor:pointer" onchange="fetchBiayaFanel()"></select>
         <span id="bf-loading" style="display:none;color:var(--text-muted);font-size:0.85rem">Memuat...</span>
       </div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.8rem">Biaya operasional dari jurnal akun 6-xxxx (tanpa penyusutan 6-52xx & amortisasi sewa 6-5100), per fanel via FanelMapping. PUSAT/HO = biaya kantor pusat & yang tidak ter-tag outlet. Kolom <b style="color:#8E44AD">PRODUKSI</b> = seluruh akun 5-xxxx dari entitas mana pun (HO/Zizu/Pekalongan) — informasi bagian HPP, TIDAK dijumlahkan ke Jumlah & Rasio. Rasio = jumlah biaya operasional ÷ penjualan bersih.</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.8rem">Biaya operasional dari jurnal akun 6-xxxx (tanpa penyusutan 6-52xx & amortisasi sewa 6-5100), per fanel via FanelMapping. PUSAT/HO = biaya kantor pusat & yang tidak ter-tag outlet. Kolom <b>GAJI</b> = akun gaji 6-14xx yang belum dipecah per outlet (tetap bagian Jumlah & Rasio; bila jurnal gaji nanti ber-outletId, otomatis pindah ke kolom fanel). Kolom <b style="color:#8E44AD">PRODUKSI</b> = seluruh akun 5-xxxx dari entitas mana pun (HO/Zizu/Pekalongan) — informasi bagian HPP, TIDAK dijumlahkan ke Jumlah & Rasio. Rasio = jumlah biaya operasional ÷ penjualan bersih.</div>
       <div style="position:relative;height:280px;margin-bottom:1rem"><canvas id="bf-chart"></canvas></div>
       <div style="overflow-x:auto"><div id="bf-table"><div style="padding:2rem;text-align:center;color:var(--text-muted)">Memuat...</div></div></div>
     </div>
@@ -3484,11 +3484,14 @@ function bfInitYear() {
 async function fetchBiayaFanel() {
   bfInitYear();
   const year = document.getElementById('bf-year').value;
+  const ckBf = 'fb-cache-bf-' + year;
+  try { const c = localStorage.getItem(ckBf); if (c) { const j = JSON.parse(c); if (j && j.ok) renderBiayaFanel(j.data); } } catch (e) {}
   document.getElementById('bf-loading').style.display = 'inline';
   try {
     const resp = await fetch(APPS_SCRIPT_URL + '?action=getBiayaFanel&year=' + year);
     const res = await resp.json();
     document.getElementById('bf-loading').style.display = 'none';
+    if (res.ok) { try { localStorage.setItem(ckBf, JSON.stringify(res)); } catch (e) {} }
     if (!res.ok) { document.getElementById('bf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + (res.error||'Gagal') + '</div>'; return; }
     renderBiayaFanel(res.data);
   } catch (err) {
@@ -3499,10 +3502,10 @@ async function fetchBiayaFanel() {
 function renderBiayaFanel(d) {
   const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const fmtS = n => { n = Number(n)||0; if (Math.abs(n)>=1e9) return (n/1e9).toFixed(2)+' M'; if (Math.abs(n)>=1e6) return (n/1e6).toFixed(0)+' jt'; return n.toLocaleString('id-ID'); };
-  const cols = [...d.fanels, 'PUSAT/HO', 'PRODUKSI'];
-  const val = (m, c) => c === 'PUSAT/HO' ? m.pusat : (c === 'PRODUKSI' ? (m.produksi || 0) : (m.fanel[c] || 0));
-  const totVal = c => c === 'PUSAT/HO' ? d.totalPusat : (c === 'PRODUKSI' ? (d.totalProduksi || 0) : d.totalFanel[c]);
-  const konVal = c => c === 'PUSAT/HO' ? d.kontribusiPusat : (c === 'PRODUKSI' ? null : d.kontribusi[c]);
+  const cols = [...d.fanels, 'GAJI', 'PUSAT/HO', 'PRODUKSI'];
+  const val = (m, c) => c === 'GAJI' ? (m.gaji || 0) : (c === 'PUSAT/HO' ? m.pusat : (c === 'PRODUKSI' ? (m.produksi || 0) : (m.fanel[c] || 0)));
+  const totVal = c => c === 'GAJI' ? (d.totalGaji || 0) : (c === 'PUSAT/HO' ? d.totalPusat : (c === 'PRODUKSI' ? (d.totalProduksi || 0) : d.totalFanel[c]));
+  const konVal = c => c === 'GAJI' ? d.kontribusiGaji : (c === 'PUSAT/HO' ? d.kontribusiPusat : (c === 'PRODUKSI' ? null : d.kontribusi[c]));
 
   let th = '<tr style="background:var(--bg);border-bottom:2px solid var(--border)">' +
     '<th style="padding:0.6rem;text-align:left;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase">Bulan</th>' +
@@ -3564,11 +3567,14 @@ function pfInitYear() {
 async function fetchPencapaianFanel() {
   pfInitYear();
   const year = document.getElementById('pf-year').value;
+  const ckPf = 'fb-cache-pf-' + year;
+  try { const c = localStorage.getItem(ckPf); if (c) { const j = JSON.parse(c); if (j && j.ok) renderPencapaianFanel(j.data); } } catch (e) {}
   document.getElementById('pf-loading').style.display = 'inline';
   try {
     const resp = await fetch(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
     const res = await resp.json();
     document.getElementById('pf-loading').style.display = 'none';
+    if (res.ok) { try { localStorage.setItem(ckPf, JSON.stringify(res)); } catch (e) {} }
     if (!res.ok) {
       document.getElementById('pf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + (res.error || 'Gagal memuat') + '</div>';
       return;
