@@ -830,11 +830,19 @@ function filterReceivablePayDropdown() {
   }
 } 
 async function reload(){  
-  showLoad(true);
+  // SWR: tampilkan data terakhir dari perangkat dulu, data segar menyusul
+  const CK='fb-cache-getAll';
+  let served=false;
+  try{
+    const c=localStorage.getItem(CK);
+    if(c){const j=JSON.parse(c);if(j&&j.ok){DATA=j;renderAll();populatePiutangCounterDropdown();populateSupplierDatalist();populateCustomerDatalist();served=true;}}
+  }catch(e){}
+  if(!served)showLoad(true);
   const res=await apiCall({action:'getAll'});
-  showLoad(false);
-  if(!res.ok){alert('Gagal ambil data: '+res.error);return;}
+  if(!served)showLoad(false);
+  if(!res.ok){if(!served)alert('Gagal ambil data: '+res.error);return;}
   DATA=res;
+  try{localStorage.setItem(CK,JSON.stringify(res));}catch(e){}
   renderAll();
   // FIX: Kalau sedang di page Analytics, reload analytics data juga (Lost Sale, Jam Sibuk)
   const currentPage=document.querySelector('.sb-btn.active')?.dataset.p;
