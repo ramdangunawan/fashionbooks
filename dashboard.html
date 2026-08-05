@@ -1953,6 +1953,7 @@ footer {
         <div style="display:flex; align-items:center; gap:0.4rem;">
           <label style="font-size:0.85rem;">Sort:</label>
           <select id="sl-sort-filter" class="date-input">
+            <option value="targetPct">🎯 % Pencapaian Target</option>
             <option value="netSales">Total Sales</option>
             <option value="transactions">Jumlah Transaksi</option>
             <option value="atv">ATV (Avg Transaction)</option>
@@ -1989,6 +1990,7 @@ footer {
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ATV</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">ABS</th>
               <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">vs Periode Lalu</th>
+              <th style="padding:0.8rem; text-align:right; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">🎯 Target %</th>
             </tr>
           </thead>
           <tbody id="sl-tbody">
@@ -3162,6 +3164,56 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ═══ RANKING BERBASIS PENCAPAIAN TARGET (permintaan marketing) ═══
+let __slTargets = null;
+async function slLoadTargets() {
+  if (__slTargets) return __slTargets;
+  try {
+    const r = await fetch(APPS_SCRIPT_URL + '?action=getTargets');
+    const j = await r.json();
+    __slTargets = (j && j.ok && j.targets) ? j.targets : [];
+  } catch (e) { __slTargets = []; }
+  return __slTargets;
+}
+
+function slMonthsBetween(s, e) {
+  const out = []; let d = new Date(String(s).slice(0,7) + '-01T00:00:00');
+  const end = new Date(String(e).slice(0,7) + '-01T00:00:00');
+  while (d <= end) { out.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  return out;
+}
+function slNormMonth(v) {
+  const s = String(v).replace(/^'/, '');
+  if (/^\d{4}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  return s.slice(0, 7);
+}
+async function slEnrichTargets(d) {
+  try {
+    const targets = await slLoadTargets();
+    const months = slMonthsBetween(d.startDate || currentRange.startDate, d.endDate || currentRange.endDate);
+    const map = {};
+    targets.forEach(t => {
+      const m = slNormMonth(t.month);
+      if (months.indexOf(m) === -1) return;
+      const k = String(t.salesId);
+      map[k] = (map[k] || 0) + (Number(t.targetAmount) || 0);
+    });
+    (d.leaderboard || []).forEach(s => {
+      const tg = map[String(s.salesId)] || 0;
+      s.targetAmount = tg;
+      s.targetPct = tg > 0 ? Math.round(s.netSales / tg * 1000) / 10 : 0;
+    });
+  } catch (e) { console.error('enrich target gagal', e); }
+}
+function slPctCell(s) {
+  if (!s.targetAmount) return '<span style="color:var(--text-muted)">-</span>';
+  const p = s.targetPct;
+  const c = p >= 100 ? '#16A34A' : (p >= 80 ? '#D68910' : '#DC2626');
+  return '<span title="Target: Rp ' + Math.round(s.targetAmount).toLocaleString('id-ID') + '" style="font-weight:700;color:' + c + '">' + String(p).replace('.', ',') + '%</span>';
+}
+
 // ===== PHASE 3: SALES LEADERBOARD =====
 let salesLeaderboardData = null;
 
@@ -3181,17 +3233,18 @@ async function fetchSalesLeaderboard() {
     if (!data.ok) {
       console.error('Sales Leaderboard error:', data.error);
       document.getElementById('sl-tbody').innerHTML = 
-        '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+        '<tr><td colspan="9" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
       return;
     }
     
     salesLeaderboardData = data.data;
+    await slEnrichTargets(salesLeaderboardData);
     renderSalesLeaderboard();
     
   } catch (err) {
     console.error('Sales Leaderboard fetch error:', err);
     document.getElementById('sl-tbody').innerHTML = 
-      '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+      '<tr><td colspan="9" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
   }
 }
 
@@ -3258,7 +3311,7 @@ function renderSalesLeaderboard() {
   // Render Table (semua rank, mulai dari rank 1)
   const tbody = document.getElementById('sl-tbody');
   if (leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem; text-align:center; color:var(--text-muted);">Tidak ada data</td></tr>';
   } else {
     let tableHtml = '';
     leaderboard.forEach(function(s) {
@@ -3291,6 +3344,7 @@ function renderSalesLeaderboard() {
             '<td style="padding:0.8rem; text-align:right;">' + formatRupiah(s.atv) + '</td>' +
             '<td style="padding:0.8rem; text-align:right;">' + abs.toFixed(1) + ' pcs</td>' +
             '<td style="padding:0.8rem; text-align:right;">' + growthHtml + '</td>' +
+            '<td style="padding:0.8rem; text-align:right;">' + slPctCell(s) + '</td>' +
           '</tr>';
     });
     tbody.innerHTML = tableHtml;
@@ -3352,7 +3406,7 @@ async function fetchDailyHeatmap() {
     if (!data.ok) {
       console.error('Heatmap error:', data.error);
       document.getElementById('hm-tbody').innerHTML = 
-        '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
+        '<tr><td colspan="9" style="padding:2rem; text-align:center; color:#DC2626;">❌ ' + data.error + '</td></tr>';
       return;
     }
     
@@ -3362,7 +3416,7 @@ async function fetchDailyHeatmap() {
   } catch (err) {
     console.error('Heatmap fetch error:', err);
     document.getElementById('hm-tbody').innerHTML = 
-      '<tr><td colspan="8" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
+      '<tr><td colspan="9" style="padding:2rem; text-align:center; color:#DC2626;">❌ Gagal memuat data</td></tr>';
   }
 }
 

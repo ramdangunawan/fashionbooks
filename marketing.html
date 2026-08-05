@@ -862,6 +862,7 @@ body {
         <div style="display:flex;align-items:center;gap:0.4rem">
           <label style="font-size:0.85rem">Sort:</label>
           <select id="mkt-sl-sort-filter" class="mkt-filter-select" onchange="renderSalesLeaderboardMkt()">
+            <option value="targetPct">🎯 % Pencapaian Target</option>
             <option value="netSales">Total Sales</option>
             <option value="transactions">Jumlah Transaksi</option>
             <option value="atv">ATV (Avg Transaction)</option>
@@ -892,6 +893,7 @@ body {
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">ATV</th>
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">ABS</th>
               <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">vs Periode Lalu</th>
+              <th style="padding:0.8rem;text-align:right;font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">🎯 Target %</th>
             </tr>
           </thead>
           <tbody id="mkt-sl-tbody">
@@ -1372,16 +1374,64 @@ function getHeatmapColor(amount, minAmount, maxAmount) {
   return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
+// ═══ RANKING BERBASIS PENCAPAIAN TARGET (permintaan marketing) ═══
+let __slTargets = null;
+async function slLoadTargets() {
+  if (__slTargets) return __slTargets;
+  const j = await apiCall({action: 'getTargets'});
+  __slTargets = (j && j.ok && j.targets) ? j.targets : [];
+  return __slTargets;
+}
+
+function slMonthsBetween(s, e) {
+  const out = []; let d = new Date(String(s).slice(0,7) + '-01T00:00:00');
+  const end = new Date(String(e).slice(0,7) + '-01T00:00:00');
+  while (d <= end) { out.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  return out;
+}
+function slNormMonth(v) {
+  const s = String(v).replace(/^'/, '');
+  if (/^\d{4}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  return s.slice(0, 7);
+}
+async function slEnrichTargets(d) {
+  try {
+    const targets = await slLoadTargets();
+    const months = slMonthsBetween(d.startDate || currentRange.startDate, d.endDate || currentRange.endDate);
+    const map = {};
+    targets.forEach(t => {
+      const m = slNormMonth(t.month);
+      if (months.indexOf(m) === -1) return;
+      const k = String(t.salesId);
+      map[k] = (map[k] || 0) + (Number(t.targetAmount) || 0);
+    });
+    (d.leaderboard || []).forEach(s => {
+      const tg = map[String(s.salesId)] || 0;
+      s.targetAmount = tg;
+      s.targetPct = tg > 0 ? Math.round(s.netSales / tg * 1000) / 10 : 0;
+    });
+  } catch (e) { console.error('enrich target gagal', e); }
+}
+function slPctCell(s) {
+  if (!s.targetAmount) return '<span style="color:var(--text-muted)">-</span>';
+  const p = s.targetPct;
+  const c = p >= 100 ? '#16A34A' : (p >= 80 ? '#D68910' : '#DC2626');
+  return '<span title="Target: Rp ' + Math.round(s.targetAmount).toLocaleString('id-ID') + '" style="font-weight:700;color:' + c + '">' + String(p).replace('.', ',') + '%</span>';
+}
+
 let mktSlData = null;
 async function fetchSalesLeaderboardMkt() {
   if (!currentRange.startDate || !currentRange.endDate) return;
   const outletId = document.getElementById('mkt-sl-outlet-filter')?.value || 0;
   const res = await apiCall({action:'getSalesLeaderboard', startDate: currentRange.startDate, endDate: currentRange.endDate, outletId: outletId});
   if (!res.ok) {
-    document.getElementById('mkt-sl-tbody').innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
+    document.getElementById('mkt-sl-tbody').innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
     return;
   }
   mktSlData = res.data;
+  await slEnrichTargets(mktSlData);
   renderSalesLeaderboardMkt();
 }
 
@@ -1425,7 +1475,7 @@ function renderSalesLeaderboardMkt() {
 
   const tbody = document.getElementById('mkt-sl-tbody');
   if (leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">Tidak ada data</td></tr>';
     return;
   }
   tbody.innerHTML = leaderboard.map(s => {
@@ -1449,6 +1499,7 @@ function renderSalesLeaderboardMkt() {
       '<td style="padding:0.8rem;text-align:right">' + fmt(s.atv) + '</td>' +
       '<td style="padding:0.8rem;text-align:right">' + abs.toFixed(1) + ' pcs</td>' +
       '<td style="padding:0.8rem;text-align:right">' + growth + '</td>' +
+      '<td style="padding:0.8rem;text-align:right">' + slPctCell(s) + '</td>' +
     '</tr>';
   }).join('');
 }
@@ -1459,7 +1510,7 @@ async function fetchDailyHeatmapMkt() {
   const outletId = document.getElementById('mkt-sl-outlet-filter')?.value || 0;
   const res = await apiCall({action:'getDailyHeatmap', startDate: currentRange.startDate, endDate: currentRange.endDate, outletId: outletId});
   if (!res.ok) {
-    document.getElementById('mkt-hm-tbody').innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
+    document.getElementById('mkt-hm-tbody').innerHTML = '<tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--danger)">❌ ' + (res.error||'Gagal memuat') + '</td></tr>';
     return;
   }
   mktHmData = res.data;
