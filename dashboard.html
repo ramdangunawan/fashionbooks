@@ -2300,6 +2300,29 @@ footer {
       </div>
     </div>
     
+    <!-- Rincian Biaya (detail transaksi) -->
+    <div class="tb-section">
+      <div class="tb-section-header">
+        <div class="tb-section-title">🧾 Rincian Biaya (Detail Transaksi)</div>
+        <div class="tb-section-meta" id="tb-detail-meta">-</div>
+      </div>
+      <div style="overflow-x:auto;margin-bottom:1rem">
+        <table class="tb-table" style="min-width:520px">
+          <thead><tr><th>Akun</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody id="tb-detail-akun-tbody"><tr><td colspan="2" style="color:var(--text-muted)">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+      <div style="margin:0.3rem 0 0.6rem">
+        <button id="tb-detail-toggle" onclick="tbToggleDetail()" style="padding:0.45rem 0.9rem;border:1px solid var(--border);border-radius:6px;background:var(--card);cursor:pointer;font-family:inherit;font-size:0.82rem">🔍 Lihat Detail Transaksi</button>
+      </div>
+      <div id="tb-detail-trx-wrap" style="display:none;overflow-x:auto;max-height:420px;overflow-y:auto">
+        <table class="tb-table" style="min-width:700px">
+          <thead><tr><th>Tanggal</th><th>Akun</th><th>Deskripsi</th><th>Outlet</th><th style="text-align:right">Nilai</th></tr></thead>
+          <tbody id="tb-detail-tbody"><tr><td colspan="5" style="color:var(--text-muted)">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Role + Region Breakdown -->
     <div class="tb-grid-2">
       <div class="tb-section">
@@ -3971,6 +3994,7 @@ async function fetchTabBiaya() {
     
     tabBiayaData = data.data;
     renderTabBiaya();
+    fetchBiayaDetail();
     
   } catch (err) {
     console.error('Tab Biaya fetch error:', err);
@@ -3984,6 +4008,43 @@ async function fetchTabBiaya() {
 // ========================================
 // RENDER: Main dispatcher
 // ========================================
+function tbToggleDetail() {
+  const w = document.getElementById('tb-detail-trx-wrap');
+  const b = document.getElementById('tb-detail-toggle');
+  const open = w.style.display !== 'none';
+  w.style.display = open ? 'none' : 'block';
+  b.textContent = open ? '🔍 Lihat Detail Transaksi' : '🔼 Sembunyikan Detail Transaksi';
+}
+
+async function fetchBiayaDetail() {
+  const akunBody = document.getElementById('tb-detail-akun-tbody');
+  const trxBody = document.getElementById('tb-detail-tbody');
+  const meta = document.getElementById('tb-detail-meta');
+  if (!akunBody || !trxBody) return;
+  akunBody.innerHTML = '<tr><td colspan="2" style="color:var(--text-muted)">Memuat...</td></tr>';
+  trxBody.innerHTML = '<tr><td colspan="5" style="color:var(--text-muted)">Memuat...</td></tr>';
+  try {
+    const outletFilter = document.getElementById('tb-outlet-filter')?.value || 'all';
+    const url = APPS_SCRIPT_URL + '?action=getBiayaDetail' +
+      '&startDate=' + encodeURIComponent(currentRange.startDate) +
+      '&endDate=' + encodeURIComponent(currentRange.endDate) +
+      '&outletFilter=' + encodeURIComponent(outletFilter);
+    const resp = await fetch(url);
+    const res = await resp.json();
+    if (!res.ok) { meta.textContent = '❌ ' + (res.error || 'gagal'); return; }
+    const d = res.data;
+    const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    meta.textContent = d.countJournals + ' jurnal · ' + d.countLines + ' baris · Total ' + fmt(d.total) + (d.capped ? ' (600 baris pertama)' : '');
+    akunBody.innerHTML = d.perAkun.map(a =>
+      '<tr><td>' + a.account + ' — ' + a.accountName + '</td><td style="text-align:right;font-weight:600">' + fmt(a.total) + '</td></tr>'
+    ).join('') || '<tr><td colspan="2">-</td></tr>';
+    trxBody.innerHTML = d.rows.map(r =>
+      '<tr><td style="white-space:nowrap">' + r.date + '</td><td style="white-space:nowrap">' + r.account + '</td><td>' + r.desc +
+      '</td><td style="white-space:nowrap">' + r.outlet + '</td><td style="text-align:right;font-weight:600">' + fmt(r.amount) + '</td></tr>'
+    ).join('') || '<tr><td colspan="5">-</td></tr>';
+  } catch (err) { meta.textContent = '❌ ' + err.message; }
+}
+
 function tbPopulateOutletFilter(byOutlet) {
   const sel = document.getElementById('tb-outlet-filter');
   if (!sel || !byOutlet) return;
