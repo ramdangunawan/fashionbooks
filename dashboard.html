@@ -1811,7 +1811,7 @@ footer {
     <button class="tab" data-tab="laba-rugi">📊 Laba Rugi</button>
     <button class="tab" data-tab="biaya">💸 Biaya</button>
     <button class="tab" data-tab="target">🎯 Pencapaian</button>
-    <button class="tab" data-tab="forecast">🔮 Forecast <span class="coming-soon">Soon</span></button>
+    <button class="tab" data-tab="forecast">🔮 Forecast</button>
   </div>
   
   <div class="tab-content active" id="tab-overview">
@@ -2419,10 +2419,24 @@ footer {
   </div>
   
   <div class="tab-content" id="tab-forecast">
-    <div class="empty-state">
-      <div class="icon">🔮</div>
-      <h3>Tab Forecast</h3>
-      <p>Akan dikembangkan di tahap berikutnya.</p>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <h3>🔮 Forecast Menuju Target</h3>
+        <div style="display:flex;gap:0.4rem;align-items:center">
+          <select id="fc-year" class="date-input" onchange="fetchForecast(true)"><option value="2026">2026</option></select>
+          <span id="fc-loading" style="display:none;font-size:0.85rem;color:var(--text-muted)">Memuat...</span>
+        </div>
+      </div>
+      <div id="fc-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.8rem;margin:0.8rem 0"></div>
+      <div id="fc-note" style="font-size:0.8rem;color:var(--text-muted);font-style:italic"></div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-header"><h3>📈 Tiga Skenario Sampai Akhir Tahun</h3></div>
+      <div style="overflow-x:auto"><table class="tb-table" style="min-width:640px" id="fc-skenario"></table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>📅 Realisasi vs Target per Bulan</h3></div>
+      <div style="overflow-x:auto"><table class="tb-table" style="min-width:560px" id="fc-bulanan"></table></div>
     </div>
   </div>
   
@@ -3763,6 +3777,83 @@ document.addEventListener('click', function(e) {
     if (!bfLoaded) { bfLoaded = true; fetchBiayaFanel(); }
   }
 });  
+// ===== TAB FORECAST =====
+let fcLoaded = false;
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.matches('.tab[data-tab="forecast"]')) {
+    if (!fcLoaded) { fcLoaded = true; fetchForecast(); }
+  }
+});
+async function fetchForecast(force) {
+  const year = document.getElementById('fc-year').value;
+  const ck = 'fb-cache-pf-' + year;
+  if (!force) { try { const c = localStorage.getItem(ck); if (c) { const j = JSON.parse(c); if (j && j.ok) renderForecast(j.data); } } catch (e) {} }
+  document.getElementById('fc-loading').style.display = 'inline';
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
+    const res = await resp.json();
+    document.getElementById('fc-loading').style.display = 'none';
+    if (!res.ok) { document.getElementById('fc-note').textContent = '❌ ' + res.error; return; }
+    try { localStorage.setItem(ck, JSON.stringify(res)); } catch (e) {}
+    renderForecast(res.data);
+  } catch (err) {
+    document.getElementById('fc-loading').style.display = 'none';
+    document.getElementById('fc-note').textContent = '❌ ' + err.message;
+  }
+}
+function renderForecast(d) {
+  const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+  const jt = n => (n / 1e6).toFixed(1).replace('.', ',') + ' jt';
+  const M = d.months || [];
+  let lastIdx = -1;
+  M.forEach((m, i) => { if ((m.jumlah || 0) > 0) lastIdx = i; });
+  if (lastIdx < 0) { document.getElementById('fc-note').textContent = 'Belum ada data penjualan tahun ini.'; return; }
+  const ytd = M.slice(0, lastIdx + 1).reduce((a, m) => a + (m.jumlah || 0), 0);
+  const ytdTarget = M.slice(0, lastIdx + 1).reduce((a, m) => a + (m.target || 0), 0);
+  let lastTarget = 0; M.forEach(m => { if ((m.target || 0) > 0) lastTarget = m.target; });
+  const fyTarget = M.reduce((a, m) => a + ((m.target || 0) > 0 ? m.target : lastTarget), 0);
+  const sisa = 11 - lastIdx;
+  const dataMonths = M.slice(0, lastIdx + 1).filter(m => (m.jumlah || 0) > 0);
+  const last3 = dataMonths.slice(-3);
+  const runRate = last3.reduce((a, m) => a + m.jumlah, 0) / Math.max(last3.length, 1);
+  const lastVal = M[lastIdx].jumlah || 0;
+  let moderat = 0, v = lastVal;
+  for (let k = 0; k < sisa; k++) { v = v * 1.05; moderat += v; }
+  const pct = ytdTarget > 0 ? ytd / ytdTarget * 100 : 0;
+  const gapFY = Math.max(fyTarget - ytd, 0);
+  const perBln = sisa > 0 ? gapFY / sisa : 0;
+  const namaBln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  const cardHtml = (label, val, sub, color) =>
+    '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0.8rem"><div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">' + label + '</div><div style="font-size:1.15rem;font-weight:800;color:' + (color || 'var(--green)') + ';margin-top:0.2rem">' + val + '</div>' + (sub ? '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem">' + sub + '</div>' : '') + '</div>';
+  document.getElementById('fc-cards').innerHTML =
+    cardHtml('Realisasi s/d ' + namaBln[lastIdx], rp(ytd), lastIdx + 1 + ' bulan') +
+    cardHtml('Target s/d ' + namaBln[lastIdx], rp(ytdTarget), 'FY: ' + rp(fyTarget)) +
+    cardHtml('Pencapaian YTD', pct.toFixed(1).replace('.', ',') + '%', null, pct >= 100 ? '#16A34A' : (pct >= 80 ? '#D68910' : '#DC2626')) +
+    cardHtml('Butuh per Bulan (' + sisa + ' bln sisa)', jt(perBln), 'utk capai target FY', perBln > runRate * 1.15 ? '#DC2626' : '#16A34A');
+  document.getElementById('fc-note').textContent = 'Asumsi: bulan tanpa target memakai target bulan terakhir terisi (' + jt(lastTarget) + '/bln). Run-rate = rata-rata 3 bulan terakhir.';
+
+  const sk = [
+    ['Konservatif', 'Run-rate ' + jt(runRate) + '/bln', ytd + runRate * sisa],
+    ['Moderat', 'Tumbuh +5% per bulan', ytd + moderat],
+    ['Capai Target', 'Butuh ' + jt(perBln) + '/bln (+' + (runRate > 0 ? Math.max((perBln / runRate - 1) * 100, 0).toFixed(0) : '-') + '% vs run-rate)', fyTarget]
+  ];
+  document.getElementById('fc-skenario').innerHTML =
+    '<thead><tr><th>Skenario</th><th>Asumsi</th><th style="text-align:right">Proyeksi Full Year</th><th style="text-align:right">% Target FY</th></tr></thead><tbody>' +
+    sk.map(r => { const p2 = fyTarget > 0 ? r[2] / fyTarget * 100 : 0; const c = p2 >= 100 ? '#16A34A' : (p2 >= 90 ? '#D68910' : '#DC2626');
+      return '<tr><td style="font-weight:600">' + r[0] + '</td><td>' + r[1] + '</td><td style="text-align:right;font-weight:700">' + rp(r[2]) + '</td><td style="text-align:right;font-weight:800;color:' + c + '">' + p2.toFixed(1).replace('.', ',') + '%</td></tr>'; }).join('') + '</tbody>';
+
+  document.getElementById('fc-bulanan').innerHTML =
+    '<thead><tr><th>Bulan</th><th style="text-align:right">Realisasi</th><th style="text-align:right">Target</th><th style="text-align:right">%</th></tr></thead><tbody>' +
+    M.map((m, i) => {
+      if (i > lastIdx) return '';
+      const p3 = (m.target || 0) > 0 ? m.jumlah / m.target * 100 : 0;
+      const c = p3 >= 100 ? '#16A34A' : (p3 >= 80 ? '#D68910' : '#DC2626');
+      return '<tr><td>' + namaBln[i] + '</td><td style="text-align:right">' + rp(m.jumlah || 0) + '</td><td style="text-align:right;color:var(--text-muted)">' + rp(m.target || 0) + '</td><td style="text-align:right;font-weight:700;color:' + c + '">' + ((m.target || 0) > 0 ? p3.toFixed(1).replace('.', ',') + '%' : '-') + '</td></tr>';
+    }).join('') +
+    '<tr style="background:var(--bg)"><td style="font-weight:700">Sisa ' + sisa + ' bln (moderat)</td><td style="text-align:right;font-weight:700">' + rp(moderat) + '</td><td style="text-align:right;color:var(--text-muted)">' + rp(Math.max(fyTarget - ytdTarget, 0)) + '</td><td></td></tr></tbody>';
+}
+
 // Initial load: default ke "Bulan Ini"
 const initialRange = getPresetRange('month');
 currentRange = initialRange;

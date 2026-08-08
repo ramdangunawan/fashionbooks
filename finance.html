@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FashionBooks — Finance</title>
+<style>
+:root{--bg:#FAF6EF;--card:#FFFFFF;--green:#1B5E20;--green-soft:#E8F5E9;--border:#E5DFD3;--text:#2B2B2B;--text-muted:#8A8375;--danger:#DC2626;--amber:#D68910}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding:1rem}
+header{display:flex;justify-content:space-between;align-items:center;padding:0.8rem 0;margin-bottom:0.6rem}
+h1{font-size:1.15rem;color:var(--green)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+label{display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:0.7rem 0 0.25rem}
+input,select,textarea{width:100%;padding:0.65rem 0.7rem;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:0.95rem;background:#FFFDF8}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green-soft);border-color:var(--green)}
+button{width:100%;padding:0.8rem;margin-top:1rem;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+button:disabled{opacity:0.55}
+.btn-ghost{background:transparent;color:var(--danger);border:1px solid var(--border);width:auto;padding:0.4rem 0.8rem;margin:0;font-size:0.8rem;font-weight:600}
+.msg{margin-top:0.8rem;padding:0.7rem;border-radius:9px;font-size:0.9rem;display:none}
+.msg.ok{background:var(--green-soft);color:var(--green);display:block}
+.msg.err{background:#FDECEC;color:var(--danger);display:block}
+.hint{font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;font-style:italic}
+table{width:100%;border-collapse:collapse;font-size:0.82rem;margin-top:0.5rem}
+th{text-align:left;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;padding:0.4rem 0.3rem;border-bottom:1px solid var(--border)}
+td{padding:0.45rem 0.3rem;border-bottom:1px solid var(--border)}
+.badge{background:#FFF3D6;color:var(--amber);padding:0.1rem 0.5rem;border-radius:20px;font-size:0.72rem;font-weight:700}
+.right{text-align:right}
+#user-chip{font-size:0.8rem;color:var(--text-muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>💼 FashionBooks — Input Biaya Finance</h1>
+    <div style="display:flex;gap:0.5rem;align-items:center"><span id="user-chip"></span><button class="btn-ghost" id="btn-logout" style="display:none" onclick="logout()">Keluar</button></div>
+  </header>
+
+  <!-- LOGIN -->
+  <div class="card" id="login-card">
+    <label>Nama</label>
+    <input id="lg-name" autocomplete="username" placeholder="Nama user finance">
+    <label>PIN</label>
+    <input id="lg-pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN">
+    <button id="btn-login" onclick="doLogin()">Masuk</button>
+    <div class="msg" id="lg-msg"></div>
+    <div class="hint">Khusus user dengan role <b>finance</b> (dibuat Owner di master Sales).</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="card" id="form-card" style="display:none">
+    <label>Tanggal Biaya</label>
+    <input id="f-date" type="date">
+    <label>Outlet / Entitas (room biaya)</label>
+    <select id="f-outlet"></select>
+    <label>Kategori</label>
+    <select id="f-cat"></select>
+    <label>Sumber Dana</label>
+    <select id="f-src"></select>
+    <label>Jumlah (Rp)</label>
+    <input id="f-amount" type="number" inputmode="numeric" min="1" placeholder="0">
+    <label>Keterangan</label>
+    <textarea id="f-desc" rows="2" placeholder="mis. Token listrik gudang BT1 minggu ke-2"></textarea>
+    <button id="btn-save" onclick="simpan()">💾 Simpan (masuk antrean approval)</button>
+    <div class="msg" id="f-msg"></div>
+    <div class="hint">Semua input berstatus <b>pending</b> → Owner meng-approve di Review Pengeluaran → jurnal tercipta otomatis dengan outlet yang dipilih di sini. Tidak perlu jurnal manual.</div>
+  </div>
+
+  <!-- RIWAYAT SESI -->
+  <div class="card" id="hist-card" style="display:none">
+    <b style="font-size:0.9rem">🧾 Input sesi ini</b>
+    <table><thead><tr><th>Tgl</th><th>Outlet</th><th>Kategori</th><th class="right">Jumlah</th><th>Status</th></tr></thead>
+    <tbody id="hist-body"></tbody></table>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1mSO9TS-kfK0BTNAyCNm342L_l_bNksJBMlMRjE47rNWjV8b1MYImD/exec';
+let USER = null, OUTLETS = [];
+
+function el(id){ return document.getElementById(id); }
+function showMsg(id, text, ok){ const m = el(id); m.textContent = text; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+async function api(params){
+  const q = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
+  const r = await fetch(APPS_SCRIPT_URL + '?' + q);
+  return r.json();
+}
+
+async function doLogin(){
+  const name = el('lg-name').value.trim(), pin = el('lg-pin').value.trim();
+  if (!name || !pin) { showMsg('lg-msg', 'Isi nama dan PIN', false); return; }
+  el('btn-login').disabled = true; el('btn-login').textContent = 'Memeriksa...';
+  try {
+    const res = await api({ action: 'login', name: name, pin: pin });
+    if (!res.ok) { showMsg('lg-msg', res.error || 'Login gagal', false); return; }
+    const role = String(res.role || '').toLowerCase();
+    if (role !== 'finance' && role !== 'admin') {
+      showMsg('lg-msg', 'Akun ini ber-role "' + role + '". Halaman ini khusus role finance — minta Owner menambahkan user finance di master Sales.', false);
+      return;
+    }
+    USER = { id: res.sales.id, name: res.sales.name, role: role };
+    sessionStorage.setItem('fb-finance-user', JSON.stringify(USER));
+    await masukForm();
+  } catch (err) { showMsg('lg-msg', 'Gagal terhubung: ' + err.message, false); }
+  finally { el('btn-login').disabled = false; el('btn-login').textContent = 'Masuk'; }
+}
+
+async function masukForm(){
+  el('login-card').style.display = 'none';
+  el('form-card').style.display = 'block';
+  el('hist-card').style.display = 'block';
+  el('btn-logout').style.display = 'inline-block';
+  el('user-chip').textContent = '👤 ' + USER.name;
+  el('f-date').value = new Date().toISOString().slice(0, 10);
+  try {
+    const [o, c, s] = await Promise.all([
+      api({ action: 'getOutletsList' }),
+      api({ action: 'getExpenseCategories' }),
+      api({ action: 'getExpenseSources' })
+    ]);
+    OUTLETS = (o.ok && o.data) ? o.data : [];
+    el('f-outlet').innerHTML = '<option value="">-- pilih outlet --</option>' +
+      OUTLETS.map(x => '<option value="' + x.id + '">' + x.name + '</option>').join('');
+    const cats = (c.ok && c.categories) ? Object.keys(c.categories) : [];
+    el('f-cat').innerHTML = '<option value="">-- pilih kategori --</option>' +
+      cats.map(k => '<option value="' + k + '">' + k + '</option>').join('');
+    const srcs = (s.ok && s.sources) ? s.sources : [];
+    el('f-src').innerHTML = '<option value="">-- pilih sumber dana --</option>' +
+      srcs.map(x => '<option value="' + x.code + '">' + x.name + '</option>').join('');
+  } catch (err) { showMsg('f-msg', 'Gagal memuat master data: ' + err.message, false); }
+}
+
+async function simpan(){
+  const outletId = el('f-outlet').value, cat = el('f-cat').value, src = el('f-src').value;
+  const amount = Number(el('f-amount').value), desc = el('f-desc').value.trim(), tgl = el('f-date').value;
+  if (!outletId) { showMsg('f-msg', 'Pilih outlet dulu', false); return; }
+  if (!cat) { showMsg('f-msg', 'Pilih kategori', false); return; }
+  if (!src) { showMsg('f-msg', 'Pilih sumber dana', false); return; }
+  if (!(amount > 0)) { showMsg('f-msg', 'Jumlah harus lebih dari 0', false); return; }
+  el('btn-save').disabled = true; el('btn-save').textContent = 'Menyimpan...';
+  try {
+    const res = await api({ action: 'addFinanceExpense', date: tgl, outletId: outletId, salesId: USER.id, category: cat, source: src, amount: amount, desc: desc });
+    if (!res.ok) { showMsg('f-msg', '❌ ' + res.error, false); return; }
+    const oName = (OUTLETS.find(x => String(x.id) === String(outletId)) || {}).name || outletId;
+    showMsg('f-msg', '✅ Tersimpan (id ' + res.id + ') — menunggu approval Owner.', true);
+    el('hist-body').insertAdjacentHTML('afterbegin',
+      '<tr><td>' + tgl.slice(5) + '</td><td>' + oName + '</td><td>' + cat + '</td><td class="right">' + rp(amount) + '</td><td><span class="badge">pending</span></td></tr>');
+    el('f-amount').value = ''; el('f-desc').value = '';
+  } catch (err) { showMsg('f-msg', '❌ ' + err.message, false); }
+  finally { el('btn-save').disabled = false; el('btn-save').textContent = '💾 Simpan (masuk antrean approval)'; }
+}
+
+function logout(){ sessionStorage.removeItem('fb-finance-user'); location.reload(); }
+
+(function init(){
+  try {
+    const saved = sessionStorage.getItem('fb-finance-user');
+    if (saved) { USER = JSON.parse(saved); masukForm(); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
