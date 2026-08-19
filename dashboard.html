@@ -2448,6 +2448,20 @@ footer {
 
 <script>
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwebiC-vAC0jx1mSO9TS-kfK0BTNAyCNm342L_l_bNksJBMlMRjE47rNWjV8b1MYImD/exec';
+// ═══ FB-RETRY: tolakan gerbang server dicoba-ulang otomatis ═══
+async function fetchJsonRetry(url, tries) {
+  tries = tries || 3;
+  let lastErr = 'Server sibuk';
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url);
+      const t = await r.text();
+      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
+    } catch (e) { lastErr = e.message; }
+    await new Promise(res => setTimeout(res, 400 + i * 800));
+  }
+  return { ok: false, error: lastErr + ' — coba refresh sesaat lagi' };
+}
 
 let currentData = null;
 let isLoading = false;
@@ -2613,8 +2627,7 @@ async function fetchAnalytics() {
   try {
     const url = APPS_SCRIPT_URL + '?action=getAnalyticsRange&startDate=' + currentRange.startDate + '&endDate=' + currentRange.endDate;
     const startTime = Date.now();
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJsonRetry(url);
     const duration = Date.now() - startTime;
     
     if (!data.ok) {
@@ -3183,8 +3196,7 @@ let __slTargets = null;
 async function slLoadTargets() {
   if (__slTargets) return __slTargets;
   try {
-    const r = await fetch(APPS_SCRIPT_URL + '?action=getTargets');
-    const j = await r.json();
+    const j = await fetchJsonRetry(APPS_SCRIPT_URL + '?action=getTargets');
     __slTargets = (j && j.ok && j.targets) ? j.targets : [];
   } catch (e) { __slTargets = []; }
   return __slTargets;
@@ -3241,8 +3253,7 @@ async function fetchSalesLeaderboard() {
                 '&startDate=' + currentRange.startDate +
                 '&endDate=' + currentRange.endDate +
                 '&outletId=' + outletId;
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJsonRetry(url);
     
     if (!data.ok) {
       console.error('Sales Leaderboard error:', data.error);
@@ -3414,8 +3425,7 @@ async function fetchDailyHeatmap() {
                 '&startDate=' + currentRange.startDate +
                 '&endDate=' + currentRange.endDate +
                 '&outletId=' + outletId;
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJsonRetry(url);
     
     if (!data.ok) {
       console.error('Heatmap error:', data.error);
@@ -3579,8 +3589,7 @@ async function fetchBiayaFanel() {
   try { const c = localStorage.getItem(ckBf); if (c) { const j = JSON.parse(c); if (j && j.ok) renderBiayaFanel(j.data); } } catch (e) {}
   document.getElementById('bf-loading').style.display = 'inline';
   try {
-    const resp = await fetch(APPS_SCRIPT_URL + '?action=getBiayaFanel&year=' + year);
-    const res = await resp.json();
+    const res = await fetchJsonRetry(APPS_SCRIPT_URL + '?action=getBiayaFanel&year=' + year);
     document.getElementById('bf-loading').style.display = 'none';
     if (res.ok) { try { localStorage.setItem(ckBf, JSON.stringify(res)); } catch (e) {} }
     if (!res.ok) { document.getElementById('bf-table').innerHTML = '<div style="padding:2rem;text-align:center;color:#C0392B">❌ ' + (res.error||'Gagal') + '</div>'; return; }
@@ -3662,8 +3671,7 @@ async function fetchPencapaianFanel() {
   try { const c = localStorage.getItem(ckPf); if (c) { const j = JSON.parse(c); if (j && j.ok) renderPencapaianFanel(j.data); } } catch (e) {}
   document.getElementById('pf-loading').style.display = 'inline';
   try {
-    const resp = await fetch(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
-    const res = await resp.json();
+    const res = await fetchJsonRetry(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
     document.getElementById('pf-loading').style.display = 'none';
     if (res.ok) { try { localStorage.setItem(ckPf, JSON.stringify(res)); } catch (e) {} }
     if (!res.ok) {
@@ -3790,8 +3798,7 @@ async function fetchForecast(force) {
   if (!force) { try { const c = localStorage.getItem(ck); if (c) { const j = JSON.parse(c); if (j && j.ok) renderForecast(j.data); } } catch (e) {} }
   document.getElementById('fc-loading').style.display = 'inline';
   try {
-    const resp = await fetch(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
-    const res = await resp.json();
+    const res = await fetchJsonRetry(APPS_SCRIPT_URL + '?action=getPencapaianFanel&year=' + year);
     document.getElementById('fc-loading').style.display = 'none';
     if (!res.ok) { document.getElementById('fc-note').textContent = '❌ ' + res.error; return; }
     try { localStorage.setItem(ck, JSON.stringify(res)); } catch (e) {}
@@ -3888,8 +3895,7 @@ document.getElementById('lr-period-display').textContent =
                 '&mode=' + mode +
                 '&marginPercent=' + marginPercent;
     
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJsonRetry(url);
     
     if (!data.ok) {
       console.error('Laba Rugi error:', data.error);
@@ -4126,8 +4132,7 @@ async function fetchTabBiaya() {
                 '&outletFilter=' + encodeURIComponent(outletFilter) +
                 '&granularity=' + granularity;
     
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJsonRetry(url);
     
     if (!data.ok) {
       console.error('Tab Biaya error:', data.error);
@@ -4174,8 +4179,7 @@ async function fetchBiayaDetail() {
       '&startDate=' + encodeURIComponent(currentRange.startDate) +
       '&endDate=' + encodeURIComponent(currentRange.endDate) +
       '&outletFilter=' + encodeURIComponent(outletFilter);
-    const resp = await fetch(url);
-    const res = await resp.json();
+    const res = await fetchJsonRetry(url);
     if (!res.ok) { meta.textContent = '❌ ' + (res.error || 'gagal'); return; }
     const d = res.data;
     const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');

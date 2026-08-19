@@ -85,8 +85,16 @@ const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
 
 async function api(params){
   const q = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
-  const r = await fetch(APPS_SCRIPT_URL + '?' + q);
-  return r.json();
+  let lastErr = 'Server sibuk';
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(APPS_SCRIPT_URL + '?' + q);
+      const t = await r.text();
+      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
+    } catch (err) { lastErr = err.message; }
+    await new Promise(res => setTimeout(res, 400 + i * 800));
+  }
+  return { ok: false, error: lastErr + ' — coba lagi sesaat' };
 }
 
 async function doLogin(){
