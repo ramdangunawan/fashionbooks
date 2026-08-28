@@ -2212,17 +2212,3 @@ function filterReportsByDate(reports) {
 </script>
 </body>
 </html>
-// ═══ FB-RETRY: tolakan gerbang server dicoba-ulang otomatis ═══
-async function fetchJsonRetry(url, tries) {
-  tries = tries || 3;
-  let lastErr = 'Server sibuk';
-  for (let i = 0; i < tries; i++) {
-    try {
-      const r = await fetch(url);
-      const t = await r.text();
-      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
-    } catch (e) { lastErr = e.message; }
-    await new Promise(res => setTimeout(res, 400 + i * 800));
-  }
-  return { ok: false, error: lastErr + ' — coba refresh sesaat lagi' };
-}
