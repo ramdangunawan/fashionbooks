@@ -1111,6 +1111,9 @@ document.addEventListener('click',e=>{
 });
 
 async function submitMultiExpense(){
+  // ANTI-DOUBLE-SUBMIT: flag global + idempotency key (pola sama dengan submitReport)
+  if(window.isSubmittingExp){console.warn('Expense submit already in progress');return;}
+  const submitId='exp_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
   hideExpAlerts();
   const date=document.getElementById('exp-date').value;
   const source=document.getElementById('exp-source').value;
@@ -1133,10 +1136,12 @@ async function submitMultiExpense(){
   
   if(!confirm(`Kirim ${validItems.length} pengeluaran?\n\nTanggal: ${date}\nSumber Dana: ${source}\n\n${summary}\n\nTotal: ${fmt(total)}\nAuto-approve: ${autoCount} item\nPerlu review: ${reviewCount} item\n\nLanjutkan?`))return;
   
+  window.isSubmittingExp=true;
   const btn=document.getElementById('exp-submit-btn');btn.innerHTML='<span class="loading"></span> Mengirim...';btn.disabled=true;
   const itemsPayload=validItems.map(it=>({category:it.category,amount:Number(it.amount),description:it.description||generalDesc}));
-  const res=await apiCall({action:'addMultiExpense',date,outletId:session.outlet.id,salesId:session.sales.id,sourceAccount:source,description:generalDesc,items:JSON.stringify(itemsPayload)});
+  const res=await apiCall({action:'addMultiExpense',submitId:submitId,date,outletId:session.outlet.id,salesId:session.sales.id,sourceAccount:source,description:generalDesc,items:JSON.stringify(itemsPayload)});
   btn.innerHTML='Kirim Semua Pengeluaran';btn.disabled=false;
+  window.isSubmittingExp=false;
   
   if(!res.ok){showA('exp-err',res.error||'Gagal mengirim');document.getElementById('exp-err').style.display='block';return;}
   
