@@ -739,7 +739,8 @@ tfoot td.r{text-align:right;font-family:'JetBrains Mono',monospace}
 
 <script>
 const LS_URL='fb_owner_url';let API_URL='';let DATA={outlets:[],sales:[],reports:[],payables:[],receivables:[],journals:[],accounts:[]};
-const today=new Date().toISOString().slice(0,10);
+const ymdLokal=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); // FIX: tanggal lokal, bukan UTC
+const today=ymdLokal(new Date());
 const fmt=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
 const fmtN=n=>new Intl.NumberFormat('id-ID').format(n);
 const isDN=t=>t==='ASSET'||t==='EXPENSE'||t==='COGS';
@@ -1975,12 +1976,12 @@ async function populateOutletDropdown(){
 async function init(){
   document.getElementById('setup-page').style.display='none';
   document.getElementById('main-app').style.display='block';
-  const d=new Date(),firstD=new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10),lastD=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);
+  const d=new Date(),firstD=ymdLokal(new Date(d.getFullYear(),d.getMonth(),1)),lastD=ymdLokal(new Date(d.getFullYear(),d.getMonth()+1,0));
   document.getElementById('pf-from').value=firstD;document.getElementById('pf-to').value=lastD;
   const cfFrom=document.getElementById('cf-from');const cfTo=document.getElementById('cf-to');
   if(cfFrom)cfFrom.value=firstD;if(cfTo)cfTo.value=lastD;
   ['h-date','ar-date','j-date','h-pay-date','ar-pay-date','nr-date','tr-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
-  ['h-due','ar-due'].forEach(id=>{const d30=new Date();d30.setDate(d30.getDate()+30);document.getElementById(id).value=d30.toISOString().slice(0,10);});
+  ['h-due','ar-due'].forEach(id=>{const d30=new Date();d30.setDate(d30.getDate()+30);document.getElementById(id).value=ymdLokal(d30);});
   const tgMonth=document.getElementById('tg-month');if(tgMonth)tgMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
   await populateOutletDropdown();
   await reload();
