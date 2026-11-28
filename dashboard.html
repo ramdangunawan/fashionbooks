@@ -1854,7 +1854,7 @@ footer {
         <div class="sub" id="kpi-expense-sub">Memuat data...</div>
       </div>
       
-      <div class="kpi-card accent-info" data-tooltip="Profit Kasar = Penjualan Bersih - HPP (estimasi margin 19%)">
+      <div class="kpi-card accent-info" data-tooltip="Profit = Pendapatan - HPP - Beban, dihitung dari semua jurnal bulan tersebut">
         <div class="label">
           <span>📊 Profit Kasar</span>
           
@@ -2471,7 +2471,7 @@ async function fetchJsonRetry(url, tries) {
     try {
       const r = await fetch(url);
       const t = await r.text();
-      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
+      try { const obj = JSON.parse(t); if (obj && obj.ok === false && String(obj.error||'').indexOf('AUTH:') === 0) { localStorage.removeItem('fb-dash-auth'); alert('Sesi login berakhir — silakan login ulang.'); location.reload(); return obj; } return obj; } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
     } catch (e) { lastErr = e.message; }
     await new Promise(res => setTimeout(res, 400 + i * 800));
   }
@@ -2650,7 +2650,13 @@ async function fetchAnalytics() {
     }
     
     currentData = data.data;
-    
+
+    // LABA RINGKAS: hitung dari Journals (konsisten dgn Laba Rugi owner.html)
+    try {
+      const lrRes = await fetchJsonRetry(APPS_SCRIPT_URL + '?action=getLabaRingkas&startDate=' + currentRange.startDate + '&endDate=' + currentRange.endDate);
+      currentData.labaRingkas = (lrRes && lrRes.ok) ? lrRes.data : null;
+    } catch (eLr) { currentData.labaRingkas = null; }
+
     // Show warning if any
     const warningBox = document.getElementById('range-warning');
     const warningText = document.getElementById('range-warning-text');
@@ -2872,8 +2878,9 @@ function renderDashboard() {
   
   // KPI values dari range
   const sales = getPeriodValue('netSales');
-  const expense = getPeriodValue('expense');
-  const profit = getPeriodValue('profit');
+  const lr = currentData.labaRingkas; // dari Journals; null kalau backend belum di-deploy
+  const expense = lr ? (lr.hpp + lr.expense) : getPeriodValue('expense');
+  const profit = lr ? lr.profit : getPeriodValue('profit');
   const retur = getPeriodValue('retur');
   const k = currentData.kpi;
   
@@ -2894,7 +2901,7 @@ function renderDashboard() {
   setTimeout(function() { expenseEl.classList.remove('updated'); }, 600);
   
   const avgPerDay = currentData.rangeDays > 0 ? expense / currentData.rangeDays : 0;
-  document.getElementById('kpi-expense-sub').innerHTML = 
+  document.getElementById('kpi-expense-sub').innerHTML =
     'Rata-rata/hari: <strong>' + formatRupiah(avgPerDay) + '</strong>';
   
   // Profit card

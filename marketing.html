@@ -1131,7 +1131,7 @@ async function apiCall(params) {
     try {
       const r = await fetch(url.toString(), {method:'GET', redirect:'follow'});
       const t = await r.text();
-      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
+      try { const obj = JSON.parse(t); if (obj && obj.ok === false && String(obj.error||'').indexOf('AUTH:') === 0) { localStorage.removeItem(LS_SESSION); alert('Sesi login berakhir — silakan login ulang.'); location.reload(); return obj; } return obj; } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
     } catch(err) { lastErr = err.message; }
     await new Promise(res => setTimeout(res, 400 + i * 800));
   }
@@ -2199,8 +2199,11 @@ function filterReportsByDate(reports) {
   if (!savedSession) { show('page-login'); return; }
   
   try {
-    session = JSON.parse(savedSession);
-    if (session && session.role && (session.role === 'marketing' || session.role === 'owner' || session.role === 'manager')) {
+    const s = JSON.parse(savedSession);
+    const umur = s && s.loginAt ? (Date.now() - new Date(s.loginAt).getTime()) : Infinity;
+    if (!s || !s.token || !(umur < 24*3600*1000)) { localStorage.removeItem(LS_SESSION); show('page-login'); return; }
+    if (s.role && (s.role === 'marketing' || s.role === 'owner' || s.role === 'manager')) {
+      session = s;
       goToMain();
     } else {
       show('page-login');

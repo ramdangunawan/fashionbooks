@@ -745,7 +745,7 @@ const fmtN=n=>new Intl.NumberFormat('id-ID').format(n);
 const isDN=t=>t==='ASSET'||t==='EXPENSE'||t==='COGS';
 const BONUS_RULES=[{min:0,max:4999999,pct:0,l:'< Rp5jt'},{min:5000000,max:9999999,pct:2,l:'Rp5jt–10jt'},{min:10000000,max:19999999,pct:3.5,l:'Rp10jt–20jt'},{min:20000000,max:Infinity,pct:5,l:'> Rp20jt'}];
 const calcBonus=ts=>{const r=BONUS_RULES.find(x=>ts>=x.min&&ts<=x.max);return r?{pct:r.pct,amt:Math.round(ts*r.pct/100)}:{pct:0,amt:0};};
-const sDate=d=>String(d).slice(0,10);
+const sDate=d=>{const x=new Date(d);if(isNaN(x.getTime()))return String(d).slice(0,10);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}; // FIX: tanggal lokal, bukan potongan teks UTC (dulu jurnal jam 00:00 tergeser mundur 1 hari)
 const getPF=()=>document.getElementById('pf-from').value;const getPT=()=>document.getElementById('pf-to').value;
 const getAcc=id=>DATA.accounts.find(a=>a.code===id||a.id===id);const getAccByCode=c=>DATA.accounts.find(a=>a.code===c);
 function showA(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),4000)}
@@ -761,7 +761,7 @@ async function apiCall(params){
     try{
       const r=await fetch(url.toString(),{method:'GET',redirect:'follow'});
       const t=await r.text();
-      try{return JSON.parse(t);}catch(e){lastErr='Server sibuk (respon bukan data)';}
+      try{const obj=JSON.parse(t);if(obj&&obj.ok===false&&String(obj.error||'').indexOf('AUTH:')===0){localStorage.removeItem(LS_SESSION);alert('Sesi login berakhir — silakan login ulang.');location.reload();return obj;}return obj;}catch(e){lastErr='Server sibuk (respon bukan data)';}
     }catch(err){lastErr=err.message;}
     await new Promise(res=>setTimeout(res,400+i*800));
   }
@@ -1993,7 +1993,9 @@ function getSession(){
   try{
     const s=JSON.parse(localStorage.getItem(LS_SESSION)||'null');
     if(!s)return null;
-    if(new Date(s.expiresAt)<=new Date()){localStorage.removeItem(LS_SESSION);return null;}
+    if(!s.token){localStorage.removeItem(LS_SESSION);return null;} // sesi era lama tanpa token
+    var expMs=s.expiresAt?new Date(s.expiresAt).getTime():NaN;
+    if(isNaN(expMs)||expMs<=Date.now()){localStorage.removeItem(LS_SESSION);return null;}
     return s;
   }catch(e){return null;}
 }

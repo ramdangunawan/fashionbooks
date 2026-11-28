@@ -93,7 +93,7 @@ async function api(params){
     try {
       const r = await fetch(APPS_SCRIPT_URL + '?' + q);
       const t = await r.text();
-      try { return JSON.parse(t); } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
+      try { const obj = JSON.parse(t); if (obj && obj.ok === false && String(obj.error||'').indexOf('AUTH:') === 0) { localStorage.removeItem('fb-finance-user'); alert('Sesi login berakhir — silakan login ulang.'); location.reload(); return obj; } return obj; } catch (e) { lastErr = 'Server sibuk (respon bukan data)'; }
     } catch (err) { lastErr = err.message; }
     await new Promise(res => setTimeout(res, 400 + i * 800));
   }
@@ -171,7 +171,7 @@ function logout(){ localStorage.removeItem('fb-finance-user'); location.reload()
     const saved = localStorage.getItem('fb-finance-user');
     if (saved) {
       const u = JSON.parse(saved);
-      if (u && u.loginAt && (Date.now() - u.loginAt) < 24*3600*1000) { USER = u; masukForm(); }
+      if (u && u.token && u.loginAt && (Date.now() - u.loginAt) < 24*3600*1000) { USER = u; masukForm(); }
       else localStorage.removeItem('fb-finance-user');
     }
   } catch (e) {}
